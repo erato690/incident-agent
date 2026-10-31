@@ -111,6 +111,7 @@ pre.code { margin: 0; overflow-x: auto; background: var(--panel); border: 1px so
   <nav class="tabs" aria-label="Abas">
     <a href="#projeto" id="tab-projeto">Projeto: item 1</a>
     <a href="#rubrica" id="tab-rubrica">Rubrica</a>
+    <a href="#cronograma" id="tab-cronograma">Cronograma</a>
   </nav>
 
   <div class="tab" id="view-projeto">
@@ -681,10 +682,51 @@ Tela de análise ◀── lê os turnos gravados ◀───────┘</p
       </table></div>
     </section>
   </div>
+
+  <div class="tab" id="view-cronograma" hidden>
+    <header>
+      <h1>Cronograma: ordem dos itens até a entrega</h1>
+      <p class="sub">Tudo que falta fazer, na ordem em que precisa ser feito. Alvo de entrega 09/11/2026 (Moodle); 13/11 se o professor confirmar o que disse na aula 7.</p>
+      <div class="ref">Atualizado 31/10/2026</div>
+    </header>
+
+    <section>
+      <h2 class="sec">Concluído em 31/10</h2>
+      <div class="tbl" style="margin-top:12px"><table>
+        <tr><th>Item</th><th>Onde</th></tr>
+        <tr><td class="ok">✓ Arquitetura e desenho do agente</td><td>Anatomia, MVP, memória, guardrails, verificação cognitiva, mapeamento da rubrica — aba <a href="#projeto">Projeto</a></td></tr>
+        <tr><td class="ok">✓ Repositório <code>incident-shop</code></td><td>Histórico git fictício (9 tags) + API FastAPI dos 8 cenários, publicado</td></tr>
+        <tr><td class="ok">✓ Repositório <code>incident-agent</code></td><td>Esqueleto de pastas (<code>agente/</code>, <code>app/</code>, <code>dados_dummy/</code>), publicado</td></tr>
+        <tr><td class="ok">✓ Repositório <code>agentes-cognitivos</code></td><td>Privado, material de estudo (12 abas) publicado</td></tr>
+        <tr><td class="ok">✓ Artefatos divididos e material de estudo</td><td>Estudo (12 abas) e Projeto (este artefato) separados</td></tr>
+      </table></div>
+    </section>
+
+    <section>
+      <h2 class="sec">Pendente, na ordem de execução</h2>
+      <div class="tbl" style="margin-top:12px"><table>
+        <tr><th>#</th><th>Quando</th><th>Item</th></tr>
+        <tr><td>1</td><td class="todo">antes do notebook</td><td>Revisar as 10 abas novas de estudo quanto à fidelidade com a transcrição das aulas (ver nota na aba Estudo/HANDOFF)</td></tr>
+        <tr><td>2</td><td class="todo">antes do relatório</td><td>Decidir: registrar o uso de spec-kit no relatório ou descartar essa menção da rubrica (a loja foi construída direto em código, não pelo fluxo specify/plan/tasks)</td></tr>
+        <tr><td>3</td><td class="todo">antes do notebook</td><td>Decidir: moderação extra com o endpoint gratuito da OpenAI entra ou não</td></tr>
+        <tr><td>4</td><td class="todo">até 05/11</td><td>Chave da OpenAI e conta no LangSmith (<code>LANGSMITH_API_KEY</code>)</td></tr>
+        <tr><td>5</td><td class="todo">31/10–01/11</td><td>Notebook Fase 1 — <code>01_mvp_chain</code>: chain executável, NLU, barreira de escopo, <code>@chain</code>, LCEL</td></tr>
+        <tr><td>6</td><td class="todo">02/11</td><td>Notebook Fase 2 — <code>02_react_ferramentas</code>: ReAct, orquestradores, GitHub via function calling, PTCF</td></tr>
+        <tr><td>7</td><td class="todo">03/11</td><td>Notebook Fase 3 — <code>03_memoria</code>: curto e longo prazo, NLU multi-turno</td></tr>
+        <tr><td>8</td><td class="todo">04/11</td><td>Notebook Fase 4 — <code>04_rag_ferramentas</code>: text-to-SQL, RAG sobre FAISS existente</td></tr>
+        <tr><td>9</td><td class="todo">05–06/11</td><td>Notebook Fase 5 — <code>05_integrador</code> + <code>app/</code>: agente único, auditor, Streamlit (duas telas)</td></tr>
+        <tr><td>10</td><td class="todo">06/11</td><td>Registro no LangSmith (dataset dos cenários, avaliadores)</td></tr>
+        <tr><td>11</td><td class="todo">07/11</td><td>Relatório técnico em PDF (<code>nome_sobrenome_ai-agents_langchain-agents.pdf</code>)</td></tr>
+        <tr><td>12</td><td class="todo">08/11</td><td>Vídeo com webcam (interação real, Drive com link público)</td></tr>
+        <tr><td>13</td><td class="todo">09/11 (ou 13/11)</td><td>Entrega final</td></tr>
+      </table></div>
+      <p class="sec-sub" style="margin-top:10px">Itens 1 a 3 não têm data fixa, mas bloqueiam decisões do notebook — resolver antes de começar a Fase 1.</p>
+    </section>
+  </div>
 </main>
 <script>
 (function () {
-  var names = ["projeto", "rubrica"];
+  var names = ["projeto", "rubrica", "cronograma"];
   function show() {
     var h = (location.hash || "#projeto").slice(1);
     if (names.indexOf(h) < 0) h = "projeto";
