@@ -4,10 +4,17 @@ from pydantic import ValidationError
 from agente.schemas import AnaliseIncidente, AnaliseNLU, Hipotese
 
 
+def _hip(causa="a", confianca=0.5, **kw):
+    return Hipotese(causa=causa, confianca=confianca, evidencia="trecho", **kw)
+
+
+def _tres(**kw):
+    return [_hip("a", 0.2, **kw), _hip("b", 0.9, **kw), _hip("c", 0.5, **kw)]
+
+
 def _analise(**kw):
     base = dict(severidade="alta", categoria="null_pointer", servico="pagamentos-api",
-                resumo="r", hipoteses=[], evidencia_insuficiente=True,
-                proximos_passos=["ver logs"])
+                resumo="r", hipoteses=_tres(), proximos_passos=["ver logs"])
     base.update(kw)
     return AnaliseIncidente(**base)
 
@@ -37,14 +44,28 @@ def test_analise_exige_proximos_passos():
         _analise(proximos_passos=[])
 
 
-def test_hipoteses_vazias_exigem_evidencia_insuficiente():
+@pytest.mark.parametrize("n", [0, 1, 2, 4])
+def test_analise_exige_exatamente_tres_hipoteses(n):
+    hs = [_hip(str(i), 0.1 * (i + 1)) for i in range(n)]
     with pytest.raises(ValidationError):
-        _analise(hipoteses=[], evidencia_insuficiente=False)
-    assert _analise().hipoteses == []
+        _analise(hipoteses=hs)
 
 
 def test_hipoteses_ordenadas_por_confianca():
-    h = [Hipotese(causa="a", confianca=0.2, evidencia="e"),
-         Hipotese(causa="b", confianca=0.9, evidencia="e")]
-    a = _analise(hipoteses=h, evidencia_insuficiente=False)
-    assert [x.causa for x in a.hipoteses] == ["b", "a"]
+    assert [x.causa for x in _analise().hipoteses] == ["b", "c", "a"]
+
+
+def test_evidencia_insuficiente_por_hipotese_default_falso():
+    assert _hip().evidencia_insuficiente is False
+
+
+def test_evidencia_insuficiente_da_analise_so_se_todas_marcadas():
+    assert _analise().evidencia_insuficiente is False
+    hs = _tres()
+    hs[0].evidencia_insuficiente = True
+    assert _analise(hipoteses=hs).evidencia_insuficiente is False
+    assert _analise(hipoteses=_tres(evidencia_insuficiente=True)).evidencia_insuficiente is True
+
+
+def test_evidencia_insuficiente_fora_do_schema_de_validacao():
+    assert "evidencia_insuficiente" not in AnaliseIncidente.model_json_schema()["properties"]

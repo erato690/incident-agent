@@ -7,7 +7,11 @@ from agente.schemas import AnaliseIncidente, AnaliseNLU, Hipotese, ResultadoMode
 
 ANALISE = AnaliseIncidente(
     severidade="alta", categoria="null_pointer", servico="pagamentos-api", resumo="NPE",
-    hipoteses=[Hipotese(causa="cupom nulo", confianca=0.8, evidencia="NullPointerException")],
+    hipoteses=[
+        Hipotese(causa="cupom nulo", confianca=0.8, evidencia="NullPointerException"),
+        Hipotese(causa="deploy recente", confianca=0.5, evidencia="depois do deploy"),
+        Hipotese(causa="pool esgotado", confianca=0.1, evidencia="x", evidencia_insuficiente=True),
+    ],
     proximos_passos=["ver deploy"],
 )
 

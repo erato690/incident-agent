@@ -2,7 +2,7 @@
 from typing import Literal
 
 from langchain_core.messages import BaseMessage
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
 Intencao = Literal[
     "investigar_erro", "checar_deploy", "checar_metrica", "comparar_incidente",
@@ -48,6 +48,8 @@ class Hipotese(BaseModel):
     causa: str
     confianca: float = Field(ge=0, le=1)
     evidencia: str = Field(description="Trecho literal do texto de entrada")
+    evidencia_insuficiente: bool = Field(
+        default=False, description="True quando o texto não sustenta bem esta hipótese")
 
     @field_validator("evidencia")
     @classmethod
@@ -62,16 +64,21 @@ class AnaliseIncidente(BaseModel):
     categoria: str
     servico: str | None = None
     resumo: str
-    hipoteses: list[Hipotese]
-    evidencia_insuficiente: bool = False
+    hipoteses: list[Hipotese] = Field(
+        min_length=3, max_length=3,
+        description="Exatamente 3 hipóteses, da mais para a menos provável")
     proximos_passos: list[str] = Field(min_length=1)
 
     @model_validator(mode="after")
-    def _ordena_e_valida(self) -> "AnaliseIncidente":
-        if not self.hipoteses and not self.evidencia_insuficiente:
-            raise ValueError("sem hipóteses exige evidencia_insuficiente=True")
+    def _ordena(self) -> "AnaliseIncidente":
         self.hipoteses.sort(key=lambda h: h.confianca, reverse=True)
         return self
+
+    @computed_field  # só na saída; fora do schema de validação (format_instructions)
+    @property
+    def evidencia_insuficiente(self) -> bool:
+        """True quando nenhuma das 3 hipóteses tem evidência suficiente."""
+        return all(h.evidencia_insuficiente for h in self.hipoteses)
 
 
 class RespostaFixa(BaseModel):
