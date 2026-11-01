@@ -2,3 +2,8 @@
 __pycache__/
 *.pyc
 .venv/
+
+# ferramentas locais (ruflo/claude-flow)
+.claude-flow/
+.swarm/
+ruvector.db
