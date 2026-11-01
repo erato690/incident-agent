@@ -54,9 +54,11 @@ JSON segue o princípio VIII da constitution.
 | `evidencia_insuficiente` | `bool` (derivado, somente leitura) | `True` quando todas as hipóteses têm `evidencia_insuficiente=True` (princípio II); não faz parte do schema de validação |
 | `proximos_passos` | `list[str]` | ao menos 1 item |
 
-**Hipotese**: `causa: str`, `confianca: float` (0 a 1), `evidencia: str` (trecho literal do
-texto de entrada; validação: não vazio), `evidencia_insuficiente: bool = False` (`True` quando o
-texto não sustenta bem aquela hipótese; o dado que a confirmaria vai em `proximos_passos`).
+**Hipotese**: `causa: str`, `confianca: float` (0 a 1), `evidencia: str | None` (trecho literal do
+texto de entrada), `evidencia_insuficiente: bool = False` (`True` quando o texto não sustenta bem
+aquela hipótese), `dado_que_falta: str | None` (o dado que a confirmaria). Validação: com
+`evidencia_insuficiente=False`, `evidencia` é obrigatória e não vazia; com `True`, `evidencia` pode
+ser nula e `dado_que_falta` é obrigatório.
 
 ## RespostaFixa
 

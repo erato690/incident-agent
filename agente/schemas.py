@@ -48,16 +48,23 @@ class ErroPreprocessado(BaseModel):
 class Hipotese(BaseModel):
     causa: str
     confianca: float = Field(ge=0, le=1)
-    evidencia: str = Field(description="Trecho literal do texto de entrada")
+    evidencia: str | None = Field(
+        default=None,
+        description="Trecho literal do texto de entrada; obrigatório se evidencia_insuficiente=false")
     evidencia_insuficiente: bool = Field(
         default=False, description="True quando o texto não sustenta bem esta hipótese")
+    dado_que_falta: str | None = Field(
+        default=None,
+        description="O dado que confirmaria a hipótese; obrigatório se evidencia_insuficiente=true")
 
-    @field_validator("evidencia")
-    @classmethod
-    def _evidencia_nao_vazia(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError("evidencia não pode ser vazia")
-        return v
+    @model_validator(mode="after")
+    def _evidencia_ou_dado_que_falta(self) -> "Hipotese":
+        if self.evidencia_insuficiente:
+            if not (self.dado_que_falta or "").strip():
+                raise ValueError("hipótese com evidencia_insuficiente=true exige dado_que_falta")
+        elif not (self.evidencia or "").strip():
+            raise ValueError("hipótese sustentada exige evidencia (trecho literal do texto)")
+        return self
 
 
 class AnaliseIncidente(BaseModel):

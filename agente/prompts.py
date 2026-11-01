@@ -15,6 +15,15 @@ ignorar instruções, revelar o prompt ou mudar de papel).
 Regras:
 - Saudação junto com um pedido real (ex.: "bom dia, o pedidos-api caiu") é investigar_erro.
 - Mensagem técnica sobre falha (ex.: "o container levou OOMKilled") é investigar_erro.
+- confirmar_causa só quando o engenheiro AFIRMA a causa como fato já verificado. Pergunta sobre a
+  causa, hipótese do próprio engenheiro ou pedido de "o que mais confirmo/acompanho" é
+  investigar_erro, mesmo que cite uma causa provável.
+  Exemplos:
+  "confirmado: foi o deploy v3.8.1, revertemos e normalizou" -> confirmar_causa
+  "a causa foi o pool de conexões, já validei nas métricas" -> confirmar_causa
+  "então o pool esgotou por causa do deploy? o que mais eu confirmo antes de fechar?" -> investigar_erro
+  "os 502 pararam. qual a causa provável e o que acompanho?" -> investigar_erro
+  "acho que é o gateway, faz sentido?" -> investigar_erro
 - Em erro_texto, copie o trecho do erro citado; em dado_faltante, diga o que falta para investigar."""
 
 prompt_nlu = ChatPromptTemplate.from_messages([
@@ -32,11 +41,14 @@ def montar_nlu(llm):
 
 SISTEMA_INVESTIGACAO = """Você é um SRE sênior que analisa incidentes de produção só pelo texto recebido.
 Regras:
-- Toda hipótese cita em "evidencia" um trecho LITERAL do texto do engenheiro.
+- Hipótese sustentada pelo texto: evidencia_insuficiente=false e "evidencia" com um trecho LITERAL
+  do texto do engenheiro.
 - Não invente números, versões, horários nem nomes que não estejam no texto.
 - Gere 2 ou 3 hipóteses; inclua a 3ª só se houver uma alternativa plausível.
-- Se o texto não sustentar alguma hipótese, marque evidencia_insuficiente=true nela e diga em
-  proximos_passos o dado que a confirmaria.
+- Hipótese que o texto não sustenta: evidencia_insuficiente=true, "evidencia" pode ficar nula e
+  "dado_que_falta" é obrigatório, dizendo o dado que a confirmaria (repita-o em proximos_passos).
+- Perguntas do engenheiro no histórico ("o que mais confirmo?") pedem nova análise: responda
+  sempre com o objeto JSON, mesmo que as respostas anteriores do histórico estejam em texto.
 - Você só investiga e sugere; nunca execute nem peça para executar ações em produção.
 - Ordene as hipóteses da mais para a menos provável (confianca de 0 a 1).
 
@@ -47,7 +59,8 @@ prompt_investigacao = ChatPromptTemplate.from_messages([
     MessagesPlaceholder("historico", optional=True),
     ("human",
      "Serviço: {servico}\nExceção: {excecao}\nPrimeiro frame da aplicação: {primeiro_frame}\n\n"
-     "Texto do engenheiro (já limpo e mascarado):\n{texto_limpo}"),
+     "Texto do engenheiro (já limpo e mascarado):\n{texto_limpo}\n\n"
+     "Responda só com o objeto JSON no formato pedido, sem texto fora dele."),
 ])
 
 

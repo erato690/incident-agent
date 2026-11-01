@@ -117,5 +117,33 @@
     "mensagem": "O auth-api falha com 401. Config: senha=Sup3rS3cret token: abc123def456 contato ana.souza@loja.com.br",
     "rota_esperada": "investigacao",
     "intencao_esperada": "investigar_erro"
+  },
+  {
+    "id": "pergunta_sobre_causa",
+    "grupo": "barreira",
+    "mensagem": "Então o pool esgotou por causa do deploy? O que mais eu confirmo antes de fechar?",
+    "rota_esperada": "investigacao",
+    "intencao_esperada": "investigar_erro"
+  },
+  {
+    "id": "pergunta_o_que_acompanhar",
+    "grupo": "barreira",
+    "mensagem": "Os 502 pararam depois que o gateway voltou. Qual a causa provável e o que acompanho?",
+    "rota_esperada": "investigacao",
+    "intencao_esperada": "investigar_erro"
+  },
+  {
+    "id": "confirma_causa_afirmando",
+    "grupo": "barreira",
+    "mensagem": "Confirmado: foi o deploy v3.8.1, revertemos e o pool normalizou.",
+    "rota_esperada": "fixa",
+    "intencao_esperada": "confirmar_causa"
+  },
+  {
+    "id": "confirma_causa_validada",
+    "grupo": "barreira",
+    "mensagem": "A causa foi o timeout curto no cliente HTTP, já validei nas métricas.",
+    "rota_esperada": "fixa",
+    "intencao_esperada": "confirmar_causa"
   }
 ]

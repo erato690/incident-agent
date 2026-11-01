@@ -10,7 +10,8 @@ ANALISE = AnaliseIncidente(
     hipoteses=[
         Hipotese(causa="cupom nulo", confianca=0.8, evidencia="NullPointerException"),
         Hipotese(causa="deploy recente", confianca=0.5, evidencia="depois do deploy"),
-        Hipotese(causa="pool esgotado", confianca=0.1, evidencia="x", evidencia_insuficiente=True),
+        Hipotese(causa="pool esgotado", confianca=0.1, evidencia_insuficiente=True,
+                 dado_que_falta="métrica do pool"),
     ],
     proximos_passos=["ver deploy"],
 )

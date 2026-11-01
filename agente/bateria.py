@@ -13,7 +13,7 @@ from agente.schemas import RespostaTurno
 # Chave do JSON -> subtítulo exibido (a ordem define a ordem dos grupos no relatório).
 GRUPOS = {
     "investigacao": "Investigação (cenários de erro)",
-    "barreira": "Barreira (saudação, fora do escopo, pedido de ação, injeção, vazia)",
+    "barreira": "Barreira (saudação, fora do escopo, pedido de ação, injeção, vazia, causa)",
     "guardrails": "Guardrails (segredos mascarados, moderação com aviso)",
 }
 
@@ -53,9 +53,10 @@ def detalhe_html(m: dict, r: RespostaTurno) -> str:
         a = r.analise
         itens.append(f"<b>Severidade:</b> {a.severidade} · <b>Resumo:</b> {escape(a.resumo)}")
         hips = "".join(
-            f"<li>{escape(h.causa)} — confiança {h.confianca:.2f} — evidência: "
-            f"<code>{escape(h.evidencia)}</code>"
-            + (" <i>(evidência insuficiente)</i>" if h.evidencia_insuficiente else "") + "</li>"
+            f"<li>{escape(h.causa)} — confiança {h.confianca:.2f} — "
+            + (f"evidência: <code>{escape(h.evidencia)}</code>" if h.evidencia else "sem evidência no texto")
+            + (f" <i>(evidência insuficiente; falta: {escape(h.dado_que_falta or '-')})</i>"
+               if h.evidencia_insuficiente else "") + "</li>"
             for h in a.hipoteses)
         itens.append(f"<b>Hipóteses:</b><ol>{hips}</ol>")
         if m.get("hipoteses_devem_considerar"):
