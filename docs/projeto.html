@@ -454,6 +454,122 @@ Exemplos:
     </section>
 
     <section>
+      <h2 class="sec">Chain: hoje (Fase 1) e alvo (Fase 5)</h2>
+      <p class="sec-sub">Na Fase 1 quem orquestra é um roteador fixo: o <code>RunnableBranch</code> decide entre resposta fixa e investigação, sem o LLM escolher nada. RAG e ferramentas entram nas Fases 2 a 4. Na Fase 5 o orquestrador vira o agente ReAct, que decide sozinho o que consultar.</p>
+      <h3 style="font-family:var(--font-display);font-size:16px;margin:16px 0 8px">Fase 1 · o que está em <code>agente/pipeline.py</code></h3>
+      <div class="scroll">
+        <svg viewBox="0 0 960 250" role="img" aria-label="Chain da Fase 1: entrada passa por máscara local, moderação, NLU e RunnableBranch; mensagem vazia, sinalizada ou fora da investigação recebe resposta fixa; o resto vai para a investigação (pré-processamento, prompt, LLM e parser JSON) e sai como RespostaTurno.">
+          <defs><marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+          <rect class="box-env" x="10" y="40" width="110" height="74" rx="5"/>
+          <text class="t-title" x="65" y="72" text-anchor="middle">Entrada</text>
+          <text class="t-sub" x="65" y="92" text-anchor="middle">mensagem</text>
+          <text class="t-sub" x="65" y="106" text-anchor="middle">+ histórico</text>
+          <rect class="box-dec" x="140" y="40" width="110" height="74" rx="5"/>
+          <text class="t-title" x="195" y="72" text-anchor="middle">Máscara</text>
+          <text class="t-sub" x="195" y="92" text-anchor="middle">regex local</text>
+          <text class="t-sub" x="195" y="106" text-anchor="middle">sem LLM</text>
+          <rect class="box-dec" x="270" y="40" width="110" height="74" rx="5"/>
+          <text class="t-title" x="325" y="72" text-anchor="middle">Moderação</text>
+          <text class="t-sub" x="325" y="92" text-anchor="middle">OpenAI</text>
+          <text class="t-sub" x="325" y="106" text-anchor="middle">sem chave: pula</text>
+          <rect class="box-dec" x="400" y="40" width="110" height="74" rx="5"/>
+          <text class="t-title" x="455" y="72" text-anchor="middle">NLU</text>
+          <text class="t-sub" x="455" y="92" text-anchor="middle">structured</text>
+          <text class="t-sub" x="455" y="106" text-anchor="middle">output</text>
+          <rect class="box-dec" x="530" y="40" width="110" height="74" rx="5" style="stroke-width:2.5"/>
+          <text class="t-title" x="585" y="72" text-anchor="middle">Roteador</text>
+          <text class="t-sub" x="585" y="92" text-anchor="middle">RunnableBranch</text>
+          <text class="t-sub" x="585" y="106" text-anchor="middle">por intenção</text>
+          <rect class="box-dec" x="660" y="30" width="160" height="94" rx="5"/>
+          <text class="t-title" x="740" y="54" text-anchor="middle">Investigação</text>
+          <text class="t-sub" x="740" y="74" text-anchor="middle">RunnableLambda(preprocessar)</text>
+          <text class="t-sub" x="740" y="92" text-anchor="middle">| prompt | llm</text>
+          <text class="t-sub" x="740" y="110" text-anchor="middle">| JsonOutputParser</text>
+          <rect class="box-act" x="840" y="40" width="110" height="74" rx="5"/>
+          <text class="t-title" x="895" y="72" text-anchor="middle">Saída</text>
+          <text class="t-sub" x="895" y="92" text-anchor="middle">RespostaTurno</text>
+          <text class="t-sub" x="895" y="106" text-anchor="middle">(JSON)</text>
+          <path class="ln" d="M120 77 H138" marker-end="url(#ar5)"/>
+          <path class="ln" d="M250 77 H268" marker-end="url(#ar5)"/>
+          <path class="ln" d="M380 77 H398" marker-end="url(#ar5)"/>
+          <path class="ln" d="M510 77 H528" marker-end="url(#ar5)"/>
+          <path class="ln" d="M640 77 H658" marker-end="url(#ar5)"/>
+          <path class="ln" d="M820 77 H838" marker-end="url(#ar5)"/>
+          <rect class="box-env" x="140" y="180" width="500" height="50" rx="5"/>
+          <text class="t-title" x="390" y="202" text-anchor="middle">Resposta fixa</text>
+          <text class="t-sub" x="390" y="220" text-anchor="middle">PromptTemplate por categoria · não chama o LLM de investigação</text>
+          <path class="ln" d="M195 114 V178" marker-end="url(#ar5)"/>
+          <text class="t-lab" x="202" y="150">vazia</text>
+          <path class="ln" d="M325 114 V178" marker-end="url(#ar5)"/>
+          <text class="t-lab" x="332" y="150">sinalizada</text>
+          <path class="ln" d="M585 114 V178" marker-end="url(#ar5)"/>
+          <text class="t-lab" x="592" y="140">saudação, fora do escopo,</text>
+          <text class="t-lab" x="592" y="155">ação, injeção, fase futura</text>
+          <path class="ln" d="M895 114 V205 H642" marker-end="url(#ar5)"/>
+          <text class="t-lab" x="700" y="198">também vira RespostaTurno</text>
+        </svg>
+      </div>
+      <h3 style="font-family:var(--font-display);font-size:16px;margin:18px 0 8px">Fase 5 · o agente vira o orquestrador</h3>
+      <div class="scroll">
+        <svg viewBox="0 0 960 360" role="img" aria-label="Alvo da Fase 5: a mesma entrada com máscara, moderação, NLU e roteador entrega a investigação a um agente ReAct com MemorySaver; o agente escolhe ferramentas só de leitura (loja, GitHub, SQL, RAG sobre FAISS e memória de longo prazo); o auditor confere a resposta, que volta ao engenheiro; o post-mortem .md sai só no final, a pedido.">
+          <defs><marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+          <rect class="box-dec" x="10" y="50" width="190" height="74" rx="5"/>
+          <text class="t-title" x="105" y="78" text-anchor="middle">Barreira (Fase 1)</text>
+          <text class="t-sub" x="105" y="98" text-anchor="middle">máscara · moderação</text>
+          <text class="t-sub" x="105" y="114" text-anchor="middle">NLU · roteador</text>
+          <rect class="box-env" x="10" y="190" width="190" height="50" rx="5"/>
+          <text class="t-title" x="105" y="212" text-anchor="middle">Resposta fixa</text>
+          <text class="t-sub" x="105" y="230" text-anchor="middle">fora da investigação</text>
+          <path class="ln" d="M105 124 V188" marker-end="url(#ar6)"/>
+          <path class="ln" d="M200 87 H258" marker-end="url(#ar6)"/>
+          <text class="t-lab" x="208" y="142">investigar</text>
+          <rect class="box-ag" x="240" y="20" width="400" height="320" rx="10"/>
+          <text class="t-grp" x="256" y="40">Agente</text>
+          <rect class="box-dec" x="260" y="50" width="360" height="74" rx="5" style="stroke-width:2.5"/>
+          <text class="t-title" x="440" y="78" text-anchor="middle">create_agent (ReAct)</text>
+          <text class="t-sub" x="440" y="98" text-anchor="middle">system PTCF · MemorySaver (resumo) · decide a próxima ferramenta</text>
+          <text class="t-sub" x="440" y="114" text-anchor="middle">pensamento → ação → observação</text>
+          <path class="ln" d="M440 126 V156" marker-start="url(#ar6)" marker-end="url(#ar6)"/>
+          <text class="t-lab" x="450" y="146">chama e recebe (só leitura)</text>
+          <rect class="box-mem" x="260" y="160" width="110" height="74" rx="5"/>
+          <text class="t-title" x="315" y="186" text-anchor="middle">Loja</text>
+          <text class="t-sub" x="315" y="204" text-anchor="middle">logs · métricas</text>
+          <text class="t-sub" x="315" y="220" text-anchor="middle">deploys · fase 2</text>
+          <rect class="box-mem" x="385" y="160" width="110" height="74" rx="5"/>
+          <text class="t-title" x="440" y="186" text-anchor="middle">GitHub</text>
+          <text class="t-sub" x="440" y="204" text-anchor="middle">comparar_versoes</text>
+          <text class="t-sub" x="440" y="220" text-anchor="middle">API real · fase 2</text>
+          <rect class="box-mem" x="510" y="160" width="110" height="74" rx="5"/>
+          <text class="t-title" x="565" y="186" text-anchor="middle">SQL</text>
+          <text class="t-sub" x="565" y="204" text-anchor="middle">SELECT · query_only</text>
+          <text class="t-sub" x="565" y="220" text-anchor="middle">SQLite · fase 4</text>
+          <rect class="box-mem" x="260" y="250" width="172" height="74" rx="5"/>
+          <text class="t-title" x="346" y="276" text-anchor="middle">RAG</text>
+          <text class="t-sub" x="346" y="294" text-anchor="middle">buscar_runbook no FAISS</text>
+          <text class="t-sub" x="346" y="310" text-anchor="middle">cita documento · fase 4</text>
+          <rect class="box-mem" x="448" y="250" width="172" height="74" rx="5"/>
+          <text class="t-title" x="534" y="276" text-anchor="middle">Memória longa</text>
+          <text class="t-sub" x="534" y="294" text-anchor="middle">episódica · semântica</text>
+          <text class="t-sub" x="534" y="310" text-anchor="middle">grava só confirmado · fase 3</text>
+          <rect class="box-aud" x="680" y="150" width="130" height="64" rx="5"/>
+          <text class="t-title" x="745" y="176" text-anchor="middle">Auditor</text>
+          <text class="t-sub" x="745" y="196" text-anchor="middle">aula 7 · fase 5</text>
+          <path class="ln" d="M620 87 H745 V148" marker-end="url(#ar6)"/>
+          <rect class="box-act" x="840" y="150" width="110" height="64" rx="5"/>
+          <text class="t-title" x="895" y="176" text-anchor="middle">Resposta</text>
+          <text class="t-sub" x="895" y="196" text-anchor="middle">com evidência</text>
+          <path class="ln" d="M810 182 H838" marker-end="url(#ar6)"/>
+          <rect class="box-act" x="840" y="270" width="110" height="64" rx="5"/>
+          <text class="t-title" x="895" y="296" text-anchor="middle">Post-mortem</text>
+          <text class="t-sub" x="895" y="316" text-anchor="middle">.md · só no final</text>
+          <path class="ln" d="M895 214 V268" marker-end="url(#ar6)"/>
+          <text class="t-lab" x="903" y="246">a pedido</text>
+        </svg>
+      </div>
+      <p class="sec-sub" style="margin-top:10px">A barreira da Fase 1 continua na frente na Fase 5. A rubrica da Fase 2 ainda pede <code>RouterChain</code> e chains sequenciais e paralelas como demonstração; o padrão do projeto segue o <code>RunnableBranch</code>.</p>
+    </section>
+
+    <section>
       <h2 class="sec">Verificação cognitiva: trajetória e auditor (aula 7)</h2>
       <p class="sec-sub">Dois olhares sobre cada turno. A trajetória mostra como o agente chegou na resposta. O auditor diz se a resposta se sustenta. A rubrica pede que a verificação seja parte do próprio agente: quando o auditor refuta uma hipótese, o engenheiro vê o aviso "não verificado" na resposta. O detalhe (trajetória, fact-check, falácias) fica na tela de análise, não no relatório.</p>
       <div class="cmp" style="margin-top:12px">
