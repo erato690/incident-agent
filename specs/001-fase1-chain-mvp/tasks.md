@@ -83,13 +83,13 @@ teste, veja falhar, implemente. O comportamento com LLM é verificado pela bater
 **Independent Test**: executar o notebook com `nbconvert --execute` sem `OPENAI_API_KEY` e
 localizar cada item pela tabela final (SC-001, SC-005).
 
-- [ ] T022 [US3] Criar `projeto.ipynb` com a célula de bootstrap (raiz no `sys.path`; se `agente/` não existir, `git clone https://github.com/erato690/incident-agent`) e a célula de setup (`pip install -r requirements.txt` comentado para Colab, `escolher_llm()`), conforme research R8
-- [ ] T023 [US3] Adicionar em `projeto.ipynb` o cabeçalho "Seção 1 · Fase 1" com o resumo em markdown da anatomia (7 etapas numeradas), tipo híbrido, maturidade 1 → 4, planejamento hierárquico de 5 etapas e as 4 memórias, com link para o artefato do Projeto (FR-014)
-- [ ] T024 [US3] Adicionar em `projeto.ipynb` as células de templates: `inspect.getsource` de `agente/prompts.py` e um `format` de exemplo de um `PromptTemplate` e de um `ChatPromptTemplate` (FR-010)
-- [ ] T025 [US3] Adicionar em `projeto.ipynb` a célula de pré-processamento no pipe (`RunnableLambda(preprocessar)`) e a célula curta com o mesmo passo usando `@chain`, imprimindo `saida_pipe == saida_chain` e uma frase sobre a equivalência e o motivo de usar a função no pipe (FR-012)
-- [ ] T026 [US3] Adicionar em `projeto.ipynb` a célula com `inspect.getsource(montar_pipeline)`, a montagem do pipeline e as chamadas `invoke` (cenário `deploy_com_bug`), `batch` (8 cenários, tabela com severidade e primeira hipótese) e `stream` da investigação mostrando o JSON crescendo (FR-011, FR-013)
-- [ ] T027 [US3] Adicionar em `projeto.ipynb` a bateria: roda `dados_dummy/fase1_mensagens.json`, mostra tabela `id | rota esperada | rota obtida | intenção | ok` e verifica que nenhum valor original de segredo aparece no texto mascarado (FR-016, SC-003, SC-004)
-- [ ] T028 [US3] Adicionar em `projeto.ipynb` o texto "LCEL × composição imperativa" (quadro da aula 2, roteamento da aula 3, escolha justificada) e a tabela final "item da rubrica → célula" com os 6 itens da Fase 1 (FR-013, SC-005)
+- [x] T022 [US3] Criar `projeto.ipynb` com a célula de bootstrap (raiz no `sys.path`; se `agente/` não existir, `git clone https://github.com/erato690/incident-agent`) e a célula de setup (`pip install -r requirements.txt` comentado para Colab, `escolher_llm()`), conforme research R8
+- [x] T023 [US3] Adicionar em `projeto.ipynb` o cabeçalho "Seção 1 · Fase 1" com o resumo em markdown da anatomia (7 etapas numeradas), tipo híbrido, maturidade 1 → 4, planejamento hierárquico de 5 etapas e as 4 memórias, com link para o artefato do Projeto (FR-014)
+- [x] T024 [US3] Adicionar em `projeto.ipynb` as células de templates: `inspect.getsource` de `agente/prompts.py` e um `format` de exemplo de um `PromptTemplate` e de um `ChatPromptTemplate` (FR-010)
+- [x] T025 [US3] Adicionar em `projeto.ipynb` a célula de pré-processamento no pipe (`RunnableLambda(preprocessar)`) e a célula curta com o mesmo passo usando `@chain`, imprimindo `saida_pipe == saida_chain` e uma frase sobre a equivalência e o motivo de usar a função no pipe (FR-012)
+- [x] T026 [US3] Adicionar em `projeto.ipynb` a célula com `inspect.getsource(montar_pipeline)`, a montagem do pipeline e as chamadas `invoke` (cenário `deploy_com_bug`), `batch` (8 cenários, tabela com severidade e primeira hipótese) e `stream` da investigação mostrando o JSON crescendo (FR-011, FR-013)
+- [x] T027 [US3] Adicionar em `projeto.ipynb` a bateria: roda `dados_dummy/fase1_mensagens.json`, mostra tabela `id | rota esperada | rota obtida | intenção | ok` e verifica que nenhum valor original de segredo aparece no texto mascarado (FR-016, SC-003, SC-004)
+- [x] T028 [US3] Adicionar em `projeto.ipynb` o texto "LCEL × composição imperativa" (quadro da aula 2, roteamento da aula 3, escolha justificada) e a tabela final "item da rubrica → célula" com os 6 itens da Fase 1 (FR-013, SC-005)
 
 ---
 

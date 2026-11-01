@@ -71,13 +71,20 @@ def _preprocessar_estado(estado: dict) -> dict:
     }
 
 
-def montar_investigacao(llm) -> Runnable:
-    """Estado -> AnaliseIncidente (uma nova tentativa); falha final vira str com o erro."""
+def montar_investigacao_json(llm) -> Runnable:
+    """Estado -> dict JSON da análise, sem validação; usado no stream (JSON parcial)."""
     parser = JsonOutputParser(pydantic_object=AnaliseIncidente)
-    nucleo = (
+    return (
         RunnableLambda(_preprocessar_estado)
         | prompt_investigacao.partial(format_instructions=parser.get_format_instructions())
         | llm | parser
+    )
+
+
+def montar_investigacao(llm) -> Runnable:
+    """Estado -> AnaliseIncidente (uma nova tentativa); falha final vira str com o erro."""
+    nucleo = (
+        montar_investigacao_json(llm)
         | RunnableLambda(AnaliseIncidente.model_validate)
     ).with_retry(stop_after_attempt=2, wait_exponential_jitter=False)
     falha = RunnableLambda(
