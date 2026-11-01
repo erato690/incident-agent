@@ -94,7 +94,7 @@ escolha no setup é fácil de testar.
 Razão: a rubrica exige notebook reprodutível; a loja pode não estar no ar quando o professor
 avaliar.
 
-### VIII. JSON por dentro, relatório só sob pedido
+### VIII. JSON por dentro, post-mortem só no final
 
 - Estas trocas internas MUST usar modelos Pydantic (serializáveis em JSON):
   1. resultado da moderação;
@@ -103,11 +103,16 @@ avaliar.
      passos);
   4. veredito do auditor (a partir da Fase 5);
   5. registro de cada turno para a tela de análise (pergunta, resposta, trajetória, auditoria);
-  6. dados do relatório.
-- O relatório `.md` MUST ser gerado a partir do item 6, por template em código, só quando o
-  engenheiro pedir.
+  6. dados do post-mortem.
+- O post-mortem `.md` é o único atuador do agente. Ele MUST ser gerado a partir do item 6, por
+  template em código, só quando o engenheiro pedir, ao fim da investigação, de preferência depois
+  da causa confirmada. Sem causa confirmada, MUST sair marcado como "causa não confirmada".
+- Template do post-mortem: resumo; impacto e severidade; linha do tempo; causa raiz e
+  evidências; correção sugerida (comando para o humano rodar); ações preventivas; lições
+  aprendidas.
+- Nos turnos da conversa, a resposta com evidência volta direto ao engenheiro e não é atuação.
 
-Razão: JSON é verificável por código; o relatório é para leitura humana.
+Razão: JSON é verificável por código; o post-mortem é o registro final para leitura humana.
 
 ### IX. Escopo mínimo guiado pela rubrica
 
@@ -178,6 +183,7 @@ Seis camadas, na ordem em que atuam. Cada camada entra no notebook na fase indic
 - Histórico: 1.0.0 (2026-11-01) versão inicial; 1.1.0 (2026-11-01) seção Guardrails separada,
   auditor a partir da Fase 5, `RunnableLambda` + demonstração de `@chain`, `langchain-classic`,
   plano B só no setup, lista das trocas JSON, critério de tamanho de spec; 1.1.1 (2026-11-01)
-  máscara de segredos antes da moderação (camada 1).
+  máscara de segredos antes da moderação (camada 1); post-mortem `.md` como único atuador, só
+  no final (princípio VIII).
 
 **Version**: 1.1.1 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-01
