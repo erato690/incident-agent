@@ -69,16 +69,19 @@ Razão: memória contaminada por hipótese não confirmada propaga erros para in
 
 Razão: o professor avalia pelos padrões do curso e pela rubrica.
 
-### VI. Modelos e plano B
+### VI. Modelos: escolha explícita entre DeepSeek e OpenAI
 
-- LLM de chat: `ChatDeepSeek` (modelo de chat, temperatura 0).
+- Dois provedores de chat, numa tabela única em `agente/config.py`: `deepseek`
+  (`ChatDeepSeek`, `deepseek-v4-flash`) e `openai` (`ChatOpenAI`, `gpt-4o-mini`), ambos com
+  temperatura 0.
 - Embeddings: OpenAI `text-embedding-3-small`.
-- A escolha do LLM MUST acontecer uma vez, na célula de setup: sem `DEEPSEEK_API_KEY`, ou com
-  `FORCAR_PLANO_B=1`, o setup usa `ChatOpenAI("gpt-4o-mini")`. O setup MUST imprimir qual modelo
-  foi escolhido. Não há troca automática no meio da execução.
+- A escolha MUST ser explícita e acontecer uma vez, na célula de setup: argumento de
+  `escolher_llm(provedor)`, senão a variável `LLM_PROVEDOR`, senão `openai` (padrão). Valor
+  inválido ou chave ausente do provedor escolhido MUST gerar erro claro. Não há troca automática
+  entre provedores. O setup MUST imprimir o provedor e o modelo escolhidos.
 
-Razão: o DeepSeek usa o crédito existente; o plano B garante que o professor consiga rodar; a
-escolha no setup é fácil de testar.
+Razão: quem roda o notebook escolhe o provedor da chave que tem, trocando uma palavra; a escolha
+explícita é fácil de testar e não esconde qual modelo produziu as saídas.
 
 ### VII. Reprodutível offline
 
@@ -187,6 +190,7 @@ Seis camadas, na ordem em que atuam. Cada camada entra no notebook na fase indic
   auditor a partir da Fase 5, `RunnableLambda` + demonstração de `@chain`, `langchain-classic`,
   plano B só no setup, lista das trocas JSON, critério de tamanho de spec; 1.1.1 (2026-11-01)
   máscara de segredos antes da moderação (camada 1); post-mortem `.md` como único atuador, só
-  no final (princípio VIII); 1.1.2 (2026-11-01) entregáveis não citam as aulas.
+  no final (princípio VIII); 1.1.2 (2026-11-01) entregáveis não citam as aulas; 1.2.0 (2026-11-01) escolha
+  explícita do LLM (`LLM_PROVEDOR`, padrão `openai`) no lugar do plano B.
 
-**Version**: 1.1.2 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-01
+**Version**: 1.2.0 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-01

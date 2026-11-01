@@ -49,7 +49,7 @@ nenhuma tool de escrita
 | III. Barreira de escopo | Moderação → NLU → `RunnableBranch` com respostas fixas | OK |
 | IV. Memória | Fase 1 só recebe histórico explícito; nenhuma escrita em memória | OK (N/A) |
 | V. Padrões das aulas | LCEL, `with_structured_output`, função no pipe + demo `@chain`; nenhuma API clássica nesta fase | OK |
-| VI. Modelos | `escolher_llm()` no setup, `FORCAR_PLANO_B`, imprime o modelo | OK |
+| VI. Modelos | `escolher_llm(provedor)` no setup, `LLM_PROVEDOR` (padrão `openai`), imprime provedor e modelo | OK |
 | VII. Offline | Moderação pula com aviso; dados de teste locais; sem código da loja | OK |
 | VIII. JSON | Trocas 1, 2 e 3 em Pydantic; relatório fora desta fase | OK |
 | IX. Escopo mínimo | 3 user stories, 1 seção, tabela de rubrica na spec | OK |

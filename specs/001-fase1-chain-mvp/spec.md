@@ -271,7 +271,7 @@ item, a célula e a saída que o comprovam.
   cada cenário, sem incluir o código da loja no notebook.
 - Os textos das respostas fixas seguem o modelo do artefato do Projeto ("Só ajudo a investigar
   incidentes de produção..."), em português.
-- O LLM é escolhido uma vez na célula de setup (DeepSeek ou plano B), conforme o princípio VI;
+- O LLM é escolhido uma vez na célula de setup (`deepseek` ou `openai`, padrão `openai`), conforme o princípio VI;
   esta spec não muda essa célula.
 - Para não duplicar código entre fases, funções reutilizáveis (schemas, pré-processamento,
   templates) podem morar no pacote `agente/` e ser importadas pelo notebook; a decisão fica para

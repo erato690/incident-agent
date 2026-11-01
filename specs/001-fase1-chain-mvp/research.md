@@ -5,10 +5,11 @@ Fontes: constitution v1.1.1, spec 001, notebooks das aulas 2, 3 e 4
 
 ## R1. Modelo de chat no setup
 
-- **Decision**: `ChatDeepSeek(model="deepseek-v4-flash", temperature=0)`, pacote
-  `langchain-deepseek`. Plano B: `ChatOpenAI(model="gpt-4o-mini", temperature=0)` quando não
-  houver `DEEPSEEK_API_KEY` ou quando `FORCAR_PLANO_B=1`. A célula imprime o modelo escolhido.
-- **Rationale**: mesmo nome de modelo usado pelo professor na aula 2; plano B conforme o princípio
+- **Decision** (revisada em 01/11, constitution 1.2.0): escolha explícita entre `deepseek`
+  (`ChatDeepSeek(model="deepseek-v4-flash")`) e `openai` (`ChatOpenAI(model="gpt-4o-mini")`),
+  temperatura 0, por `escolher_llm(provedor)` ou `LLM_PROVEDOR`; padrão `openai`. Sem troca
+  automática. A célula imprime provedor e modelo.
+- **Rationale**: mesmo nome de modelo usado pelo professor na aula 2; escolha explícita conforme o princípio
   VI.
 - **Alternatives**: troca automática em tempo de execução (rejeitada pela constitution 1.1.0).
 
@@ -19,7 +20,7 @@ Fontes: constitution v1.1.1, spec 001, notebooks das aulas 2, 3 e 4
 - **Rationale**: padrão da aula 5 (seção 4.1) citado no artefato do Projeto; o histórico entra
   como lista de mensagens explícita (o `MemorySaver` é da Fase 3).
 - **Risk**: o DeepSeek pode falhar em function calling estruturado. Mitigação: o mesmo código
-  roda com o plano B (`FORCAR_PLANO_B=1`); a bateria da seção mostra qual modelo foi usado.
+  roda com `escolher_llm("openai")`; a bateria da seção mostra qual modelo foi usado.
 
 ## R3. Saída JSON da investigação e `stream`
 
