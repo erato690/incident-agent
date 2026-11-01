@@ -127,11 +127,11 @@ def montar_etapas(
     """Etapas do pipeline na ordem em que a mensagem passa (cada uma é um Runnable)."""
     nlu = nlu or montar_nlu(llm)
     investigacao = investigacao or montar_investigacao(llm)
-    return {
+    etapas = {
         # entra {mensagem, historico} -> sai {mensagem, historico} com segredos mascarados
         "passo1_mascara": RunnableLambda(_mascarar_entrada),
         # entra estado mascarado -> sai estado + resposta (fixa "vazia" ou None)
-        "passo2_vazia": _marcar(_decide_vazia),
+        "passo2_vazia": _se_pendente(_marcar(_decide_vazia)),  # 1ª checagem: sempre roda
         # entra estado sem resposta -> sai estado + moderacao + resposta (fixa se sinalizada)
         "passo3_moderacao": _se_pendente(
             RunnablePassthrough.assign(moderacao=lambda e: moderar(e["mensagem"]))
@@ -146,6 +146,9 @@ def montar_etapas(
         # entra estado com resposta -> sai só o RespostaTurno
         "passo7_resposta": RunnableLambda(lambda estado: estado["resposta"]),
     }
+    for nome, etapa in etapas.items():
+        etapa.name = nome  # nome legível no grafo (get_graph) e no trace
+    return etapas
 
 
 def montar_pipeline(
