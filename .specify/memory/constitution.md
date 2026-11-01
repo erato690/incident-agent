@@ -170,6 +170,9 @@ Seis camadas, na ordem em que atuam. Cada camada entra no notebook na fase indic
   publicação, ações irreversíveis, mudança de escopo e decisões de produto em aberto exigem
   confirmação do Rafael.
 - Documentação, commits e respostas em português; nomes de repositório em inglês.
+- Os entregáveis (notebook, código, prompts, README, relatório PDF) MUST NOT citar as aulas
+  do curso ("aula N"): apresentam as técnicas pelo nome. As aulas servem só como referência
+  interna de planejamento.
 - Antes de declarar uma tarefa concluída, a seção do notebook correspondente MUST rodar com
   dados dummy.
 
@@ -184,6 +187,6 @@ Seis camadas, na ordem em que atuam. Cada camada entra no notebook na fase indic
   auditor a partir da Fase 5, `RunnableLambda` + demonstração de `@chain`, `langchain-classic`,
   plano B só no setup, lista das trocas JSON, critério de tamanho de spec; 1.1.1 (2026-11-01)
   máscara de segredos antes da moderação (camada 1); post-mortem `.md` como único atuador, só
-  no final (princípio VIII).
+  no final (princípio VIII); 1.1.2 (2026-11-01) entregáveis não citam as aulas.
 
-**Version**: 1.1.1 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-01
+**Version**: 1.1.2 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-01
