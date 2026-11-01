@@ -62,3 +62,14 @@ def test_epoch_ms_nao_vira_cartao():
 def test_cartao_so_com_luhn_valido():
     assert "[CARTAO]" in mascarar("4111 1111 1111 1111")
     assert "[CARTAO]" not in mascarar("4111 1111 1111 1112")
+
+
+@pytest.mark.parametrize("texto, esperado", [
+    ("(config: senha=abc123). A status", "(config: senha=[SEGREDO]). A status"),
+    ("token=xyz, depois", "token=[SEGREDO], depois"),
+    ('password="s3cr3t" no env', 'password="[SEGREDO]" no env'),
+    ("senha=abc123.", "senha=[SEGREDO]."),
+    ("api_key: k-1.2.3 fim", "api_key: [SEGREDO] fim"),
+])
+def test_valor_do_segredo_para_em_pontuacao(texto, esperado):
+    assert mascarar(texto) == esperado

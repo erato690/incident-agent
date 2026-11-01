@@ -7,7 +7,8 @@ from agente.schemas import (
 ANALISE = AnaliseIncidente(
     severidade="alta", categoria="npe", servico="pagamentos-api", resumo="NPE após deploy",
     hipoteses=[Hipotese(causa="cupom nulo", confianca=0.8, evidencia="cupom is null"),
-               Hipotese(causa="pool", confianca=0.2, evidencia="timeout", evidencia_insuficiente=True)],
+               Hipotese(causa="pool", confianca=0.2, evidencia_insuficiente=True,
+                        dado_que_falta="métrica do pool")],
     proximos_passos=["ver diff"])
 
 INV = RespostaTurno(rota="investigacao", moderacao=ResultadoModeracao(status="aviso",
@@ -35,6 +36,7 @@ def test_detalhe_investigacao_mostra_hipoteses_e_mascara():
     assert h.startswith("<details>") and "a — ok" in h
     assert "Sup3r" not in h and "[SEGREDO]" in h
     assert "cupom nulo" in h and "0.80" in h and "insuficiente" in h and "alta" in h
+    assert "métrica do pool" in h
 
 
 def test_detalhe_fixa_mostra_texto_camada_e_escapa_html():
