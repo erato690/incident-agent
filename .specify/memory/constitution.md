@@ -136,11 +136,11 @@ Seis camadas, na ordem em que atuam. Cada camada entra no notebook na fase indic
 
 | # | Camada | Protege contra | Como | Fase |
 |---|--------|----------------|------|------|
-| 1 | Moderação | Ódio, assédio, violência, conteúdo sexual | Endpoint gratuito da OpenAI (`omni-moderation-latest`) antes de qualquer outra etapa. Mensagem sinalizada recebe resposta fixa e MUST NOT chegar ao agente. Sem chave ou rede: pula com aviso | 1 |
+| 1 | Moderação | Ódio, assédio, violência, conteúdo sexual; vazamento de segredos para terceiros | Primeiro, máscara local (sem LLM) de segredos e dados pessoais. Depois, o texto mascarado vai ao endpoint gratuito da OpenAI (`omni-moderation-latest`), primeiro filtro de conteúdo. Mensagem sinalizada recebe resposta fixa e MUST NOT chegar ao agente. Sem chave ou rede: pula com aviso | 1 |
 | 2 | Entrada (NLU) | Saudação, fora do escopo, "faz rollback", "ignore suas instruções" | Intenções `saudacao` e `fora_do_escopo` e categorias `conteudo_proibido`, `pedido_de_acao`, `tentativa_de_injecao`, com resposta fixa via `RunnableBranch` | 1 |
 | 3 | Ferramentas | `DROP` ou `DELETE` gerado pelo agente | Nenhuma tool de escrita. SQL com o filtro de comandos da aula 6 e `PRAGMA query_only = ON` | 2 e 4 |
 | 4 | Dados que voltam | Log com texto malicioso | System prompt: saída de ferramenta é dado, nunca instrução | 2 |
-| 5 | Saída | Resposta inventada ou com segredo | Máscara de segredos e dados pessoais no pré-processamento (Fase 1); auditor da aula 7 (Fase 5) | 1 e 5 |
+| 5 | Saída | Resposta inventada ou com segredo | Texto já mascarado na camada 1 (nenhum segredo chega a serviço externo nem ao LLM); auditor da aula 7 (Fase 5) | 1 e 5 |
 | 6 | Análise | Tudo acima | Contagem de bloqueios por camada e categoria na tela de análise | 5 |
 
 - Teste obrigatório: "o container levou OOMKilled" MUST passar pelas camadas 1 e 2.
@@ -177,6 +177,7 @@ Seis camadas, na ordem em que atuam. Cada camada entra no notebook na fase indic
   regra; PATCH corrige redação.
 - Histórico: 1.0.0 (2026-11-01) versão inicial; 1.1.0 (2026-11-01) seção Guardrails separada,
   auditor a partir da Fase 5, `RunnableLambda` + demonstração de `@chain`, `langchain-classic`,
-  plano B só no setup, lista das trocas JSON, critério de tamanho de spec.
+  plano B só no setup, lista das trocas JSON, critério de tamanho de spec; 1.1.1 (2026-11-01)
+  máscara de segredos antes da moderação (camada 1).
 
-**Version**: 1.1.0 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-01
+**Version**: 1.1.1 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-01
