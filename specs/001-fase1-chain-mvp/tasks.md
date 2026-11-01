@@ -95,8 +95,8 @@ localizar cada item pela tabela final (SC-001, SC-005).
 
 ## Phase 6: Polish
 
-- [ ] T029 Executar `pytest tests/ -q` e `jupyter nbconvert --to notebook --execute projeto.ipynb` com e sem `OPENAI_API_KEY`, conferir os resultados esperados de `quickstart.md` e o tempo abaixo de 3 minutos
-- [ ] T030 [P] Atualizar `README.md` (seção "Como rodar": `.env`, `pip install`, `pytest`, notebook), preservando as anotações pessoais existentes no fim do arquivo
+- [x] T029 Executar `pytest tests/ -q` e `jupyter nbconvert --to notebook --execute projeto.ipynb` com e sem `OPENAI_API_KEY`, conferir os resultados esperados de `quickstart.md` e o tempo abaixo de 3 minutos
+- [x] T030 [P] Atualizar `README.md` (seção "Como rodar": `.env`, `pip install`, `pytest`, notebook), preservando as anotações pessoais existentes no fim do arquivo
 
 ---
 
