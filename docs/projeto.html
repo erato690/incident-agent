@@ -254,7 +254,7 @@ ol.passos b { color: var(--fg); font-weight: 500; }
     <section>
       <h2 class="sec">Componentes</h2>
       <div class="cmp" style="margin-top:14px">
-        <div class="card mvp"><span class="tag">MVP · fase 1 · decidido</span><h3>LLM e embeddings</h3><p>Chat: DeepSeek (<code>ChatDeepSeek</code>, modelo de chat, temperatura 0), pago com o crédito que já existe. Embeddings: OpenAI <code>text-embedding-3-small</code>, porque o DeepSeek não tem API de embeddings; isso mantém o FAISS igual ao da aula 6. Plano B, se a saída estruturada falhar ou se quem roda o notebook não tiver <code>DEEPSEEK_API_KEY</code>: <code>ChatOpenAI("gpt-4o-mini")</code>, escolhido automaticamente no setup.</p></div>
+        <div class="card mvp"><span class="tag">MVP · fase 1 · decidido</span><h3>LLM e embeddings</h3><p>Chat: escolha explícita entre dois provedores, sem troca automática. <code>openai</code> (padrão): <code>ChatOpenAI("gpt-4o-mini")</code>; <code>deepseek</code>: <code>ChatDeepSeek("deepseek-v4-flash")</code>. Quem roda escolhe no setup (<code>escolher_llm("openai")</code>) ou em <code>LLM_PROVEDOR</code> no <code>.env</code>; sem a chave do provedor escolhido, o setup para com erro claro. Temperatura 0. Embeddings: OpenAI <code>text-embedding-3-small</code>, porque o DeepSeek não tem API de embeddings.</p></div>
         <div class="card mvp"><span class="tag">MVP · fase 1</span><h3>Barreira de escopo e NLU</h3><p>Como na aula 5 (seção 4.1): <code>with_structured_output(AnaliseNLU)</code> extrai intenção e entidades de cada pergunta, usando o histórico. Um <code>RunnableBranch</code> responde saudação e assunto fora do escopo com texto fixo, sem chamar o agente.</p></div>
         <div class="card mvp"><span class="tag">MVP · fase 1</span><h3>Pré-processamento (RunnableLambda)</h3><p>Limpa o ruído do stack trace, extrai a impressão digital do erro (exceção, primeiro frame do código, serviço) e mascara segredos e dados pessoais antes de enviar ao LLM. A impressão digital vira a chave de busca na memória episódica.</p></div>
         <div class="card mvp"><span class="tag">MVP · fase 1</span><h3>System message (roteador)</h3><p>Persona: SRE sênior. Tarefa: responder à pergunta do engenheiro sem inventar. Regras, como no orquestrador da aula 6: toda hipótese cita a evidência que a sustenta; métrica só vem de ferramenta; checar a ordem no tempo antes de culpar um deploy; dizer "evidência insuficiente" quando faltar dado; recusar o que está fora do escopo.</p></div>
@@ -649,7 +649,7 @@ Tela de análise ◀── lê os turnos gravados ◀───────┘</p
       <h2 class="sec">Entrega: notebook que roda sozinho</h2>
       <p class="sec-sub">O professor executa de cima para baixo com dados dummy criados no próprio notebook. O Streamlit não roda dentro de uma célula, então o notebook reproduz as duas telas em texto e tabelas. O <code>app.py</code> reaproveita as mesmas funções e é um extra para o vídeo.</p>
       <ol class="ladder" style="margin-top:12px">
-        <li><b>1 · Setup</b><span>Chaves, LLM com plano B automático, embeddings.</span></li>
+        <li><b>1 · Setup</b><span>Chaves, escolha do LLM (openai ou deepseek), embeddings.</span></li>
         <li><b>2 · Dados dummy</b><span>SQLite em memória, FAISS de runbooks, API simulada em thread.</span></li>
         <li><b>3 · Item 1</b><span>NLU, barreira, <code>RunnableBranch</code>, <code>RunnableLambda</code> + demo <code>@chain</code>.</span></li>
         <li><b>4 · Agente</b><span><code>create_agent</code>, três fontes, <code>MemorySaver</code>.</span></li>
@@ -693,7 +693,7 @@ Tela de análise ◀── lê os turnos gravados ◀───────┘</p
       <div class="n-dec">
         <h2>Decidido em 31/10</h2>
         <ul>
-          <li>Chat no DeepSeek, embeddings na OpenAI</li>
+          <li>Chat: escolha explícita entre OpenAI (padrão) e DeepSeek; embeddings na OpenAI</li>
           <li>Conversa guiada por perguntas; relatório é uma intenção</li>
           <li>Interno sempre em JSON; o engenheiro recebe <code>.md</code> em formato único só quando pede o relatório</li>
           <li>Barreira de escopo com NLU e resposta fixa</li>
@@ -808,7 +808,7 @@ Tela de análise ◀── lê os turnos gravados ◀───────┘</p
         <tr><th>Item da rubrica</th><th>Como fechamos</th><th>Evidência</th></tr>
         <tr><td>Verificação factual e lógica</td><td>Auditor da aula 7 dentro do agente: extração, fact-check contra o gabarito ou as ferramentas, NLI com falácias do domínio</td><td>Resposta certa aprovada e resposta errada reprovada</td></tr>
         <tr><td>Agente único com RAG, SQL e API</td><td><code>incident-shop</code>, GitHub, SQLite e FAISS sob um executor</td><td>Investigação completa de um cenário</td></tr>
-        <tr><td><code>create_openai_tools_agent</code> e <code>AgentExecutor</code></td><td>Executor final, com DeepSeek ou <code>gpt-4o-mini</code></td><td>Execução com trajetória</td></tr>
+        <tr><td><code>create_openai_tools_agent</code> e <code>AgentExecutor</code></td><td>Executor final, com o LLM escolhido no setup</td><td>Execução com trajetória</td></tr>
         <tr><td><code>RunnableWithMessageHistory</code></td><td>Histórico por <code>session_id</code> igual ao incidente</td><td>Sessão com vários turnos</td></tr>
         <tr><td>Interface Streamlit</td><td>Tela de uso e tela de análise</td><td>Prints e vídeo</td></tr>
         <tr><td>Avaliação no LangSmith</td><td>Dataset com os cenários e gabarito; avaliadores de resposta e de trajetória (aula 8)</td><td>Relatório do LangSmith e análise das métricas</td></tr>
@@ -819,7 +819,7 @@ Tela de análise ◀── lê os turnos gravados ◀───────┘</p
       <h2 class="sec">Entregáveis</h2>
       <div class="tbl" style="margin-top:12px"><table>
         <tr><th>Entregável</th><th>Como fechamos</th><th>Quem / quando</th></tr>
-        <tr><td>Código e notebooks</td><td>Um notebook (<code>projeto.ipynb</code>, uma seção por fase), <code>agente/</code>, <code>dados_dummy/</code>, <code>app/</code>; roda sozinho com dados dummy e plano B de LLM</td><td>Nós · até 06/11</td></tr>
+        <tr><td>Código e notebooks</td><td>Um notebook (<code>projeto.ipynb</code>, uma seção por fase), <code>agente/</code>, <code>dados_dummy/</code>, <code>app/</code>; roda sozinho com dados dummy e o LLM escolhido no setup</td><td>Nós · até 06/11</td></tr>
         <tr><td>Relatório técnico em PDF</td><td><code>nome_sobrenome_ai-agents_langchain-agents.pdf</code>: problema, decisões por fase, avaliação, limitações, evidências</td><td>Nós · 07/11</td></tr>
         <tr><td>Registro no LangSmith</td><td>Experimento com os casos do auditor e das ferramentas</td><td>Nós · 06/11 (precisa da sua conta)</td></tr>
         <tr><td>Vídeo com webcam</td><td>Interação real: decisão de usar ferramenta, chamada ao GitHub, memória entre turnos. Drive com "qualquer pessoa com o link"</td><td>Você · 08/11</td></tr>
