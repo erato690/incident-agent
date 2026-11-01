@@ -1,0 +1,10 @@
+langchain
+langchain-core
+langchain-deepseek
+langchain-openai
+openai
+pydantic>=2
+python-dotenv
+jupyter
+nbconvert
+pytest

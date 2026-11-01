@@ -38,6 +38,9 @@ JSON segue o princípio VIII da constitution.
 | `servico` | `str \| None` | do NLU ou de nome conhecido no texto |
 | `texto_limpo` | `str` | sem frames repetidos, no máximo 4.000 caracteres, já mascarado |
 
+`ErroPreprocessado` = `impressao: ImpressaoDigital` (campos `excecao`, `primeiro_frame`,
+`servico`) + `texto_limpo` (aninhado, como implementado).
+
 ## AnaliseIncidente (troca 3)
 
 | Campo | Tipo | Regra |
