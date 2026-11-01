@@ -3,7 +3,7 @@
 ## Pré-requisitos
 
 - Python 3.11+ e o repositório clonado.
-- `.env` com `DEEPSEEK_API_KEY` (ou `OPENAI_API_KEY` + `FORCAR_PLANO_B=1`). `OPENAI_API_KEY` é
+- `.env` com `OPENAI_API_KEY` (padrão) ou `LLM_PROVEDOR=deepseek` + `DEEPSEEK_API_KEY`. `OPENAI_API_KEY` é
   opcional para a moderação.
 
 ```bash

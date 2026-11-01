@@ -21,7 +21,7 @@ Interface que as fases seguintes, o `app/` e a bateria de testes usam. Tipos em
 | `mascarar` | `(texto: str) -> str` | substitui segredos e PII por `[SEGREDO]`, `[EMAIL]`, `[CPF]`, `[CARTAO]`; idempotente |
 | `preprocessar` | `(texto: str, servico: str \| None = None) -> ErroPreprocessado` | remove ruído, limita a 4.000 caracteres, extrai impressão digital |
 | `moderar` | `(texto: str) -> ResultadoModeracao` | nunca levanta exceção |
-| `escolher_llm` | `() -> BaseChatModel` | DeepSeek ou plano B conforme env; imprime o escolhido |
+| `escolher_llm` | `(provedor: str \| None = None) -> BaseChatModel` | `deepseek` ou `openai` (argumento > `LLM_PROVEDOR` > `openai`); erro se inválido ou sem chave; imprime provedor e modelo |
 
 ## Mensagens de teste (`dados_dummy/fase1_mensagens.json`)
 

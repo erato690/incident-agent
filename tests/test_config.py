@@ -6,34 +6,51 @@ from agente import config
 @pytest.fixture(autouse=True)
 def _sem_env(monkeypatch):
     monkeypatch.setattr(config, "load_dotenv", lambda *a, **k: None)
-    for v in ("DEEPSEEK_API_KEY", "OPENAI_API_KEY", "FORCAR_PLANO_B"):
+    for v in ("DEEPSEEK_API_KEY", "OPENAI_API_KEY", "LLM_PROVEDOR"):
         monkeypatch.delenv(v, raising=False)
 
 
-def test_deepseek_com_chave(monkeypatch):
+def test_padrao_openai_sem_llm_provedor(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "fake")
+    assert config.escolher_llm().model_name == "gpt-4o-mini"
+
+
+def test_env_deepseek(monkeypatch):
+    monkeypatch.setenv("LLM_PROVEDOR", "deepseek")
     monkeypatch.setenv("DEEPSEEK_API_KEY", "fake")
     assert config.escolher_llm().model_name == "deepseek-v4-flash"
 
 
-def test_plano_b_sem_chave_deepseek(monkeypatch):
-    monkeypatch.setenv("OPENAI_API_KEY", "fake")
-    assert config.escolher_llm().model_name == "gpt-4o-mini"
-
-
-def test_forcar_plano_b(monkeypatch):
+def test_argumento_sobrepoe_env(monkeypatch):
+    monkeypatch.setenv("LLM_PROVEDOR", "openai")
     monkeypatch.setenv("DEEPSEEK_API_KEY", "fake")
-    monkeypatch.setenv("OPENAI_API_KEY", "fake")
-    monkeypatch.setenv("FORCAR_PLANO_B", "1")
-    assert config.escolher_llm().model_name == "gpt-4o-mini"
+    assert config.escolher_llm("deepseek").model_name == "deepseek-v4-flash"
 
 
-def test_erro_sem_chaves():
+def test_valor_invalido_lista_opcoes():
+    with pytest.raises(ValueError, match="deepseek.*openai|openai.*deepseek"):
+        config.escolher_llm("gemini")
+
+
+def test_chave_ausente_cita_variavel():
+    with pytest.raises(RuntimeError, match="OPENAI_API_KEY"):
+        config.escolher_llm()
     with pytest.raises(RuntimeError, match="DEEPSEEK_API_KEY"):
-        config.escolher_llm()
+        config.escolher_llm("deepseek")
 
 
-def test_forcar_plano_b_sem_openai(monkeypatch):
+def test_sem_troca_automatica(monkeypatch):
     monkeypatch.setenv("DEEPSEEK_API_KEY", "fake")
-    monkeypatch.setenv("FORCAR_PLANO_B", "1")
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError, match="OPENAI_API_KEY"):
         config.escolher_llm()
+
+
+def test_normaliza_maiusculas_e_espacos(monkeypatch):
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "fake")
+    assert config.escolher_llm("DeepSeek ").model_name == "deepseek-v4-flash"
+
+
+def test_imprime_provedor_e_modelo(monkeypatch, capsys):
+    monkeypatch.setenv("OPENAI_API_KEY", "fake")
+    config.escolher_llm()
+    assert "LLM: openai · gpt-4o-mini" in capsys.readouterr().out
