@@ -6,7 +6,7 @@ from langchain_core.runnables import Runnable, RunnableBranch, RunnableLambda, R
 
 from agente.mascara import mascarar
 from agente.preprocessamento import preprocessar
-from agente.prompts import montar_nlu, prompt_investigacao
+from agente.prompts import montar_nlu, prompt_investigacao, respostas_fixas
 from agente.schemas import (
     AnaliseIncidente, ResultadoModeracao, RespostaFixa, RespostaTurno,
 )
@@ -19,8 +19,8 @@ INTENCOES_FIXAS = {
 
 
 def _texto_fixo(categoria: str) -> str:
-    """Texto simples por categoria. US2 (T019/T020) troca por PromptTemplate por categoria."""
-    return f"[resposta fixa: {categoria}]"
+    """Texto do PromptTemplate da categoria."""
+    return respostas_fixas[categoria].format()
 
 
 def _fixa(camada: int, categoria: str) -> RespostaFixa:
@@ -80,7 +80,9 @@ def montar_investigacao(llm) -> Runnable:
         | llm | parser
         | RunnableLambda(AnaliseIncidente.model_validate)
     ).with_retry(stop_after_attempt=2, wait_exponential_jitter=False)
-    falha = RunnableLambda(lambda e: f"JSON inválido da investigação: {e['excecao']}")
+    falha = RunnableLambda(
+        lambda e: f"JSON inválido da investigação: {e['excecao']} | mensagem: {e['mensagem']}"
+    )
     return nucleo.with_fallbacks([falha], exception_key="excecao")
 
 

@@ -108,3 +108,31 @@ def test_json_invalido_na_primeira_e_valido_na_segunda():
     llm = FakeListChatModel(responses=["lixo", ANALISE.model_dump_json()])
     pipe = montar_pipeline(llm, esp.moderar, nlu=esp.nlu())
     assert pipe.invoke({"mensagem": "erro"}).rota == "investigacao"
+
+
+def test_json_invalido_inclui_mensagem_mascarada_no_erro():
+    from langchain_core.language_models.fake_chat_models import FakeListChatModel
+    esp = Espioes()
+    llm = FakeListChatModel(responses=["lixo", "lixo"])
+    pipe = montar_pipeline(llm, esp.moderar, nlu=esp.nlu())
+    r = pipe.invoke({"mensagem": "falha com senha=abc12345"})
+    assert r.rota == "erro" and "JSON inválido da investigação:" in r.erro
+    assert "| mensagem: falha com senha=[SEGREDO]" in r.erro and "abc12345" not in r.erro
+
+
+@pytest.mark.parametrize("intencao", [
+    "pedido_de_acao", "tentativa_de_injecao", "gerar_relatorio", "confirmar_causa",
+    "fora_do_escopo", "conteudo_proibido",
+])
+def test_categorias_fixas_camada_2_com_texto_proprio(intencao):
+    esp = Espioes(intencao=intencao)
+    r = _pipe(esp).invoke({"mensagem": "x"})
+    assert r.rota == "fixa" and r.fixa.camada == 2 and r.fixa.categoria == intencao
+    assert not r.fixa.texto.startswith("[resposta fixa") and esp.inv_estados == []
+
+
+def test_texto_fora_do_escopo_e_fase_futura():
+    from agente.pipeline import _texto_fixo
+    assert "Só ajudo a investigar incidentes de produção." in _texto_fixo("fora_do_escopo")
+    assert "Fase 5" in _texto_fixo("gerar_relatorio")
+    assert "Fase 3" in _texto_fixo("confirmar_causa")

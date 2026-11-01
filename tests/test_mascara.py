@@ -53,3 +53,12 @@ def test_texto_tecnico_intacto(texto):
 def test_idempotente():
     t = "senha=abc12345 e ana@x.com cpf 123.456.789-09 cartao 4111 1111 1111 1111"
     assert mascarar(mascarar(t)) == mascarar(t)
+
+
+def test_epoch_ms_nao_vira_cartao():
+    assert mascarar("ts 1730419200000 no log") == "ts 1730419200000 no log"
+
+
+def test_cartao_so_com_luhn_valido():
+    assert "[CARTAO]" in mascarar("4111 1111 1111 1111")
+    assert "[CARTAO]" not in mascarar("4111 1111 1111 1112")
