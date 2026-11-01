@@ -44,11 +44,17 @@ def test_analise_exige_proximos_passos():
         _analise(proximos_passos=[])
 
 
-@pytest.mark.parametrize("n", [0, 1, 2, 4])
-def test_analise_exige_exatamente_tres_hipoteses(n):
+@pytest.mark.parametrize("n", [0, 1, 4])
+def test_analise_rejeita_menos_de_duas_ou_mais_de_tres_hipoteses(n):
     hs = [_hip(str(i), 0.1 * (i + 1)) for i in range(n)]
     with pytest.raises(ValidationError):
         _analise(hipoteses=hs)
+
+
+@pytest.mark.parametrize("n", [2, 3])
+def test_analise_aceita_duas_ou_tres_hipoteses(n):
+    hs = [_hip(str(i), 0.1 * (i + 1)) for i in range(n)]
+    assert len(_analise(hipoteses=hs).hipoteses) == n
 
 
 def test_hipoteses_ordenadas_por_confianca():

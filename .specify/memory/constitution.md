@@ -20,6 +20,9 @@ Razão: a decisão e a ação ficam com a pessoa; um agente que erra só ao suge
 ### II. Evidência antes de afirmação
 
 - Toda hipótese MUST citar a evidência que a sustenta (ferramenta, documento ou chunk).
+- A análise MUST trazer 2 ou 3 hipóteses ordenadas por confiança; a 3ª só entra se houver
+  alternativa plausível. Hipótese que o texto não sustenta MUST ser marcada com
+  `evidencia_insuficiente` e vir com o dado que a confirmaria.
 - Números de métricas MUST vir de uma chamada de ferramenta, nunca do LLM.
 - Antes de atribuir a causa a um deploy, o agente MUST verificar que o deploy aconteceu antes do
   início do sintoma.
@@ -191,6 +194,7 @@ Seis camadas, na ordem em que atuam. Cada camada entra no notebook na fase indic
   plano B só no setup, lista das trocas JSON, critério de tamanho de spec; 1.1.1 (2026-11-01)
   máscara de segredos antes da moderação (camada 1); post-mortem `.md` como único atuador, só
   no final (princípio VIII); 1.1.2 (2026-11-01) entregáveis não citam as aulas; 1.2.0 (2026-11-01) escolha
-  explícita do LLM (`LLM_PROVEDOR`, padrão `openai`) no lugar do plano B.
+  explícita do LLM (`LLM_PROVEDOR`, padrão `openai`) no lugar do plano B. 1.3.0 (2026-11-01) análise com 2 ou 3
+  hipóteses e `evidencia_insuficiente` por hipótese (princípio II).
 
-**Version**: 1.2.0 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-01
+**Version**: 1.3.0 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-01

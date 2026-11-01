@@ -199,9 +199,11 @@ item, a célula e a saída que o comprovam.
   da aplicação, serviço). O texto de entrada já chega mascarado (FR-000).
 - **FR-008**: A investigação MUST devolver uma análise do incidente validada contra um schema:
   severidade (`baixa`, `media`, `alta`, `critica`), categoria, serviço, resumo, lista de
-  hipóteses (causa, confiança de 0 a 1, evidência citada do texto) e próximos passos.
-- **FR-009**: Toda hipótese MUST citar um trecho do texto de entrada como evidência. Sem
-  evidência suficiente, a análise MUST dizer "evidência insuficiente" e propor o dado a buscar
+  2 ou 3 hipóteses ordenadas por confiança (causa, confiança de 0 a 1, evidência citada do texto,
+  `evidencia_insuficiente` por hipótese; a 3ª só com alternativa plausível) e próximos passos.
+- **FR-009**: Toda hipótese MUST citar um trecho do texto de entrada como evidência. Hipótese sem
+  sustentação no texto MUST ser marcada com `evidencia_insuficiente` e vir com o dado que a
+  confirmaria
   (constitution, princípio II).
 
 **Evidências da rubrica**

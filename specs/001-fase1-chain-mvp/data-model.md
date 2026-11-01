@@ -49,13 +49,13 @@ JSON segue o princípio VIII da constitution.
 | `categoria` | `str` | ex.: `null_pointer`, `timeout`, `capacidade`, `configuracao` |
 | `servico` | `str \| None` | |
 | `resumo` | `str` | até ~300 caracteres |
-| `hipoteses` | `list[Hipotese]` | exatamente 3, ordenadas por `confianca` decrescente |
-| `evidencia_insuficiente` | `bool` (derivado, somente leitura) | `True` quando as 3 hipóteses têm `evidencia_insuficiente=True` (princípio II); não faz parte do schema de validação |
+| `hipoteses` | `list[Hipotese]` | 2 ou 3 (a 3ª só com alternativa plausível), ordenadas por `confianca` decrescente |
+| `evidencia_insuficiente` | `bool` (derivado, somente leitura) | `True` quando todas as hipóteses têm `evidencia_insuficiente=True` (princípio II); não faz parte do schema de validação |
 | `proximos_passos` | `list[str]` | ao menos 1 item |
 
 **Hipotese**: `causa: str`, `confianca: float` (0 a 1), `evidencia: str` (trecho literal do
 texto de entrada; validação: não vazio), `evidencia_insuficiente: bool = False` (`True` quando o
-texto não sustenta bem aquela hipótese; o dado a buscar vai em `proximos_passos`).
+texto não sustenta bem aquela hipótese; o dado que a confirmaria vai em `proximos_passos`).
 
 ## RespostaFixa
 

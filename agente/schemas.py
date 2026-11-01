@@ -65,8 +65,8 @@ class AnaliseIncidente(BaseModel):
     servico: str | None = None
     resumo: str
     hipoteses: list[Hipotese] = Field(
-        min_length=3, max_length=3,
-        description="Exatamente 3 hipóteses, da mais para a menos provável")
+        min_length=2, max_length=3,
+        description="2 ou 3 hipóteses, da mais para a menos provável")
     proximos_passos: list[str] = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -77,7 +77,7 @@ class AnaliseIncidente(BaseModel):
     @computed_field  # só na saída; fora do schema de validação (format_instructions)
     @property
     def evidencia_insuficiente(self) -> bool:
-        """True quando nenhuma das 3 hipóteses tem evidência suficiente."""
+        """True quando nenhuma das hipóteses tem evidência suficiente."""
         return all(h.evidencia_insuficiente for h in self.hipoteses)
 
 
