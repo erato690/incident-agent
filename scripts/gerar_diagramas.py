@@ -11,13 +11,28 @@ from matplotlib.lines import Line2D
 SAIDA = Path(__file__).resolve().parent.parent / "docs" / "img"
 TXT = "#1f2933"
 
-COR_PESSOA = ("#dbe7f5", "#2b5d9b")
-COR_SISTEMA = ("#cfe3f7", "#1f4e8c")
-COR_SEM_LLM = ("#d6ecd9", "#3b7d4a")
-COR_LLM = ("#e4d8f3", "#6b46a8")
-COR_EXTERNO = ("#e3e5e8", "#5a636e")
-COR_FIXA = ("#fbe3b8", "#b9770e")
-COR_FASE2 = ("#f4f5f6", "#a3aab2")
+# Paleta única dos dois diagramas: papel -> (fundo claro, borda/cor forte).
+# Cores fortes validadas com o validador de paleta da skill dataviz (modo claro, fundo branco,
+# todos os pares): pessoa, nosso sistema, componente com modelo de linguagem e respostas fixas
+# passam em faixa de luminosidade, croma, separação para daltonismo (pior ΔE 8,1), separação
+# para visão normal (pior ΔE 21,5) e contraste >= 3:1. Externos ficam em cinza neutro (convenção
+# C4) e o futuro em cinza mais claro com borda tracejada (codificação secundária).
+# O fundo de cada caixa é a cor forte diluída em branco; o texto é sempre escuro (TXT).
+PALETA = {
+    "pessoa":  ("#f3dbea", "#b0368a"),   # magenta-ameixa
+    "sistema": ("#d9e7f8", "#2a78d6"),   # azul: nosso sistema e nossos componentes sem modelo
+    "llm":     ("#d5eee4", "#159a6b"),   # verde-azulado: nosso componente que chama o modelo
+    "fixa":    ("#fbe5d4", "#e8701f"),   # laranja: respostas fixas
+    "externo": ("#e8e9ea", "#5f6368"),   # cinza: serviço externo da Fase 1
+    "futuro":  ("#f6f7f8", "#9aa0a6"),   # cinza claro + tracejado: serviço externo futuro
+}
+COR_PESSOA = PALETA["pessoa"]
+COR_SISTEMA = PALETA["sistema"]
+COR_SEM_LLM = PALETA["sistema"]
+COR_LLM = PALETA["llm"]
+COR_EXTERNO = PALETA["externo"]
+COR_FIXA = PALETA["fixa"]
+COR_FASE2 = PALETA["futuro"]
 
 
 def nova_figura(larg, alt, xmax, ymax, ymin=0):
@@ -76,35 +91,40 @@ def legenda(ax, itens, x, y, larg_col, ncol=1, titulo="Legenda"):
 
 
 def contexto():
-    fig, ax = nova_figura(18, 11, 100, 58, -10)
-    ax.text(50, 56.5, "incident-agent: diagrama de contexto", ha="center", va="top",
+    fig, ax = nova_figura(18, 8, 100, 47, 1)
+    ax.text(50, 46, "incident-agent: diagrama de contexto", ha="center", va="top",
             fontsize=15, fontweight="bold", color=TXT)
-    caixa(ax, 2, 25, 19, 12, COR_PESSOA, "Engenheiro de plantão", "[pessoa]\ninvestiga o incidente")
-    caixa(ax, 33, 12, 27, 36, COR_SISTEMA, "incident-agent",
-          "(agente investigador\nde incidentes)\n\n[sistema]\nmascara, modera, entende a\nintenção e investiga a causa")
-    seta(ax, (21, 33), (33, 33), "pergunta +\nhistórico")
-    seta(ax, (33, 29), (21, 29), "resposta fixa ou\nanálise JSON", pos="abaixo")
-    ext = [
-        (42, "OpenAI Moderation API\n(omni-moderation-latest)", COR_EXTERNO, False,
-         "texto mascarado", "pontuação por\ncategoria"),
-        (32, "API de chat: OpenAI (gpt-4o-mini)\nou DeepSeek (deepseek-v4-flash)", COR_EXTERNO, False,
-         "prompt", "análise em JSON"),
-        (22, "GitHub API [Fase 2]", COR_FASE2, True, "consulta de\ncódigo (futuro)", "código e\ncommits"),
-        (12, "incident-shop (LOJA_URL)\n[Fase 2]", COR_FASE2, True, "consulta de\nestado (futuro)", "dados da loja"),
-    ]
-    for yc, nome, cores, fase2, ida, volta in ext:
-        caixa(ax, 76, yc - 3.5, 22, 7, cores, nome, tracejada=fase2,
-              cor_txt="#6b7280" if fase2 else TXT)
-        cor = "#8a929b" if fase2 else "#374151"
-        seta(ax, (60, yc + 1.4), (76, yc + 1.4), ida, externa=True, cor=cor, tam=8)
-        seta(ax, (76, yc - 1.4), (60, yc - 1.4), volta, externa=True, cor=cor, pos="abaixo", tam=8)
+    # pessoa e sistema na mesma faixa (centro y=32); externos da Fase 1 à direita, alinhados
+    # com o sistema; externos futuros abaixo do sistema, com setas verticais.
+    caixa(ax, 2, 27, 19, 10.5, COR_PESSOA, "Engenheiro de plantão", "[pessoa]\ninvestiga o incidente")
+    caixa(ax, 33, 27, 27, 10.5, COR_SISTEMA, "incident-agent",
+          "[sistema] agente investigador de incidentes\nmascara, modera, entende a intenção\ne investiga a causa")
+    seta(ax, (21, 33.5), (33, 33.5), "pergunta +\nhistórico")
+    seta(ax, (33, 30.5), (21, 30.5), "resposta fixa ou\nanálise JSON", pos="abaixo")
+    for yc, nome, ida, volta in [
+        (35.5, "OpenAI Moderation API\n(omni-moderation-latest)", "texto mascarado", "pontuação por categoria"),
+        (28.5, "API de chat: OpenAI (gpt-4o-mini)\nou DeepSeek (deepseek-v4-flash)", "prompt", "análise em JSON"),
+    ]:
+        caixa(ax, 76, yc - 3, 22, 6, COR_EXTERNO, nome)
+        seta(ax, (60, yc + 1.1), (76, yc + 1.1), ida, externa=True, tam=8)
+        seta(ax, (76, yc - 1.1), (60, yc - 1.1), volta, externa=True, pos="abaixo", tam=8)
+    cinza = PALETA["futuro"][1]
+    for xc, nome, ida, volta in [
+        (37.5, "GitHub API\n[Fase 2]", "consulta de\ncódigo", "código e\ncommits"),
+        (55.5, "incident-shop (LOJA_URL)\n[Fase 2]", "consulta de\nestado", "dados da\nloja"),
+    ]:
+        caixa(ax, xc - 8.5, 3, 17, 7, COR_FASE2, nome, tracejada=True, cor_txt="#4b5563")
+        seta(ax, (xc - 1.2, 27), (xc - 1.2, 10), ida, externa=True, cor=cinza, pos="meio",
+             ha="right", tam=8, dx=-0.6)
+        seta(ax, (xc + 1.2, 10), (xc + 1.2, 27), volta, externa=True, cor=cinza, pos="meio",
+             ha="left", tam=8, dx=0.6)
     legenda(ax, [
         ("pessoa", COR_PESSOA, None), ("sistema (nosso)", COR_SISTEMA, None),
         ("serviço externo da Fase 1", COR_EXTERNO, None),
         ("serviço externo da Fase 2 (futuro, borda tracejada)", COR_FASE2, True),
         ("seta cheia: interação direta do usuário", None, None),
         ("seta tracejada: chamada externa pela rede", None, True),
-    ], 2, 9, 0, ncol=1)
+    ], 68, 20, 0, ncol=1)
     fig.savefig(SAIDA / "contexto.png", bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
