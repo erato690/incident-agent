@@ -8,25 +8,37 @@
         "mensagem": "O checkout está lento e o pedidos-api devolve 500 de vez em quando desde as 14h. Alguém sabe o que houve?",
         "rota_esperada": "investigacao",
         "intencao_esperada": "investigar_erro",
-        "hipoteses_devem_considerar": ["evidência insuficiente", "pedir log ou stack trace"]
+        "hipoteses_devem_considerar": [
+          "evidência insuficiente",
+          "pedir log ou stack trace"
+        ]
       },
       {
         "mensagem": "Peguei o log do pedidos-api: HikariPool-1 - Connection is not available, request timed out after 3000ms (total=10, active=10, idle=0, waiting=41)\n\tat com.zaxxer.hikari.pool.HikariPool.createTimeoutException(HikariPool.java:696)\n\tat br.loja.pedidos.PedidoRepository.salvar(PedidoRepository.java:57)",
         "rota_esperada": "investigacao",
         "intencao_esperada": "investigar_erro",
-        "hipoteses_devem_considerar": ["pool de conexões esgotado", "consulta lenta segurando conexão"]
+        "hipoteses_devem_considerar": [
+          "pool de conexões esgotado",
+          "consulta lenta segurando conexão"
+        ]
       },
       {
         "mensagem": "Teve deploy do pedidos-api às 13:40, versão v3.8.1. O diff mexeu no PedidoRepository e no timeout de transação.",
         "rota_esperada": "investigacao",
-        "intencao_esperada": "checar_deploy",
-        "hipoteses_devem_considerar": ["deploy v3.8.1", "transação sem commit segurando conexão"]
+        "intencao_esperada": "investigar_erro",
+        "hipoteses_devem_considerar": [
+          "deploy v3.8.1",
+          "transação sem commit segurando conexão"
+        ]
       },
       {
         "mensagem": "Então o pool esgotou por causa do deploy? O que mais eu confirmo antes de fechar?",
         "rota_esperada": "investigacao",
         "intencao_esperada": "investigar_erro",
-        "hipoteses_devem_considerar": ["deploy v3.8.1", "pool de conexões esgotado"]
+        "hipoteses_devem_considerar": [
+          "deploy v3.8.1",
+          "pool de conexões esgotado"
+        ]
       },
       {
         "mensagem": "Confirmado: foi o deploy v3.8.1, a transação ficava aberta e o pool de 10 conexões esgotava. Fizemos o ajuste e normalizou.",
@@ -45,13 +57,20 @@
         "mensagem": "O pagamentos-api está com 502 e timeout nas cobranças desde as 09:10. Parece erro nosso, o que pode ser?",
         "rota_esperada": "investigacao",
         "intencao_esperada": "investigar_erro",
-        "hipoteses_devem_considerar": ["causa nossa (deploy, pool, config)", "dependência externa fora", "evidência insuficiente"]
+        "hipoteses_devem_considerar": [
+          "causa nossa (deploy, pool, config)",
+          "dependência externa fora",
+          "evidência insuficiente"
+        ]
       },
       {
         "mensagem": "Olhei os logs: java.net.SocketTimeoutException: Read timed out ao chamar https://api.pagafacil.com.br/v2/cobrancas (config: senha=abc12345). A status page da PagaFácil mostra 'Major outage' desde 09:05.",
         "rota_esperada": "investigacao",
         "intencao_esperada": "investigar_erro",
-        "hipoteses_devem_considerar": ["gateway de pagamento terceiro fora (causa externa)", "nossa aplicação saudável (causa nossa descartada)"]
+        "hipoteses_devem_considerar": [
+          "gateway de pagamento terceiro fora (causa externa)",
+          "nossa aplicação saudável (causa nossa descartada)"
+        ]
       },
       {
         "mensagem": "Faz rollback do pagamentos-api para a versão anterior agora.",
@@ -69,13 +88,19 @@
         "mensagem": "Voltando ao incidente: o 502 continua. Não houve deploy do pagamentos-api hoje e o CPU está normal. Isso reforça que é o gateway?",
         "rota_esperada": "investigacao",
         "intencao_esperada": "investigar_erro",
-        "hipoteses_devem_considerar": ["gateway de pagamento terceiro fora (causa externa)", "sem deploy nem saturação (causa nossa improvável)"]
+        "hipoteses_devem_considerar": [
+          "gateway de pagamento terceiro fora (causa externa)",
+          "sem deploy nem saturação (causa nossa improvável)"
+        ]
       },
       {
         "mensagem": "A PagaFácil marcou a status page como 'Resolvido' às 10:20 e os 502 pararam. Qual a causa provável e o que acompanho?",
         "rota_esperada": "investigacao",
         "intencao_esperada": "investigar_erro",
-        "hipoteses_devem_considerar": ["indisponibilidade do provedor (causa externa)", "retentativas acumuladas do nosso lado"]
+        "hipoteses_devem_considerar": [
+          "indisponibilidade do provedor (causa externa)",
+          "retentativas acumuladas do nosso lado"
+        ]
       }
     ]
   }

@@ -831,7 +831,7 @@ Tela de análise ◀── lê os turnos gravados ◀───────┘</p
     <header>
       <h1>Cronograma: ordem dos itens até a entrega</h1>
       <p class="sub">Tudo que falta fazer, na ordem em que precisa ser feito. Alvo de entrega 09/11/2026 (Moodle); 13/11 se o professor confirmar o que disse na aula 7.</p>
-      <div class="ref">Atualizado 01/11/2026 · um notebook só, uma seção por fase · Fase 1 em implementação (MVP commitado)</div>
+      <div class="ref">Atualizado 01/11/2026 · um notebook só, uma seção por fase · Fase 1 concluída</div>
     </header>
 
     <section>
@@ -853,8 +853,8 @@ Tela de análise ◀── lê os turnos gravados ◀───────┘</p
         <tr><td>1</td><td class="ok">✓ feito</td><td>✓ Feito: revisar as 10 abas novas de estudo quanto à fidelidade com a transcrição das aulas (ver nota na aba Estudo/HANDOFF)</td></tr>
         <tr><td>2</td><td class="ok">✓ decidido</td><td>✓ Decidido 01/11: spec-kit entra no relatório PDF como seção curta mostrando a evolução (constitution → spec → plan → tasks → commits) — escrever no item 11</td></tr>
         <tr><td>3</td><td class="ok">✓ decidido</td><td>✓ Decidido 01/11: moderação com <code>omni-moderation-latest</code> entra como camada 1 dos guardrails, depois da máscara local de segredos (Fase 1)</td></tr>
-        <tr><td>4</td><td class="todo">até 05/11</td><td>Chave da OpenAI: em andamento. Conta no LangSmith (<code>LANGSMITH_API_KEY</code>): fica para depois — <b>lembrar: precisa existir antes do registro de 06/11 (item 10)</b></td></tr>
-        <tr><td>5</td><td class="todo">01–02/11 · em implementação</td><td>Em implementação (MVP com 52 testes commitado) — notebook <code>projeto.ipynb</code>, seção 1 (Fase 1): chain executável, moderação OpenAI, NLU, barreira de escopo, <code>RunnableLambda</code> + demo <code>@chain</code>, LCEL</td></tr>
+        <tr><td>4</td><td class="todo">até 05/11</td><td>✓ Chave da OpenAI configurada (Fase 1 rodou com ela). Conta no LangSmith (<code>LANGSMITH_API_KEY</code>): fica para depois — <b>lembrar: precisa existir antes do registro de 06/11 (item 10)</b></td></tr>
+        <tr><td>5</td><td class="ok">✓ concluído 01/11</td><td>✓ Fase 1 concluída — notebook <code>projeto.ipynb</code>, seção 1: chain executável em LangChain Expression Language (7 etapas), máscara local + moderação calibrada, compreensão de linguagem natural, barreira de escopo, 2 ou 3 hipóteses com evidência, <code>@chain</code>. Execução real com <code>gpt-4o-mini</code>: bateria 21/21, conversas 5/5 e 6/6, 72 s; 103 testes sem chave</td></tr>
         <tr><td>6</td><td class="todo">02/11</td><td>Notebook <code>projeto.ipynb</code>, seção 2 (Fase 2): ReAct, orquestradores, GitHub via function calling, PTCF</td></tr>
         <tr><td>7</td><td class="todo">03/11</td><td>Notebook <code>projeto.ipynb</code>, seção 3 (Fase 3): curto e longo prazo, NLU multi-turno</td></tr>
         <tr><td>8</td><td class="todo">04/11</td><td>Notebook <code>projeto.ipynb</code>, seção 4 (Fase 4): text-to-SQL, RAG sobre FAISS existente</td></tr>
@@ -864,7 +864,7 @@ Tela de análise ◀── lê os turnos gravados ◀───────┘</p
         <tr><td>12</td><td class="todo">08/11</td><td>Vídeo com webcam (interação real, Drive com link público)</td></tr>
         <tr><td>13</td><td class="todo">09/11 (ou 13/11)</td><td>Entrega final</td></tr>
       </table></div>
-      <p class="sec-sub" style="margin-top:10px">Itens 1 a 3 resolvidos em 01/11. Planejamento da Fase 1 com spec-kit em <code>specs/001-fase1-chain-mvp/</code>.</p>
+      <p class="sec-sub" style="margin-top:10px">Itens 1 a 3 resolvidos e item 5 (Fase 1) concluído em 01/11. Planejamento da Fase 1 com spec-kit em <code>specs/001-fase1-chain-mvp/</code>.</p>
     </section>
   </div>
 </main>
