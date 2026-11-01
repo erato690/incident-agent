@@ -93,24 +93,69 @@ def montar_investigacao(llm) -> Runnable:
     return nucleo.with_fallbacks([falha], exception_key="excecao")
 
 
+def _ja_respondido(estado: dict) -> bool:
+    """True quando algum passo anterior já deixou a resposta pronta em estado["resposta"]."""
+    return estado.get("resposta") is not None
+
+
+def _se_pendente(runnable: Runnable) -> Runnable:
+    """Roda o passo só se ainda não há resposta; com resposta pronta, o estado passa direto."""
+    return RunnableBranch((_ja_respondido, RunnablePassthrough()), runnable)
+
+
+def _marcar(decide: Callable[[dict], RespostaTurno | None]) -> Runnable:
+    """Acrescenta a chave "resposta" (RespostaTurno ou None) sem perder as outras."""
+    return RunnablePassthrough.assign(resposta=RunnableLambda(decide))
+
+
+def _decide_vazia(estado: dict) -> RespostaTurno | None:
+    return None if estado["mensagem"].strip() else _resp_vazia(estado)
+
+
+def _decide_moderacao(estado: dict) -> RespostaTurno | None:
+    return _resp_sinalizada(estado) if estado["moderacao"].status == "sinalizada" else None
+
+
+def _decide_roteador(estado: dict) -> RespostaTurno | None:
+    return _resp_fixa_nlu(estado) if estado["nlu"].intencao in INTENCOES_FIXAS else None
+
+
+def montar_etapas(
+    llm, moderar: Callable[[str], ResultadoModeracao],
+    nlu: Runnable | None = None, investigacao: Runnable | None = None,
+) -> dict[str, Runnable]:
+    """Etapas do pipeline na ordem em que a mensagem passa (cada uma é um Runnable)."""
+    nlu = nlu or montar_nlu(llm)
+    investigacao = investigacao or montar_investigacao(llm)
+    return {
+        # entra {mensagem, historico} -> sai {mensagem, historico} com segredos mascarados
+        "passo1_mascara": RunnableLambda(_mascarar_entrada),
+        # entra estado mascarado -> sai estado + resposta (fixa "vazia" ou None)
+        "passo2_vazia": _marcar(_decide_vazia),
+        # entra estado sem resposta -> sai estado + moderacao + resposta (fixa se sinalizada)
+        "passo3_moderacao": _se_pendente(
+            RunnablePassthrough.assign(moderacao=lambda e: moderar(e["mensagem"]))
+            | _marcar(_decide_moderacao)),
+        # entra estado sem resposta -> sai estado + nlu (AnaliseNLU)
+        "passo4_nlu": _se_pendente(RunnablePassthrough.assign(nlu=nlu)),
+        # entra estado + nlu -> sai estado + resposta (fixa se a intenção for de resposta fixa)
+        "passo5_roteador": _se_pendente(_marcar(_decide_roteador)),
+        # entra estado sem resposta -> sai estado + resposta (investigação ou erro)
+        "passo6_investigacao": _se_pendente(
+            RunnablePassthrough.assign(resultado=investigacao) | _marcar(_resp_investigacao)),
+        # entra estado com resposta -> sai só o RespostaTurno
+        "passo7_resposta": RunnableLambda(lambda estado: estado["resposta"]),
+    }
+
+
 def montar_pipeline(
     llm, moderar: Callable[[str], ResultadoModeracao],
     nlu: Runnable | None = None, investigacao: Runnable | None = None,
 ) -> Runnable:
     """Entrada {"mensagem", "historico"} -> RespostaTurno. nlu/investigacao injetáveis."""
-    nlu = nlu or montar_nlu(llm)
-    investigacao = investigacao or montar_investigacao(llm)
-    investigar = RunnablePassthrough.assign(resultado=investigacao) | RunnableLambda(_resp_investigacao)
-    apos_nlu = RunnableBranch(
-        (lambda e: e["nlu"].intencao in INTENCOES_FIXAS, RunnableLambda(_resp_fixa_nlu)),
-        investigar,
-    )
-    apos_moderacao = RunnableBranch(
-        (lambda e: e["moderacao"].status == "sinalizada", RunnableLambda(_resp_sinalizada)),
-        RunnablePassthrough.assign(nlu=nlu) | apos_nlu,
-    )
-    moderada = RunnablePassthrough.assign(moderacao=lambda e: moderar(e["mensagem"])) | apos_moderacao
-    return RunnableLambda(_mascarar_entrada) | RunnableBranch(
-        (lambda e: not e["mensagem"].strip(), RunnableLambda(_resp_vazia)),
-        moderada,
+    (passo1_mascara, passo2_vazia, passo3_moderacao, passo4_nlu, passo5_roteador,
+     passo6_investigacao, passo7_resposta) = montar_etapas(llm, moderar, nlu, investigacao).values()
+    return (
+        passo1_mascara | passo2_vazia | passo3_moderacao | passo4_nlu
+        | passo5_roteador | passo6_investigacao | passo7_resposta
     )
