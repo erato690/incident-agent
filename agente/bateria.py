@@ -6,6 +6,8 @@ Reaproveitável nas próximas fases: cada mensagem do JSON traz `id`, `grupo`, `
 from html import escape
 
 from agente.mascara import mascarar
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+
 from agente.schemas import RespostaTurno
 
 # Chave do JSON -> subtítulo exibido (a ordem define a ordem dos grupos no relatório).
@@ -45,7 +47,7 @@ def detalhe_html(m: dict, r: RespostaTurno) -> str:
     itens = [
         f"<b>Mensagem enviada (mascarada):</b> <code>{escape(mascarar(m['mensagem'])) or '(vazia)'}</code>",
         f"<b>Moderação:</b> {escape(_moderacao(r))}" + (f" · scores: {escape(scores)}" if scores else ""),
-        f"<b>Intenção do NLU:</b> {escape(_intencao(r))}",
+        f"<b>Intenção (etapa de compreensão):</b> {escape(_intencao(r))}",
     ]
     if r.analise:
         a = r.analise
@@ -56,6 +58,9 @@ def detalhe_html(m: dict, r: RespostaTurno) -> str:
             + (" <i>(evidência insuficiente)</i>" if h.evidencia_insuficiente else "") + "</li>"
             for h in a.hipoteses)
         itens.append(f"<b>Hipóteses:</b><ol>{hips}</ol>")
+        if m.get("hipoteses_devem_considerar"):
+            deve = "; ".join(m["hipoteses_devem_considerar"])
+            itens.append(f"<b>Deve considerar:</b> {escape(deve)}")
     elif r.fixa:
         itens.append(f"<b>Resposta fixa (camada {r.fixa.camada}):</b> {escape(r.fixa.texto)}")
     elif r.erro:
@@ -87,3 +92,33 @@ def exibir_bateria(mensagens: list[dict], resultados: list[RespostaTurno], titul
         ok = sum(r.rota == m["rota_esperada"] for m, r in do_grupo)
         display(Markdown(f"#### {GRUPOS.get(chave, chave)}: {ok}/{len(do_grupo)}"))
         display(HTML("".join(detalhe_html(m, r) for m, r in do_grupo)))
+
+
+def texto_resposta(r: RespostaTurno) -> str:
+    """Texto curto da resposta do agente, para entrar no histórico da conversa."""
+    if r.fixa:
+        return r.fixa.texto
+    if r.analise:
+        hips = [f"- {h.causa} ({h.confianca:.2f})" for h in r.analise.hipoteses]
+        return "\n".join([r.analise.resumo, *hips])
+    return r.erro or ""
+
+
+def rodar_conversa(pipeline, conversa: dict) -> list[RespostaTurno]:
+    """Roda os turnos em ordem, acumulando o histórico (pergunta e resposta de cada turno)."""
+    historico: list[BaseMessage] = []
+    resultados = []
+    for turno in conversa["turnos"]:
+        r = pipeline.invoke({"mensagem": turno["mensagem"], "historico": list(historico)})
+        historico += [HumanMessage(turno["mensagem"]), AIMessage(texto_resposta(r))]
+        resultados.append(r)
+    return resultados
+
+
+def exibir_conversa(conversa: dict, resultados: list[RespostaTurno]) -> None:
+    """Mostra uma conversa com a mesma tabela e detalhe da bateria, um item por turno."""
+    mensagens = [
+        {**t, "id": f"{conversa['id']} · turno {i}", "grupo": conversa["titulo"]}
+        for i, t in enumerate(conversa["turnos"], 1)
+    ]
+    exibir_bateria(mensagens, resultados, titulo=conversa["titulo"])
