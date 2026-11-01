@@ -217,9 +217,9 @@ ol.passos b { color: var(--fg); font-weight: 500; }
           <path class="ln-m" d="M487 385 V408 M600 385 V408 M710 385 V408" marker-end="url(#ar-m3)"/>
           <rect class="box-act" x="800" y="110" width="140" height="120" rx="6"/>
           <text class="t-title" x="870" y="140" text-anchor="middle">Atuador</text>
-          <text class="t-sub" x="870" y="164" text-anchor="middle">resposta com</text>
-          <text class="t-sub" x="870" y="181" text-anchor="middle">evidência citada</text>
-          <text class="t-sub" x="870" y="204" text-anchor="middle">ou relatório .md</text>
+          <text class="t-sub" x="870" y="164" text-anchor="middle">post-mortem .md</text>
+          <text class="t-sub" x="870" y="181" text-anchor="middle">só no final,</text>
+          <text class="t-sub" x="870" y="204" text-anchor="middle">quando pedido</text>
           <path class="ln" d="M660 165 H674" marker-end="url(#ar3)"/>
           <rect class="box-aud" x="676" y="140" width="88" height="50" rx="5"/>
           <text class="t-title" x="730" y="162" text-anchor="middle">Auditor</text>
@@ -239,7 +239,7 @@ ol.passos b { color: var(--fg); font-weight: 500; }
           <circle class="badge" cx="814" cy="124" r="10"/><text class="badge-t" x="814" y="128" text-anchor="middle">7</text>
         </svg>
       </div>
-      <figcaption>Os quatro elementos da aula aparecem aqui: ambiente (produção), sensores (ferramentas de leitura), cognição (LLM com system message) e atuador (resposta ou relatório). Antes da cognição, a barreira de escopo classifica a pergunta e barra saudações e assuntos alheios. A memória segue o CoALA: trabalho no curto prazo; episódica, semântica e procedural no longo prazo. O agente lê as memórias e grava nelas só o que o engenheiro confirmou. A pessoa fecha o ciclo com a próxima pergunta; não há ação automática sobre o sistema.</figcaption>
+      <figcaption>Os quatro elementos da aula aparecem aqui: ambiente (produção), sensores (ferramentas de leitura), cognição (LLM com system message) e atuador (post-mortem <code>.md</code>, só no final). Antes da cognição, a barreira de escopo classifica a pergunta e barra saudações e assuntos alheios. A memória segue o CoALA: trabalho no curto prazo; episódica, semântica e procedural no longo prazo. O agente lê as memórias e grava nelas só o que o engenheiro confirmou. A pessoa fecha o ciclo com a próxima pergunta; não há ação automática sobre o sistema.</figcaption>
       <ol class="passos" aria-label="Etapas de uma pergunta, na ordem">
         <li><b>Moderação</b>: endpoint gratuito da OpenAI; mensagem sinalizada recebe resposta fixa</li>
         <li><b>Barreira + NLU</b>: intenção e entidades com o histórico; saudação ou fora do escopo recebe resposta fixa</li>
@@ -247,7 +247,7 @@ ol.passos b { color: var(--fg); font-weight: 500; }
         <li><b>Ferramentas</b>: só leitura em logs, métricas, deploys, runbooks e GitHub</li>
         <li><b>Memória</b>: lê curto e longo prazo; grava só o que o engenheiro confirmou</li>
         <li><b>Auditor</b> (fase 5): confere a resposta contra a evidência antes de entregar</li>
-        <li><b>Resposta ou relatório</b>: evidência citada a cada turno; <code>.md</code> só quando pedido</li>
+        <li><b>Post-mortem .md, só no final</b>: único atuador; sai quando o engenheiro pede ao fim da investigação (sem causa confirmada, marcado "causa não confirmada"). Nos turnos, a resposta com evidência volta direto ao engenheiro</li>
       </ol>
     </figure>
 
@@ -342,7 +342,7 @@ ol.passos b { color: var(--fg); font-weight: 500; }
         <tr><td><code>checar_metrica</code></td><td>"e o banco?"</td><td>Herda serviço e janela do turno anterior e consulta a métrica</td></tr>
         <tr><td><code>comparar_incidente</code></td><td>"já aconteceu antes?"</td><td>Busca na memória episódica pela impressão digital do erro</td></tr>
         <tr><td><code>pedir_runbook</code></td><td>"como resolve pool esgotado?"</td><td>Busca no FAISS e cita documento e chunk</td></tr>
-        <tr><td><code>gerar_relatorio</code></td><td>"fecha o relatório"</td><td>Gera o JSON do schema com tudo que a conversa levantou e renderiza em <code>.md</code> no formato único do relatório (template em código, sem LLM)</td></tr>
+        <tr><td><code>gerar_relatorio</code></td><td>"fecha o relatório"</td><td>Ao fim da investigação, gera o JSON do schema e renderiza o post-mortem <code>.md</code> (template em código, sem LLM): resumo, impacto e severidade, linha do tempo, causa raiz e evidências, correção sugerida, ações preventivas, lições aprendidas. Sem causa confirmada, sai marcado "causa não confirmada"</td></tr>
         <tr><td><code>confirmar_causa</code></td><td>"era o pool mesmo, subimos para 20"</td><td>Grava o incidente na memória episódica e o fato novo na semântica</td></tr>
         <tr><td><code>saudacao</code></td><td>"bom dia", "valeu"</td><td>Resposta fixa, sem chamar o agente</td></tr>
         <tr><td><code>fora_do_escopo</code></td><td>"qual o melhor time do Brasil?", "me conta uma piada"</td><td>Resposta fixa que explica o que o agente faz, sem chamar o agente</td></tr>
