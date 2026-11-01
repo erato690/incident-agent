@@ -8,7 +8,7 @@ Em planejamento. A maior parte do código (notebook, agente, app Streamlit) aind
 
 ## Repositórios relacionados
 
-- [`incident-shop`](https://github.com/erato690/incident-shop) — API FastAPI que simula a loja e os cenários de incidente usados pelo agente.
+- [`incident-shop`](https://github.com/erato690/incident-shop) — interface de programação (API) FastAPI que simula a loja e os cenários de incidente usados pelo agente.
 - [`agentes-cognitivos`](https://github.com/erato690/agentes-cognitivos) — material de estudo do curso e histórico de decisões do projeto.
 
 ## Arquitetura
@@ -16,9 +16,9 @@ Em planejamento. A maior parte do código (notebook, agente, app Streamlit) aind
 - **Barreira de escopo**: o agente só discute o que está no domínio de investigação de incidentes.
 - **Memória**: aprende só com fatos confirmados pelo humano; não grava nada sozinho.
 - **Auditor de verificação cognitiva**: valida se as conclusões do agente são consistentes com as evidências.
-- **Relatório**: gerado em `.md` só quando o engenheiro pede; internamente tudo é JSON.
+- **Relatório**: gerado em `.md` só quando o engenheiro pede; internamente tudo é JSON (formato de dados em texto).
 - **Sem execução de ações**: o agente não executa correções, apenas as sugere.
-- **LLM de chat**: escolha explícita entre DeepSeek (`ChatDeepSeek`) e OpenAI (`ChatOpenAI("gpt-4o-mini")`) por `LLM_PROVEDOR` (padrão `openai`), sem troca automática. Embeddings: OpenAI `text-embedding-3-small`.
+- **Modelo de linguagem (LLM) de chat**: escolha explícita entre DeepSeek (`ChatDeepSeek`) e OpenAI (`ChatOpenAI("gpt-4o-mini")`) por `LLM_PROVEDOR` (padrão `openai`), sem troca automática. Embeddings: OpenAI `text-embedding-3-small`.
 - **Fonte de dados**: lê a variável `LOJA_URL` (API do repositório irmão `incident-shop`, ao vivo); sem ela, lê respostas gravadas em `dados_dummy/<cenario>.json`.
 - **Ferramenta real de API externa**: GitHub, função `comparar_versoes` (compara duas tags/commits do repositório `incident-shop` via API REST real do GitHub, funciona sem token).
 - **Telas (futuro, Streamlit)**: uso (engenheiro faz perguntas) e análise (trajetória + auditor).
