@@ -19,8 +19,9 @@ class EntradaTurno(BaseModel):
 
 
 class ResultadoModeracao(BaseModel):
-    status: Literal["ok", "sinalizada", "pulada"]
+    status: Literal["ok", "aviso", "sinalizada", "pulada"]
     categorias: list[str] = Field(default_factory=list)
+    scores: dict[str, float] = Field(default_factory=dict)
     motivo: str | None = None
 
 

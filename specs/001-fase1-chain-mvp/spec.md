@@ -111,7 +111,8 @@ fora do escopo, pedido de ação, injeção, conteúdo impróprio) e conferir a 
 5. **Given** uma mensagem que a moderação sinaliza, **When** enviada, **Then** a resposta é
    fixa e nem o NLU nem o modelo de análise são chamados.
 6. **Given** a mensagem "o container levou OOMKilled", **When** enviada, **Then** ela passa pela
-   moderação e pelo NLU e segue para investigação.
+   moderação e pelo NLU e segue para investigação; se a moderação marcar `violence` abaixo do
+   limiar (falso positivo de jargão), o status é `aviso` e o fluxo continua.
 7. **Given** "bom dia, o pedidos-api caiu", **When** enviada, **Then** segue para investigação,
    porque contém um pedido real.
 
@@ -175,8 +176,13 @@ item, a célula e a saída que o comprovam.
 - **FR-000**: Toda mensagem MUST ter segredos e dados pessoais (senhas, tokens e chaves,
   e-mails, CPF, números de cartão) mascarados localmente, sem LLM, antes de qualquer envio a
   serviço externo (moderação ou LLM).
-- **FR-001**: Toda mensagem mascarada MUST passar pela moderação antes de qualquer outra etapa. Mensagem sinalizada MUST
-  receber resposta fixa sem chamar o NLU nem o modelo de análise.
+- **FR-001**: Toda mensagem mascarada MUST passar pela moderação antes de qualquer outra etapa. A decisão MUST usar
+  `category_scores` com limiar por categoria (`LIMIARES` em `agente/moderacao.py`), não o
+  `flagged`: score acima do limiar vira `sinalizada` e MUST receber resposta fixa sem chamar o NLU
+  nem o modelo de análise; marcada pela OpenAI mas abaixo do limiar vira `aviso` (registra
+  categorias e scores) e segue o fluxo. Violência e assédio têm limiar alto (0,85) por causa de
+  jargão técnico como "OOMKilled"; autolesão, conteúdo sexual com menores e ódio com ameaça têm
+  limiar baixo (até 0,3).
 - **FR-002**: Sem chave da OpenAI, sem rede ou com erro do serviço de moderação, o sistema MUST
   pular a moderação, mostrar um aviso visível uma vez e continuar o fluxo.
 - **FR-003**: Toda mensagem não sinalizada MUST passar pelo NLU, que MUST devolver uma análise
@@ -237,7 +243,8 @@ item, a célula e a saída que o comprovam.
 
 - **Mensagem do engenheiro**: texto livre, opcionalmente com serviço e ambiente, mais o
   histórico de mensagens anteriores da mesma conversa.
-- **Resultado da moderação**: sinalizada ou não, categorias sinalizadas, ou "pulada" com motivo.
+- **Resultado da moderação**: `ok`, `aviso` (marcada abaixo do limiar, segue), `sinalizada`
+  (acima do limiar, bloqueia) ou `pulada` com motivo; categorias e scores.
 - **Análise do NLU (`AnaliseNLU`)**: intenção ou categoria de guardrail, serviço, ambiente,
   janela de tempo, texto do erro, dado faltante.
 - **Erro pré-processado**: texto limpo (já mascarado pela FR-000), impressão digital (exceção, primeiro frame

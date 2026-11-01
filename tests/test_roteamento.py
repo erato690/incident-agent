@@ -67,6 +67,14 @@ def test_investigar_erro_vai_para_investigacao():
     assert len(esp.inv_estados) == 1
 
 
+def test_moderacao_aviso_segue_para_investigacao():
+    """Ex.: 'OOMKilled' marcado como violence abaixo do limiar: registra e segue."""
+    esp = Espioes(moderacao="aviso")
+    r = _pipe(esp).invoke({"mensagem": "o container levou OOMKilled"})
+    assert r.rota == "investigacao" and r.moderacao.status == "aviso"
+    assert len(esp.nlu_msgs) == 1 and len(esp.inv_estados) == 1
+
+
 def test_moderacao_sinalizada_nao_chama_nlu():
     esp = Espioes(moderacao="sinalizada")
     r = _pipe(esp).invoke({"mensagem": "algo impróprio"})

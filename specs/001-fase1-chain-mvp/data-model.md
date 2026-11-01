@@ -14,8 +14,9 @@ JSON segue o princípio VIII da constitution.
 
 | Campo | Tipo | Regra |
 |---|---|---|
-| `status` | `Literal["ok", "sinalizada", "pulada"]` | |
-| `categorias` | `list[str]` | categorias sinalizadas; vazio se `ok` ou `pulada` |
+| `status` | `Literal["ok", "aviso", "sinalizada", "pulada"]` | `sinalizada`: score acima do limiar da categoria (bloqueia); `aviso`: marcada pela OpenAI abaixo do limiar (segue) |
+| `categorias` | `list[str]` | categorias acima do limiar (`sinalizada`) ou marcadas (`aviso`); vazio se `ok` ou `pulada` |
+| `scores` | `dict[str, float]` | score de cada categoria em `categorias` |
 | `motivo` | `str \| None` | preenchido quando `pulada` (sem chave, sem rede, erro) |
 
 ## AnaliseNLU (troca 2)

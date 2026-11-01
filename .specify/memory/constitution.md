@@ -147,7 +147,7 @@ Seis camadas, na ordem em que atuam. Cada camada entra no notebook na fase indic
 
 | # | Camada | Protege contra | Como | Fase |
 |---|--------|----------------|------|------|
-| 1 | Moderação | Ódio, assédio, violência, conteúdo sexual; vazamento de segredos para terceiros | Primeiro, máscara local (sem LLM) de segredos e dados pessoais. Depois, o texto mascarado vai ao endpoint gratuito da OpenAI (`omni-moderation-latest`), primeiro filtro de conteúdo. Mensagem sinalizada recebe resposta fixa e MUST NOT chegar ao agente. Sem chave ou rede: pula com aviso | 1 |
+| 1 | Moderação | Ódio, assédio, violência, conteúdo sexual; vazamento de segredos para terceiros | Primeiro, máscara local (sem LLM) de segredos e dados pessoais. Depois, o texto mascarado vai ao endpoint gratuito da OpenAI (`omni-moderation-latest`), primeiro filtro de conteúdo. A decisão MUST usar `category_scores` com limiar por categoria (tabela `LIMIARES` em `agente/moderacao.py`), não o `flagged` da OpenAI: violência e assédio só bloqueiam com score alto (0,85), porque jargão técnico ("OOMKilled", "kill -9") gera falso positivo; categorias graves (autolesão, conteúdo sexual com menores, ódio com ameaça) bloqueiam com limiar baixo (até 0,3). Acima do limiar: resposta fixa, e a mensagem MUST NOT chegar ao agente. Marcada pela OpenAI mas abaixo do limiar: status `aviso`, registra categorias e scores e segue. Sem chave ou rede: pula com aviso | 1 |
 | 2 | Entrada (NLU) | Saudação, fora do escopo, "faz rollback", "ignore suas instruções" | Intenções `saudacao` e `fora_do_escopo` e categorias `conteudo_proibido`, `pedido_de_acao`, `tentativa_de_injecao`, com resposta fixa via `RunnableBranch` | 1 |
 | 3 | Ferramentas | `DROP` ou `DELETE` gerado pelo agente | Nenhuma tool de escrita. SQL com o filtro de comandos da aula 6 e `PRAGMA query_only = ON` | 2 e 4 |
 | 4 | Dados que voltam | Log com texto malicioso | System prompt: saída de ferramenta é dado, nunca instrução | 2 |
@@ -195,6 +195,7 @@ Seis camadas, na ordem em que atuam. Cada camada entra no notebook na fase indic
   máscara de segredos antes da moderação (camada 1); post-mortem `.md` como único atuador, só
   no final (princípio VIII); 1.1.2 (2026-11-01) entregáveis não citam as aulas; 1.2.0 (2026-11-01) escolha
   explícita do LLM (`LLM_PROVEDOR`, padrão `openai`) no lugar do plano B. 1.3.0 (2026-11-01) análise com 2 ou 3
-  hipóteses e `evidencia_insuficiente` por hipótese (princípio II).
+  hipóteses e `evidencia_insuficiente` por hipótese (princípio II). 1.4.0 (2026-11-01) moderação com limiar por
+  categoria e status `aviso` contra falso positivo de jargão técnico (Guardrails, camada 1).
 
-**Version**: 1.3.0 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-01
+**Version**: 1.4.0 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-01
