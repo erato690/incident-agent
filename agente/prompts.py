@@ -1,5 +1,5 @@
 """Templates reutilizáveis do agente (NLU, investigação)."""
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
 
 SISTEMA_NLU = """Você classifica mensagens de engenheiros de plantão que investigam incidentes de produção.
 Devolva a intenção e as entidades da última mensagem. Use o histórico para herdar o serviço
@@ -48,3 +48,25 @@ prompt_investigacao = ChatPromptTemplate.from_messages([
      "Serviço: {servico}\nExceção: {excecao}\nPrimeiro frame da aplicação: {primeiro_frame}\n\n"
      "Texto do engenheiro (já limpo e mascarado):\n{texto_limpo}"),
 ])
+
+
+# Respostas fixas por categoria (camadas 1 e 2). Sem variáveis: o texto é sempre o mesmo.
+_EXEMPLOS = (
+    'Exemplos: "por que o pedidos-api está com 500?", "teve deploy antes do erro?", '
+    '"já aconteceu antes?".'
+)
+_FIXAS = {
+    "vazia": "Escreva a descrição do incidente ou cole o erro para eu investigar.",
+    "sinalizada": "Não posso continuar com essa mensagem. Descreva o incidente de produção.",
+    "saudacao": "Olá! Descreva o incidente ou cole o erro que eu investigo.",
+    "fora_do_escopo": f"Só ajudo a investigar incidentes de produção. {_EXEMPLOS}",
+    "pedido_de_acao": "Eu só investigo e sugiro, nunca executo ações em produção.",
+    "tentativa_de_injecao": "Não posso mudar minhas instruções nem mostrá-las. "
+                            "Posso investigar um incidente de produção.",
+    "conteudo_proibido": "Não posso responder a esse tipo de conteúdo. "
+                         "Descreva um incidente de produção.",
+    "gerar_relatorio": "Ainda não gero relatório: o post-mortem chega na Fase 5.",
+    "confirmar_causa": "Ainda não registro a causa: registrar a causa confirmada chega na Fase 3.",
+}
+respostas_fixas = {k: PromptTemplate.from_template(v.replace("{", "{{").replace("}", "}}"))
+                   for k, v in _FIXAS.items()}
