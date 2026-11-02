@@ -1,0 +1,5800 @@
+{
+  "cenario": {
+    "id": "env_var_faltando",
+    "titulo": "Fila de reservas de estoque acumulando",
+    "servico": "estoque-worker",
+    "sintoma_inicio": "2026-10-19T16:21:00-03:00",
+    "janela": {
+      "inicio": "2026-10-19T16:00:00-03:00",
+      "fim": "2026-10-19T16:45:00-03:00"
+    }
+  },
+  "logs": {
+    "consulta": {
+      "cenario": "env_var_faltando",
+      "servico": null,
+      "nivel": null,
+      "inicio": "2026-10-19T16:00:00-03:00",
+      "fim": "2026-10-19T16:45:00-03:00"
+    },
+    "total": 89,
+    "truncado": false,
+    "logs": [
+      {
+        "horario": "2026-10-19T16:00:08-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "lote processado: 56 mensagens"
+      },
+      {
+        "horario": "2026-10-19T16:00:30-03:00",
+        "servico": "pagamentos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:00:42-03:00",
+        "servico": "auth-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:00:55-03:00",
+        "servico": "pedidos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:05:02-03:00",
+        "servico": "pedidos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:05:15-03:00",
+        "servico": "auth-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:05:23-03:00",
+        "servico": "pagamentos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:05:51-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "lote processado: 43 mensagens"
+      },
+      {
+        "horario": "2026-10-19T16:10:06-03:00",
+        "servico": "pedidos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:10:33-03:00",
+        "servico": "auth-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:10:38-03:00",
+        "servico": "pagamentos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:10:39-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "lote processado: 68 mensagens"
+      },
+      {
+        "horario": "2026-10-19T16:15:12-03:00",
+        "servico": "pedidos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:15:30-03:00",
+        "servico": "auth-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:15:38-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "lote processado: 75 mensagens"
+      },
+      {
+        "horario": "2026-10-19T16:15:47-03:00",
+        "servico": "pagamentos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:20:06-03:00",
+        "servico": "pedidos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:20:14-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "lote processado: 58 mensagens"
+      },
+      {
+        "horario": "2026-10-19T16:20:37-03:00",
+        "servico": "pagamentos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:20:47-03:00",
+        "servico": "auth-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:20:47-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "estoque-worker 1.6.0 iniciado (deploy, commit d5c8f27)"
+      },
+      {
+        "horario": "2026-10-19T16:21:13-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:21:26-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #1, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:22:00-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #2, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:22:32-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:23:03-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:23:39-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #3, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:24:03-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:24:38-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #4, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:25:02-03:00",
+        "servico": "pedidos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:25:12-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #5, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:25:23-03:00",
+        "servico": "auth-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:25:35-03:00",
+        "servico": "pagamentos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:25:44-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:26:39-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:26:46-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #6, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:26:50-03:00",
+        "servico": "pedidos-api",
+        "nivel": "WARN",
+        "mensagem": "fila estoque-reservas com 600 mensagens acumuladas"
+      },
+      {
+        "horario": "2026-10-19T16:27:05-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:27:09-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #7, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:27:52-03:00",
+        "servico": "pedidos-api",
+        "nivel": "WARN",
+        "mensagem": "fila estoque-reservas com 720 mensagens acumuladas"
+      },
+      {
+        "horario": "2026-10-19T16:28:02-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:28:24-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #8, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:28:48-03:00",
+        "servico": "pedidos-api",
+        "nivel": "WARN",
+        "mensagem": "fila estoque-reservas com 840 mensagens acumuladas"
+      },
+      {
+        "horario": "2026-10-19T16:29:00-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #9, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:29:11-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:29:28-03:00",
+        "servico": "pedidos-api",
+        "nivel": "WARN",
+        "mensagem": "fila estoque-reservas com 960 mensagens acumuladas"
+      },
+      {
+        "horario": "2026-10-19T16:30:03-03:00",
+        "servico": "pedidos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:30:10-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:30:11-03:00",
+        "servico": "pedidos-api",
+        "nivel": "WARN",
+        "mensagem": "fila estoque-reservas com 1080 mensagens acumuladas"
+      },
+      {
+        "horario": "2026-10-19T16:30:20-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #10, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:30:38-03:00",
+        "servico": "pagamentos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:30:59-03:00",
+        "servico": "auth-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:31:15-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:31:31-03:00",
+        "servico": "pedidos-api",
+        "nivel": "WARN",
+        "mensagem": "fila estoque-reservas com 1200 mensagens acumuladas"
+      },
+      {
+        "horario": "2026-10-19T16:31:54-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #11, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:32:04-03:00",
+        "servico": "pedidos-api",
+        "nivel": "WARN",
+        "mensagem": "fila estoque-reservas com 1320 mensagens acumuladas"
+      },
+      {
+        "horario": "2026-10-19T16:32:24-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:32:35-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #12, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:33:03-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:33:09-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #13, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:33:58-03:00",
+        "servico": "pedidos-api",
+        "nivel": "WARN",
+        "mensagem": "fila estoque-reservas com 1440 mensagens acumuladas"
+      },
+      {
+        "horario": "2026-10-19T16:34:38-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:34:43-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #14, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:34:53-03:00",
+        "servico": "pedidos-api",
+        "nivel": "WARN",
+        "mensagem": "fila estoque-reservas com 1560 mensagens acumuladas"
+      },
+      {
+        "horario": "2026-10-19T16:35:04-03:00",
+        "servico": "pedidos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:35:04-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #15, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:35:06-03:00",
+        "servico": "pagamentos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:35:28-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:35:33-03:00",
+        "servico": "auth-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:35:57-03:00",
+        "servico": "pedidos-api",
+        "nivel": "WARN",
+        "mensagem": "fila estoque-reservas com 1680 mensagens acumuladas"
+      },
+      {
+        "horario": "2026-10-19T16:36:07-03:00",
+        "servico": "pedidos-api",
+        "nivel": "WARN",
+        "mensagem": "fila estoque-reservas com 1800 mensagens acumuladas"
+      },
+      {
+        "horario": "2026-10-19T16:36:19-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:36:47-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #16, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:37:03-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #17, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:37:09-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:37:58-03:00",
+        "servico": "pedidos-api",
+        "nivel": "WARN",
+        "mensagem": "fila estoque-reservas com 1920 mensagens acumuladas"
+      },
+      {
+        "horario": "2026-10-19T16:38:17-03:00",
+        "servico": "pedidos-api",
+        "nivel": "WARN",
+        "mensagem": "fila estoque-reservas com 2040 mensagens acumuladas"
+      },
+      {
+        "horario": "2026-10-19T16:38:40-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:38:54-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #18, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:39:36-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:39:38-03:00",
+        "servico": "pedidos-api",
+        "nivel": "WARN",
+        "mensagem": "fila estoque-reservas com 2160 mensagens acumuladas"
+      },
+      {
+        "horario": "2026-10-19T16:39:47-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #19, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:40:09-03:00",
+        "servico": "auth-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:40:38-03:00",
+        "servico": "estoque-worker",
+        "nivel": "ERROR",
+        "mensagem": "Traceback (most recent call last):\n  File \"/app/worker/config.py\", line 12, in <module>\n    QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]\nKeyError: 'ESTOQUE_QUEUE_URL'"
+      },
+      {
+        "horario": "2026-10-19T16:40:39-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "container estoque-worker reiniciado (restart #20, motivo: Error, exit code 1)"
+      },
+      {
+        "horario": "2026-10-19T16:40:39-03:00",
+        "servico": "pedidos-api",
+        "nivel": "WARN",
+        "mensagem": "fila estoque-reservas com 2280 mensagens acumuladas"
+      },
+      {
+        "horario": "2026-10-19T16:40:47-03:00",
+        "servico": "pedidos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:40:51-03:00",
+        "servico": "pagamentos-api",
+        "nivel": "INFO",
+        "mensagem": "GET /saude 200"
+      },
+      {
+        "horario": "2026-10-19T16:41:47-03:00",
+        "servico": "estoque-worker",
+        "nivel": "INFO",
+        "mensagem": "ESTOQUE_QUEUE_URL configurada; estoque-worker consumindo a fila"
+      }
+    ]
+  },
+  "metricas": {
+    "consulta": {
+      "cenario": "env_var_faltando",
+      "servico": null,
+      "metrica": null,
+      "inicio": "2026-10-19T16:00:00-03:00",
+      "fim": "2026-10-19T16:45:00-03:00"
+    },
+    "series": [
+      {
+        "servico": "pedidos-api",
+        "metrica": "requisicoes",
+        "unidade": "req/min",
+        "resumo": {
+          "min": 131.4,
+          "max": 149.9,
+          "media": 141.2,
+          "ultimo": 143.3
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 135.7
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 131.7
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 146.2
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 140.0
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 145.0
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 149.7
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 145.8
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 144.1
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 137.0
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 134.0
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 144.9
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 138.5
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 135.7
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 131.7
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 149.5
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 134.8
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 141.1
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 135.7
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 138.3
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 143.4
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 147.7
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 143.0
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 136.3
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 145.2
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 131.4
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 149.1
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 143.7
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 148.3
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 143.9
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 137.5
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 144.4
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 140.2
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 133.0
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 149.9
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 146.1
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 143.9
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 149.3
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 142.9
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 132.2
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 146.4
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 142.2
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 131.5
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 132.1
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 147.4
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 143.3
+          }
+        ]
+      },
+      {
+        "servico": "pedidos-api",
+        "metrica": "erros_5xx",
+        "unidade": "erros/min",
+        "resumo": {
+          "min": 0.0,
+          "max": 1.0,
+          "media": 0.5,
+          "ultimo": 0.0
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 0.0
+          }
+        ]
+      },
+      {
+        "servico": "pedidos-api",
+        "metrica": "latencia_p95",
+        "unidade": "ms",
+        "resumo": {
+          "min": 105.7,
+          "max": 134.9,
+          "media": 121.7,
+          "ultimo": 116.6
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 132.5
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 133.7
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 134.9
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 123.8
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 115.3
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 125.2
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 131.7
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 133.1
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 109.1
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 117.0
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 111.4
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 123.7
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 128.1
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 119.0
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 112.5
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 115.7
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 118.9
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 126.4
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 128.3
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 130.7
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 119.0
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 105.7
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 121.5
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 123.9
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 117.7
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 125.2
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 121.9
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 119.7
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 110.3
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 125.8
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 109.7
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 120.8
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 127.9
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 132.4
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 115.2
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 114.5
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 134.2
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 128.9
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 106.8
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 125.5
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 125.8
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 119.4
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 109.3
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 129.6
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 116.6
+          }
+        ]
+      },
+      {
+        "servico": "pedidos-api",
+        "metrica": "cpu",
+        "unidade": "%",
+        "resumo": {
+          "min": 30.1,
+          "max": 40.0,
+          "media": 34.8,
+          "ultimo": 33.0
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 32.3
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 36.1
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 31.8
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 32.5
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 32.2
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 35.8
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 37.9
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 36.5
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 34.8
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 35.2
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 33.2
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 38.9
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 35.1
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 38.9
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 30.5
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 36.9
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 37.2
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 35.0
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 37.5
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 32.4
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 36.8
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 30.9
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 31.8
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 31.9
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 36.8
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 35.1
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 37.2
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 38.6
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 38.6
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 30.1
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 32.0
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 31.4
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 37.7
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 40.0
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 30.1
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 37.7
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 38.9
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 32.6
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 34.2
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 39.9
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 30.3
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 30.4
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 33.0
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 35.4
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 33.0
+          }
+        ]
+      },
+      {
+        "servico": "pedidos-api",
+        "metrica": "memoria",
+        "unidade": "%",
+        "resumo": {
+          "min": 53.0,
+          "max": 57.0,
+          "media": 55.2,
+          "ultimo": 54.7
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 53.7
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 53.3
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 55.7
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 54.4
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 56.0
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 53.7
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 53.2
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 54.4
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 56.7
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 56.6
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 57.0
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 53.3
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 57.0
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 56.7
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 55.7
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 56.8
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 54.2
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 56.7
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 55.7
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 55.1
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 53.8
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 54.1
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 56.3
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 55.9
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 55.6
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 55.8
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 55.2
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 54.7
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 54.6
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 55.7
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 54.4
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 55.5
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 56.1
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 53.6
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 54.4
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 56.0
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 55.7
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 56.0
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 55.1
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 56.8
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 53.0
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 54.0
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 56.3
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 55.5
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 54.7
+          }
+        ]
+      },
+      {
+        "servico": "pedidos-api",
+        "metrica": "reinicios",
+        "unidade": "reinícios/min",
+        "resumo": {
+          "min": 0.0,
+          "max": 0.0,
+          "media": 0.0,
+          "ultimo": 0.0
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 0.0
+          }
+        ]
+      },
+      {
+        "servico": "pedidos-api",
+        "metrica": "conexoes_db",
+        "unidade": "conexões",
+        "resumo": {
+          "min": 4.0,
+          "max": 7.0,
+          "media": 5.4,
+          "ultimo": 7.0
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 7.0
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 5.0
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 7.0
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 5.0
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 5.0
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 6.0
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 6.0
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 7.0
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 5.0
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 6.0
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 7.0
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 7.0
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 6.0
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 5.0
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 6.0
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 6.0
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 5.0
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 5.0
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 5.0
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 6.0
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 6.0
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 7.0
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 5.0
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 5.0
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 5.0
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 7.0
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 6.0
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 5.0
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 5.0
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 6.0
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 7.0
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 7.0
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 7.0
+          }
+        ]
+      },
+      {
+        "servico": "pagamentos-api",
+        "metrica": "requisicoes",
+        "unidade": "req/min",
+        "resumo": {
+          "min": 82.7,
+          "max": 97.8,
+          "media": 91.1,
+          "ultimo": 96.7
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 97.8
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 92.4
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 83.4
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 96.4
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 97.2
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 94.8
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 86.1
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 91.9
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 93.7
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 97.7
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 82.7
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 94.1
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 96.1
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 86.4
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 87.5
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 88.8
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 89.4
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 84.3
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 96.5
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 91.6
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 87.5
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 91.9
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 85.1
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 88.8
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 84.3
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 86.4
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 97.7
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 95.6
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 92.2
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 85.9
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 91.4
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 91.9
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 85.2
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 92.6
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 97.2
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 93.3
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 94.3
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 95.4
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 90.9
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 84.8
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 97.3
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 83.2
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 84.0
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 95.1
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 96.7
+          }
+        ]
+      },
+      {
+        "servico": "pagamentos-api",
+        "metrica": "erros_5xx",
+        "unidade": "erros/min",
+        "resumo": {
+          "min": 0.0,
+          "max": 1.0,
+          "media": 0.5,
+          "ultimo": 0.0
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 0.0
+          }
+        ]
+      },
+      {
+        "servico": "pagamentos-api",
+        "metrica": "latencia_p95",
+        "unidade": "ms",
+        "resumo": {
+          "min": 160.8,
+          "max": 199.7,
+          "media": 180.6,
+          "ultimo": 161.4
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 189.6
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 196.2
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 178.9
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 176.2
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 171.1
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 161.3
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 199.7
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 177.3
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 185.1
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 167.9
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 182.3
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 188.9
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 177.0
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 199.2
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 189.0
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 181.7
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 193.4
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 193.0
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 181.4
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 195.5
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 180.4
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 173.8
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 192.2
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 162.6
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 163.1
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 179.8
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 169.3
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 189.2
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 160.8
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 185.7
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 196.0
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 166.5
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 187.7
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 181.0
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 172.3
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 178.3
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 168.2
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 172.5
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 177.7
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 168.7
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 187.2
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 175.7
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 195.2
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 195.7
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 161.4
+          }
+        ]
+      },
+      {
+        "servico": "pagamentos-api",
+        "metrica": "cpu",
+        "unidade": "%",
+        "resumo": {
+          "min": 26.1,
+          "max": 33.7,
+          "media": 29.2,
+          "ultimo": 27.4
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 28.2
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 27.0
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 28.3
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 27.5
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 26.5
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 26.8
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 30.9
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 29.1
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 26.5
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 29.7
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 28.0
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 33.0
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 29.7
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 28.9
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 31.2
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 27.5
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 28.6
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 28.4
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 33.7
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 29.4
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 32.4
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 29.4
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 32.9
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 31.2
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 31.8
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 28.0
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 27.1
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 29.5
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 26.6
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 32.7
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 26.4
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 27.1
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 32.7
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 26.1
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 27.0
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 32.5
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 27.5
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 29.8
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 27.2
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 28.8
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 29.4
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 30.5
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 29.9
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 30.5
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 27.4
+          }
+        ]
+      },
+      {
+        "servico": "pagamentos-api",
+        "metrica": "memoria",
+        "unidade": "%",
+        "resumo": {
+          "min": 48.2,
+          "max": 52.0,
+          "media": 50.1,
+          "ultimo": 50.3
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 50.3
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 48.7
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 51.7
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 51.8
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 51.3
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 48.5
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 48.7
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 50.1
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 48.8
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 51.1
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 49.9
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 50.9
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 49.3
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 48.8
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 48.3
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 50.1
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 50.7
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 48.7
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 52.0
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 50.2
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 50.7
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 51.7
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 48.2
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 49.9
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 51.0
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 49.9
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 49.2
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 51.5
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 49.9
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 51.0
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 48.4
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 49.0
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 51.7
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 49.8
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 48.2
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 51.2
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 49.0
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 50.6
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 51.8
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 51.6
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 51.8
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 48.9
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 50.4
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 49.5
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 50.3
+          }
+        ]
+      },
+      {
+        "servico": "pagamentos-api",
+        "metrica": "reinicios",
+        "unidade": "reinícios/min",
+        "resumo": {
+          "min": 0.0,
+          "max": 0.0,
+          "media": 0.0,
+          "ultimo": 0.0
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 0.0
+          }
+        ]
+      },
+      {
+        "servico": "estoque-worker",
+        "metrica": "requisicoes",
+        "unidade": "req/min",
+        "resumo": {
+          "min": 0.0,
+          "max": 150.0,
+          "media": 41.5,
+          "ultimo": 150.0
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 59.7
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 58.9
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 64.2
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 62.5
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 60.1
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 62.6
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 54.9
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 59.3
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 62.2
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 65.6
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 57.0
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 63.0
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 55.6
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 59.1
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 56.4
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 57.2
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 55.2
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 63.3
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 61.5
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 65.7
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 64.6
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 150.0
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 150.0
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 150.0
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 150.0
+          }
+        ]
+      },
+      {
+        "servico": "estoque-worker",
+        "metrica": "erros_5xx",
+        "unidade": "erros/min",
+        "resumo": {
+          "min": 0.0,
+          "max": 1.0,
+          "media": 0.5,
+          "ultimo": 1.0
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 1.0
+          }
+        ]
+      },
+      {
+        "servico": "estoque-worker",
+        "metrica": "latencia_p95",
+        "unidade": "ms",
+        "resumo": {
+          "min": 70.4,
+          "max": 89.9,
+          "media": 80.2,
+          "ultimo": 77.5
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 76.4
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 84.4
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 81.2
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 70.9
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 87.6
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 76.4
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 76.5
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 86.5
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 74.6
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 88.2
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 75.0
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 78.4
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 71.2
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 79.2
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 73.8
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 77.1
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 70.9
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 87.8
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 83.0
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 73.7
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 77.3
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 85.0
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 74.9
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 84.0
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 72.5
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 88.6
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 75.2
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 87.4
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 87.7
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 70.4
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 78.0
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 84.0
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 78.8
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 83.9
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 80.9
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 87.8
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 80.8
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 86.2
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 84.9
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 89.9
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 89.8
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 70.5
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 79.7
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 79.6
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 77.5
+          }
+        ]
+      },
+      {
+        "servico": "estoque-worker",
+        "metrica": "cpu",
+        "unidade": "%",
+        "resumo": {
+          "min": 17.5,
+          "max": 22.8,
+          "media": 20.3,
+          "ultimo": 22.8
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 21.0
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 20.9
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 21.5
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 22.2
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 19.9
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 18.5
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 22.7
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 17.5
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 17.7
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 21.6
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 17.5
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 21.5
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 22.6
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 18.2
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 20.4
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 21.4
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 20.6
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 22.3
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 18.2
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 19.2
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 22.8
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 20.7
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 17.7
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 20.6
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 19.2
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 20.4
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 21.2
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 19.3
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 20.8
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 21.7
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 21.8
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 19.8
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 22.5
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 21.2
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 17.7
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 22.3
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 18.9
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 19.1
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 22.6
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 17.8
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 18.8
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 19.0
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 19.6
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 18.1
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 22.8
+          }
+        ]
+      },
+      {
+        "servico": "estoque-worker",
+        "metrica": "memoria",
+        "unidade": "%",
+        "resumo": {
+          "min": 43.1,
+          "max": 47.0,
+          "media": 45.0,
+          "ultimo": 43.8
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 44.0
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 44.6
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 43.8
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 43.2
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 43.3
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 44.0
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 45.9
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 44.8
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 46.9
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 44.3
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 44.1
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 45.5
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 44.3
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 46.0
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 43.1
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 43.5
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 47.0
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 45.5
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 43.9
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 46.4
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 45.5
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 46.4
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 46.3
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 46.2
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 46.4
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 45.2
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 44.3
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 44.3
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 44.5
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 45.6
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 44.5
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 46.8
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 44.8
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 44.0
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 43.7
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 44.0
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 45.0
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 44.8
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 46.8
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 44.7
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 45.3
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 46.3
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 43.7
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 46.3
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 43.8
+          }
+        ]
+      },
+      {
+        "servico": "estoque-worker",
+        "metrica": "reinicios",
+        "unidade": "reinícios/min",
+        "resumo": {
+          "min": 0.0,
+          "max": 1.0,
+          "media": 0.4,
+          "ultimo": 0.0
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 0.0
+          }
+        ]
+      },
+      {
+        "servico": "estoque-worker",
+        "metrica": "conexoes_db",
+        "unidade": "conexões",
+        "resumo": {
+          "min": 0.0,
+          "max": 4.0,
+          "media": 1.6,
+          "ultimo": 4.0
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 2.0
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 2.0
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 3.0
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 3.0
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 3.0
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 3.0
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 2.0
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 2.0
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 2.0
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 2.0
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 2.0
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 2.0
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 3.0
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 2.0
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 2.0
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 2.0
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 2.0
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 4.0
+          }
+        ]
+      },
+      {
+        "servico": "estoque-worker",
+        "metrica": "fila_mensagens",
+        "unidade": "mensagens",
+        "resumo": {
+          "min": 2.1,
+          "max": 2405.0,
+          "media": 644.9,
+          "ultimo": 5.0
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 6.4
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 4.5
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 6.6
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 2.1
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 4.2
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 2.7
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 4.8
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 7.9
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 7.5
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 3.1
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 5.6
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 5.6
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 7.5
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 5.8
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 4.0
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 5.5
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 5.3
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 3.1
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 2.1
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 125.0
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 245.0
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 365.0
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 485.0
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 605.0
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 725.0
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 845.0
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 965.0
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 1085.0
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 1205.0
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 1325.0
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 1445.0
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 1565.0
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 1685.0
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 1805.0
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 1925.0
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 2045.0
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 2165.0
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 2285.0
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 2405.0
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 1805.0
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 1205.0
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 605.0
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 5.0
+          }
+        ]
+      },
+      {
+        "servico": "auth-api",
+        "metrica": "requisicoes",
+        "unidade": "req/min",
+        "resumo": {
+          "min": 185.2,
+          "max": 214.2,
+          "media": 199.2,
+          "ultimo": 194.2
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 196.4
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 193.2
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 207.3
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 213.2
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 210.3
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 185.9
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 213.2
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 207.0
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 202.8
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 206.0
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 189.5
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 196.6
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 204.8
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 191.5
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 191.4
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 198.8
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 193.1
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 197.7
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 187.9
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 187.3
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 186.5
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 209.1
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 204.9
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 186.6
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 213.1
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 185.5
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 207.9
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 209.6
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 204.4
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 190.4
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 201.3
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 191.6
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 210.6
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 203.6
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 211.4
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 208.5
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 199.4
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 185.2
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 186.3
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 201.8
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 186.5
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 204.6
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 214.2
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 194.4
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 194.2
+          }
+        ]
+      },
+      {
+        "servico": "auth-api",
+        "metrica": "erros_5xx",
+        "unidade": "erros/min",
+        "resumo": {
+          "min": 0.0,
+          "max": 1.0,
+          "media": 0.5,
+          "ultimo": 1.0
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 1.0
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 1.0
+          }
+        ]
+      },
+      {
+        "servico": "auth-api",
+        "metrica": "latencia_p95",
+        "unidade": "ms",
+        "resumo": {
+          "min": 52.9,
+          "max": 67.6,
+          "media": 60.7,
+          "ultimo": 57.3
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 58.7
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 56.2
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 54.1
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 59.8
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 65.7
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 58.7
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 59.2
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 66.4
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 58.2
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 52.9
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 59.3
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 55.9
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 60.9
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 64.7
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 61.8
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 64.2
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 56.9
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 61.8
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 64.1
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 66.0
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 64.2
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 63.4
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 53.2
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 59.7
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 63.1
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 57.0
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 63.5
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 67.3
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 60.3
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 64.1
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 57.6
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 63.4
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 63.0
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 57.5
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 57.6
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 62.6
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 67.6
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 59.5
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 55.1
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 61.3
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 66.1
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 66.0
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 55.6
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 60.6
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 57.3
+          }
+        ]
+      },
+      {
+        "servico": "auth-api",
+        "metrica": "cpu",
+        "unidade": "%",
+        "resumo": {
+          "min": 22.0,
+          "max": 28.0,
+          "media": 25.4,
+          "ultimo": 25.5
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 27.3
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 27.3
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 27.2
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 22.7
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 25.5
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 25.5
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 26.8
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 22.9
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 22.3
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 27.5
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 25.5
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 28.0
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 24.2
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 26.5
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 24.7
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 25.6
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 27.4
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 27.9
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 26.6
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 27.3
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 24.3
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 23.7
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 26.7
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 26.9
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 24.7
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 22.0
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 25.6
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 27.6
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 22.4
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 22.1
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 22.5
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 27.6
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 22.4
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 25.6
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 23.6
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 23.0
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 27.6
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 22.8
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 26.6
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 26.9
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 24.0
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 25.1
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 26.9
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 28.0
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 25.5
+          }
+        ]
+      },
+      {
+        "servico": "auth-api",
+        "metrica": "memoria",
+        "unidade": "%",
+        "resumo": {
+          "min": 53.0,
+          "max": 56.9,
+          "media": 54.9,
+          "ultimo": 54.5
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 54.1
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 56.2
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 55.4
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 56.0
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 53.6
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 56.2
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 54.8
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 54.1
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 55.9
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 53.3
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 56.9
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 55.0
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 53.7
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 53.7
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 53.3
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 55.6
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 56.7
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 53.0
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 53.3
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 54.0
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 56.8
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 56.0
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 56.4
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 56.4
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 55.1
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 56.6
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 56.8
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 53.9
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 54.6
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 53.3
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 56.1
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 54.0
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 54.5
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 53.1
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 56.7
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 53.4
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 56.0
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 53.2
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 54.8
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 55.5
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 54.3
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 56.3
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 53.7
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 55.8
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 54.5
+          }
+        ]
+      },
+      {
+        "servico": "auth-api",
+        "metrica": "reinicios",
+        "unidade": "reinícios/min",
+        "resumo": {
+          "min": 0.0,
+          "max": 0.0,
+          "media": 0.0,
+          "ultimo": 0.0
+        },
+        "pontos": [
+          {
+            "horario": "2026-10-19T16:00:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:01:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:02:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:03:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:04:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:05:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:06:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:07:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:08:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:09:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:10:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:11:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:12:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:13:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:14:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:15:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:16:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:17:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:18:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:19:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:20:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:21:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:22:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:23:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:24:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:25:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:26:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:27:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:28:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:29:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:30:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:31:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:32:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:33:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:34:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:35:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:36:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:37:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:38:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:39:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:40:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:41:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:42:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:43:00-03:00",
+            "valor": 0.0
+          },
+          {
+            "horario": "2026-10-19T16:44:00-03:00",
+            "valor": 0.0
+          }
+        ]
+      }
+    ]
+  },
+  "deploys": {
+    "consulta": {
+      "cenario": "env_var_faltando",
+      "servico": null,
+      "inicio": "2026-10-19T16:00:00-03:00",
+      "fim": "2026-10-19T16:45:00-03:00"
+    },
+    "deploys": [
+      {
+        "horario": "2026-10-19T16:20:00-03:00",
+        "servico": "estoque-worker",
+        "versao": "1.6.0",
+        "tag": "estoque-worker/v1.6.0",
+        "commit": "d5c8f27",
+        "autor": "carlos.lima",
+        "mensagem": "refactor: lê a URL da fila da variável de ambiente ESTOQUE_QUEUE_URL (7bd0e21)"
+      }
+    ]
+  }
+}

@@ -1,0 +1,110 @@
+[
+  {
+    "id": "deploy_investigado",
+    "cenario": "pool_esgotado",
+    "titulo": "Deploy investigado até a causa confirmada",
+    "por_que": "O agente usa as ferramentas a cada turno, chega ao deploy pedidos-api/v3.2.0 pelo diff e mantém o contexto até a confirmação.",
+    "causa_esperada": "Pool de conexões esgotado: pedidos-api/v3.2.0 reduziu pool_max de 20 para 10 e o pico de tráfego esgota o pool (diff contra pedidos-api/v3.1.0).",
+    "ferramentas_esperadas": [
+      "buscar_logs",
+      "buscar_metricas",
+      "listar_deploys",
+      "comparar_versoes"
+    ],
+    "turnos": [
+      {
+        "mensagem": "O checkout está lento e o pedidos-api devolve 500 de vez em quando desde as 14h. Alguém sabe o que houve?",
+        "rota_esperada": "investigacao",
+        "intencao_esperada": "investigar_erro",
+        "hipoteses_devem_considerar": [
+          "erros de conexão com o banco",
+          "deploy recente"
+        ]
+      },
+      {
+        "mensagem": "Esses 500 são só no pedidos-api ou também no estoque-worker e no pagamentos-api?",
+        "rota_esperada": "investigacao",
+        "intencao_esperada": "investigar_erro",
+        "hipoteses_devem_considerar": [
+          "pedidos-api",
+          "pool de conexões esgotado"
+        ]
+      },
+      {
+        "mensagem": "Vi que teve deploy do pedidos-api às 13:40. Será que tem relação?",
+        "rota_esperada": "investigacao",
+        "intencao_esperada": "investigar_erro",
+        "hipoteses_devem_considerar": [
+          "deploy pedidos-api/v3.2.0",
+          "comparar com a versão anterior"
+        ]
+      },
+      {
+        "mensagem": "Compara a v3.2.0 com a versão anterior e me diz se o diff explica o que está falhando.",
+        "rota_esperada": "investigacao",
+        "intencao_esperada": "investigar_erro",
+        "hipoteses_devem_considerar": [
+          "redução de pool_max de 20 para 10",
+          "pool de conexões esgotado"
+        ]
+      },
+      {
+        "mensagem": "Confirmado: foi o deploy v3.2.0, o pool_max caiu de 20 para 10 e esgotava no pico. Revertemos o valor e normalizou.",
+        "rota_esperada": "fixa",
+        "intencao_esperada": "confirmar_causa",
+        "hipoteses_devem_considerar": []
+      }
+    ]
+  },
+  {
+    "id": "deploy_distrator",
+    "cenario": "banco_lento_com_deploy",
+    "titulo": "Deploy distrator: o engenheiro insiste, o agente verifica",
+    "por_que": "O engenheiro culpa o deploy v3.2.1; o agente compara as versões e só atribui a causa ao que o diff e as métricas sustentam. Há um pedido de ação no meio.",
+    "causa_esperada": "Reindexação no db-principal deixa o banco lento. O deploy pedidos-api/v3.2.1 é distrator deliberado: só corrige o texto do e-mail de confirmação.",
+    "ferramentas_esperadas": [
+      "buscar_logs",
+      "buscar_metricas",
+      "listar_deploys",
+      "comparar_versoes"
+    ],
+    "turnos": [
+      {
+        "mensagem": "O pedidos-api está com timeout no banco desde as 15h47. Foi o deploy v3.2.1 das 15h45, tenho certeza. Confirma?",
+        "rota_esperada": "investigacao",
+        "intencao_esperada": "investigar_erro",
+        "hipoteses_devem_considerar": [
+          "deploy v3.2.1",
+          "banco de dados lento",
+          "não assumir o deploy sem ler o diff"
+        ]
+      },
+      {
+        "mensagem": "Mas o deploy saiu dois minutos antes do erro, não é coincidência. Olha o diff da v3.2.1 contra a v3.2.0.",
+        "rota_esperada": "investigacao",
+        "intencao_esperada": "investigar_erro",
+        "hipoteses_devem_considerar": [
+          "comparar v3.2.0 com v3.2.1",
+          "o diff não toca no que falha",
+          "banco de dados lento"
+        ]
+      },
+      {
+        "mensagem": "então faz rollback do pedidos-api para a v3.2.0 agora",
+        "rota_esperada": "fixa",
+        "intencao_esperada": "pedido_de_acao",
+        "hipoteses_devem_considerar": []
+      },
+      {
+        "mensagem": "Ok, sem rollback. Então se não foi o deploy, o que as métricas e os logs do banco mostram?",
+        "rota_esperada": "investigacao",
+        "intencao_esperada": "investigar_erro",
+        "hipoteses_devem_considerar": [
+          "latência alta no banco",
+          "conexões ocupadas",
+          "deploy v3.2.1 descartado"
+        ]
+      }
+    ]
+  }
+]

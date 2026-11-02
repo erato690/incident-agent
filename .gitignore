@@ -7,3 +7,6 @@ __pycache__/
 .claude-flow/
 .swarm/
 ruvector.db
+
+# configuração local do editor
+.vscode/

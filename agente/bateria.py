@@ -3,12 +3,15 @@
 Reaproveitável nas próximas fases: cada mensagem do JSON traz `id`, `grupo`, `mensagem` e
 `rota_esperada`; cada resultado é um `RespostaTurno`.
 """
+
+from collections.abc import Callable
 from html import escape
 
-from agente.mascara import mascarar
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain_core.runnables import Runnable
 
-from agente.schemas import RespostaTurno
+from agente.mascara import mascarar
+from agente.schemas import AnaliseIncidente, RespostaTurno
 
 # Chave do JSON -> subtítulo exibido (a ordem define a ordem dos grupos no relatório).
 GRUPOS = {
@@ -18,108 +21,212 @@ GRUPOS = {
 }
 
 
-def _intencao(r: RespostaTurno) -> str:
-    if r.nlu:
-        return r.nlu.intencao
-    return r.fixa.categoria if r.fixa else "-"
+def _intencao(resposta: RespostaTurno) -> str:
+    if resposta.nlu:
+        return resposta.nlu.intencao
+    return resposta.fixa.categoria if resposta.fixa else "-"
 
 
-def _moderacao(r: RespostaTurno) -> str:
-    m = r.moderacao
-    return f"{m.status} ({', '.join(m.categorias)})" if m.categorias else m.status
+def _moderacao(resposta: RespostaTurno) -> str:
+    moderacao = resposta.moderacao
+    categorias = ", ".join(moderacao.categorias)
+    return f"{moderacao.status} ({categorias})" if categorias else moderacao.status
+
+
+def nomes_ferramentas(resposta: RespostaTurno) -> list[str]:
+    """Ferramentas da trajetória, na ordem, sem repetição consecutiva."""
+    nomes: list[str] = []
+    for passo in resposta.trajetoria:
+        if not nomes or nomes[-1] != passo.ferramenta:
+            nomes.append(passo.ferramenta)
+    return nomes
 
 
 def linhas_bateria(mensagens: list[dict], resultados: list[RespostaTurno]) -> list[dict]:
-    """Uma linha por teste, com as colunas da tabela-resumo."""
-    return [
-        {"id": m["id"], "grupo": GRUPOS.get(m.get("grupo"), m.get("grupo", "-")),
-         "esperada": m["rota_esperada"], "obtida": r.rota, "intenção": _intencao(r),
-         "moderação": _moderacao(r), "ok": r.rota == m["rota_esperada"]}
-        for m, r in zip(mensagens, resultados)
-    ]
+    """Uma linha por teste; a coluna "ferramentas" só aparece se algum turno usou ferramentas."""
+    com_ferramentas = any(resposta.trajetoria for resposta in resultados)
+    linhas = []
+    for mensagem, resposta in zip(mensagens, resultados, strict=True):
+        linha = {
+            "id": mensagem["id"],
+            "grupo": GRUPOS.get(mensagem.get("grupo"), mensagem.get("grupo", "-")),
+            "esperada": mensagem["rota_esperada"],
+            "obtida": resposta.rota,
+            "intenção": _intencao(resposta),
+            "moderação": _moderacao(resposta),
+        }
+        if com_ferramentas:
+            linha["ferramentas"] = " → ".join(nomes_ferramentas(resposta)) or "-"
+        linhas.append({**linha, "ok": resposta.rota == mensagem["rota_esperada"]})
+    return linhas
 
 
-def detalhe_html(m: dict, r: RespostaTurno) -> str:
-    """Bloco <details> com o que foi enviado e o que voltou (texto sempre escapado)."""
-    ok = r.rota == m["rota_esperada"]
-    mod = r.moderacao
-    scores = ", ".join(f"{c}={s:.2f}" for c, s in mod.scores.items())
+def _passos_html(resposta: RespostaTurno) -> str:
+    itens = "".join(
+        f"<li><code>{escape(passo.ferramenta)}</code>"
+        f"({escape(mascarar(str(passo.argumentos)))}) · {passo.duracao_ms} ms"
+        + (" · <b>reserva gravada</b>" if passo.reserva else "")
+        + (f" · erro: {escape(passo.erro)}" if passo.erro else "")
+        + "</li>"
+        for passo in resposta.trajetoria
+    )
+    return f"<b>Ferramentas chamadas:</b><ol>{itens}</ol>"
+
+
+def _hipoteses_html(analise: AnaliseIncidente) -> str:
+    itens = ""
+    for hipotese in analise.hipoteses:
+        evidencia = (
+            f"evidência: <code>{escape(hipotese.evidencia)}</code>"
+            if hipotese.evidencia
+            else "sem evidência no texto"
+        )
+        insuficiente = (
+            f" <i>(evidência insuficiente; falta: {escape(hipotese.dado_que_falta or '-')})</i>"
+            if hipotese.evidencia_insuficiente
+            else ""
+        )
+        itens += (
+            f"<li>{escape(hipotese.causa)} — confiança {hipotese.confianca:.2f} — "
+            f"{evidencia}{insuficiente}</li>"
+        )
+    return f"<b>Hipóteses:</b><ol>{itens}</ol>"
+
+
+def _itens_analise(mensagem: dict, analise: AnaliseIncidente) -> list[str]:
     itens = [
-        f"<b>Mensagem enviada (mascarada):</b> <code>{escape(mascarar(m['mensagem'])) or '(vazia)'}</code>",
-        f"<b>Moderação:</b> {escape(_moderacao(r))}" + (f" · scores: {escape(scores)}" if scores else ""),
-        f"<b>Intenção (etapa de compreensão):</b> {escape(_intencao(r))}",
+        f"<b>Severidade:</b> {analise.severidade} · <b>Resumo:</b> {escape(analise.resumo)}",
+        _hipoteses_html(analise),
     ]
-    if r.analise:
-        a = r.analise
-        itens.append(f"<b>Severidade:</b> {a.severidade} · <b>Resumo:</b> {escape(a.resumo)}")
-        hips = "".join(
-            f"<li>{escape(h.causa)} — confiança {h.confianca:.2f} — "
-            + (f"evidência: <code>{escape(h.evidencia)}</code>" if h.evidencia else "sem evidência no texto")
-            + (f" <i>(evidência insuficiente; falta: {escape(h.dado_que_falta or '-')})</i>"
-               if h.evidencia_insuficiente else "") + "</li>"
-            for h in a.hipoteses)
-        itens.append(f"<b>Hipóteses:</b><ol>{hips}</ol>")
-        if m.get("hipoteses_devem_considerar"):
-            deve = "; ".join(m["hipoteses_devem_considerar"])
-            itens.append(f"<b>Deve considerar:</b> {escape(deve)}")
-    elif r.fixa:
-        itens.append(f"<b>Resposta fixa (camada {r.fixa.camada}):</b> {escape(r.fixa.texto)}")
-    elif r.erro:
-        itens.append(f"<b>Erro:</b> {escape(r.erro)}")
-    status = "ok" if ok else "FALHOU"
-    cor = "#1a7f37" if ok else "#cf222e"
-    corpo = "".join(f"<li>{i}</li>" for i in itens)
-    return (f"<details><summary><b style='color:{cor}'>{escape(m['id'])} — {status}</b> "
-            f"(esperada {m['rota_esperada']}, obtida {r.rota})</summary><ul>{corpo}</ul></details>")
+    if mensagem.get("hipoteses_devem_considerar"):
+        deve = "; ".join(mensagem["hipoteses_devem_considerar"])
+        itens.append(f"<b>Deve considerar:</b> {escape(deve)}")
+    return itens
 
 
-def exibir_bateria(mensagens: list[dict], resultados: list[RespostaTurno], titulo: str = "Bateria") -> None:
+def _itens_desfecho(mensagem: dict, resposta: RespostaTurno) -> list[str]:
+    itens = []
+    if resposta.analise:
+        itens += _itens_analise(mensagem, resposta.analise)
+    elif resposta.fixa:
+        itens.append(
+            f"<b>Resposta fixa (camada {resposta.fixa.camada}):</b> {escape(resposta.fixa.texto)}"
+        )
+    elif resposta.erro:
+        itens.append(f"<b>Erro:</b> {escape(resposta.erro)}")
+    if resposta.trajetoria:
+        itens.append(_passos_html(resposta))
+    if mensagem.get("causa_esperada"):
+        itens.append(
+            f"<b>Causa esperada (informativo, não foi enviada ao modelo):</b> "
+            f"{escape(mensagem['causa_esperada'])}"
+        )
+    return itens
+
+
+def detalhe_html(mensagem: dict, resposta: RespostaTurno) -> str:
+    """Bloco <details> com o que foi enviado e o que voltou (texto sempre escapado)."""
+    acertou = resposta.rota == mensagem["rota_esperada"]
+    scores = ", ".join(
+        f"{categoria}={score:.2f}" for categoria, score in resposta.moderacao.scores.items()
+    )
+    enviada = escape(mascarar(mensagem["mensagem"])) or "(vazia)"
+    itens = [
+        f"<b>Mensagem enviada (mascarada):</b> <code>{enviada}</code>",
+        f"<b>Moderação:</b> {escape(_moderacao(resposta))}"
+        + (f" · scores: {escape(scores)}" if scores else ""),
+        f"<b>Intenção (etapa de compreensão):</b> {escape(_intencao(resposta))}",
+        *_itens_desfecho(mensagem, resposta),
+    ]
+    status = "ok" if acertou else "FALHOU"
+    cor = "#1a7f37" if acertou else "#cf222e"
+    corpo = "".join(f"<li>{item}</li>" for item in itens)
+    return (
+        f"<details><summary><b style='color:{cor}'>{escape(mensagem['id'])} — {status}</b> "
+        f"(esperada {mensagem['rota_esperada']}, obtida {resposta.rota})</summary>"
+        f"<ul>{corpo}</ul></details>"
+    )
+
+
+def _colorir_ok(valor: bool) -> str:
+    return f"background-color: {'#d1f7d6' if valor else '#ffd7d5'}; font-weight: bold"
+
+
+def exibir_bateria(
+    mensagens: list[dict], resultados: list[RespostaTurno], titulo: str = "Bateria"
+) -> None:
     """Mostra no notebook: placar, tabela colorida e, por grupo, o detalhe de cada teste."""
     import pandas as pd
     from IPython.display import HTML, Markdown, display
 
     linhas = linhas_bateria(mensagens, resultados)
-    acertos = sum(l["ok"] for l in linhas)
+    acertos = sum(linha["ok"] for linha in linhas)
     display(Markdown(f"### {titulo}: {acertos}/{len(linhas)} rotas corretas"))
     tabela = pd.DataFrame(linhas)
-    display(tabela.style.map(
-        lambda v: f"background-color: {'#d1f7d6' if v else '#ffd7d5'}; font-weight: bold",
-        subset=["ok"]).hide(axis="index"))
-    pares = list(zip(mensagens, resultados))
-    for chave in list(GRUPOS) + sorted({m.get("grupo") for m in mensagens} - set(GRUPOS)):
-        do_grupo = [(m, r) for m, r in pares if m.get("grupo") == chave]
+    display(tabela.style.map(_colorir_ok, subset=["ok"]).hide(axis="index"))
+    pares = list(zip(mensagens, resultados, strict=True))
+    for chave in list(GRUPOS) + sorted({msg.get("grupo") for msg in mensagens} - set(GRUPOS)):
+        do_grupo = [(msg, resp) for msg, resp in pares if msg.get("grupo") == chave]
         if not do_grupo:
             continue
-        ok = sum(r.rota == m["rota_esperada"] for m, r in do_grupo)
-        display(Markdown(f"#### {GRUPOS.get(chave, chave)}: {ok}/{len(do_grupo)}"))
-        display(HTML("".join(detalhe_html(m, r) for m, r in do_grupo)))
+        acertos_grupo = sum(resp.rota == msg["rota_esperada"] for msg, resp in do_grupo)
+        display(Markdown(f"#### {GRUPOS.get(chave, chave)}: {acertos_grupo}/{len(do_grupo)}"))
+        display(HTML("".join(detalhe_html(msg, resp) for msg, resp in do_grupo)))
 
 
-def texto_resposta(r: RespostaTurno) -> str:
+def texto_resposta(resposta: RespostaTurno) -> str:
     """Texto curto da resposta do agente, para entrar no histórico da conversa."""
-    if r.fixa:
-        return r.fixa.texto
-    if r.analise:
-        hips = [f"- {h.causa} ({h.confianca:.2f})" for h in r.analise.hipoteses]
-        return "\n".join([r.analise.resumo, *hips])
-    return r.erro or ""
+    if resposta.fixa:
+        return resposta.fixa.texto
+    if resposta.analise:
+        hipoteses = [f"- {hip.causa} ({hip.confianca:.2f})" for hip in resposta.analise.hipoteses]
+        return "\n".join([resposta.analise.resumo, *hipoteses])
+    return resposta.erro or ""
 
 
-def rodar_conversa(pipeline, conversa: dict) -> list[RespostaTurno]:
-    """Roda os turnos em ordem, acumulando o histórico (pergunta e resposta de cada turno)."""
+PipelineOuFabrica = Runnable | Callable[[str], Runnable]
+
+
+def _pipeline(origem: PipelineOuFabrica, cenario: str | None, cache: dict) -> Runnable:
+    """Pipeline fixo, ou o da fábrica para o cenário (um por cenário, reaproveitado)."""
+    if isinstance(origem, Runnable):
+        return origem
+    if cenario is None:
+        raise ValueError("fábrica de pipeline exige `cenario` na mensagem ou na conversa")
+    if cenario not in cache:
+        cache[cenario] = origem(cenario)
+    return cache[cenario]
+
+
+def rodar_bateria(origem: PipelineOuFabrica, mensagens: list[dict]) -> list[RespostaTurno]:
+    """Roda cada mensagem (sem histórico). `origem` é um pipeline fixo ou uma fábrica
+    `cenario -> pipeline`; o cenário vem do JSON e nunca é enviado ao modelo."""
+    cache: dict = {}
+    return [
+        _pipeline(origem, mensagem.get("cenario"), cache).invoke(
+            {"mensagem": mensagem["mensagem"], "historico": []}
+        )
+        for mensagem in mensagens
+    ]
+
+
+def rodar_conversa(origem: PipelineOuFabrica, conversa: dict) -> list[RespostaTurno]:
+    """Roda os turnos em ordem, acumulando o histórico (pergunta e resposta de cada turno).
+    O cenário vem de `conversa["cenario"]` (ou do turno), quando `origem` é uma fábrica."""
     historico: list[BaseMessage] = []
-    resultados = []
+    resultados, cache = [], {}
     for turno in conversa["turnos"]:
-        r = pipeline.invoke({"mensagem": turno["mensagem"], "historico": list(historico)})
-        historico += [HumanMessage(turno["mensagem"]), AIMessage(texto_resposta(r))]
-        resultados.append(r)
+        pipeline = _pipeline(origem, turno.get("cenario", conversa.get("cenario")), cache)
+        resposta = pipeline.invoke({"mensagem": turno["mensagem"], "historico": list(historico)})
+        historico += [HumanMessage(turno["mensagem"]), AIMessage(texto_resposta(resposta))]
+        resultados.append(resposta)
     return resultados
 
 
 def exibir_conversa(conversa: dict, resultados: list[RespostaTurno]) -> None:
     """Mostra uma conversa com a mesma tabela e detalhe da bateria, um item por turno."""
     mensagens = [
-        {**t, "id": f"{conversa['id']} · turno {i}", "grupo": conversa["titulo"]}
-        for i, t in enumerate(conversa["turnos"], 1)
+        {**turno, "id": f"{conversa['id']} · turno {indice}", "grupo": conversa["titulo"]}
+        for indice, turno in enumerate(conversa["turnos"], 1)
     ]
     exibir_bateria(mensagens, resultados, titulo=conversa["titulo"])

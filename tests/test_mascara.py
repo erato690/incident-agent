@@ -23,36 +23,41 @@ def test_segredos_viram_marcador(entrada, valor):
 
 
 def test_email():
-    s = mascarar("fale com ana.souza@loja.com.br agora")
-    assert "ana.souza" not in s and "[EMAIL]" in s
+    saida = mascarar("fale com ana.souza@loja.com.br agora")
+    assert "ana.souza" not in saida and "[EMAIL]" in saida
 
 
 @pytest.mark.parametrize("cpf", ["123.456.789-09", "12345678909"])
 def test_cpf(cpf):
-    s = mascarar(f"cpf {cpf} ok")
-    assert cpf not in s and "[CPF]" in s
+    saida = mascarar(f"cpf {cpf} ok")
+    assert cpf not in saida and "[CPF]" in saida
 
 
-@pytest.mark.parametrize("cartao", ["4111111111111111", "4111 1111 1111 1111", "4111-1111-1111-1111"])
+@pytest.mark.parametrize(
+    "cartao", ["4111111111111111", "4111 1111 1111 1111", "4111-1111-1111-1111"]
+)
 def test_cartao(cartao):
-    s = mascarar(f"cartao {cartao} fim")
-    assert "4111" not in s and "[CARTAO]" in s
+    saida = mascarar(f"cartao {cartao} fim")
+    assert "4111" not in saida and "[CARTAO]" in saida
 
 
-@pytest.mark.parametrize("texto", [
-    "container levou OOMKilled",
-    "HikariPool-1 - Connection is not available",
-    "at PagamentoService.java:88",
-    "deploy v2.14.0 do pagamentos-api",
-    "KeyError: 'ESTOQUE_QUEUE_URL'",
-])
+@pytest.mark.parametrize(
+    "texto",
+    [
+        "container levou OOMKilled",
+        "HikariPool-1 - Connection is not available",
+        "at PagamentoService.java:88",
+        "deploy v2.14.0 do pagamentos-api",
+        "KeyError: 'ESTOQUE_QUEUE_URL'",
+    ],
+)
 def test_texto_tecnico_intacto(texto):
     assert mascarar(texto) == texto
 
 
 def test_idempotente():
-    t = "senha=abc12345 e ana@x.com cpf 123.456.789-09 cartao 4111 1111 1111 1111"
-    assert mascarar(mascarar(t)) == mascarar(t)
+    texto = "senha=abc12345 e ana@x.com cpf 123.456.789-09 cartao 4111 1111 1111 1111"
+    assert mascarar(mascarar(texto)) == mascarar(texto)
 
 
 def test_epoch_ms_nao_vira_cartao():
@@ -64,12 +69,15 @@ def test_cartao_so_com_luhn_valido():
     assert "[CARTAO]" not in mascarar("4111 1111 1111 1112")
 
 
-@pytest.mark.parametrize("texto, esperado", [
-    ("(config: senha=abc123). A status", "(config: senha=[SEGREDO]). A status"),
-    ("token=xyz, depois", "token=[SEGREDO], depois"),
-    ('password="s3cr3t" no env', 'password="[SEGREDO]" no env'),
-    ("senha=abc123.", "senha=[SEGREDO]."),
-    ("api_key: k-1.2.3 fim", "api_key: [SEGREDO] fim"),
-])
+@pytest.mark.parametrize(
+    "texto, esperado",
+    [
+        ("(config: senha=abc123). A status", "(config: senha=[SEGREDO]). A status"),
+        ("token=xyz, depois", "token=[SEGREDO], depois"),
+        ('password="s3cr3t" no env', 'password="[SEGREDO]" no env'),
+        ("senha=abc123.", "senha=[SEGREDO]."),
+        ("api_key: k-1.2.3 fim", "api_key: [SEGREDO] fim"),
+    ],
+)
 def test_valor_do_segredo_para_em_pontuacao(texto, esperado):
     assert mascarar(texto) == esperado

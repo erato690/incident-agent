@@ -1,13 +1,23 @@
-"""Modelos Pydantic da Fase 1 (data-model.md)."""
+"""Modelos Pydantic das Fases 1 e 2 (data-model.md)."""
+
 from typing import Literal
 
 from langchain_core.messages import BaseMessage
-from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
+from pydantic import BaseModel, Field, computed_field, model_validator
 
 Intencao = Literal[
-    "investigar_erro", "checar_deploy", "checar_metrica", "comparar_incidente",
-    "pedir_runbook", "gerar_relatorio", "confirmar_causa", "saudacao",
-    "fora_do_escopo", "conteudo_proibido", "pedido_de_acao", "tentativa_de_injecao",
+    "investigar_erro",
+    "checar_deploy",
+    "checar_metrica",
+    "comparar_incidente",
+    "pedir_runbook",
+    "gerar_relatorio",
+    "confirmar_causa",
+    "saudacao",
+    "fora_do_escopo",
+    "conteudo_proibido",
+    "pedido_de_acao",
+    "tentativa_de_injecao",
 ]
 
 
@@ -50,12 +60,16 @@ class Hipotese(BaseModel):
     confianca: float = Field(ge=0, le=1)
     evidencia: str | None = Field(
         default=None,
-        description="Trecho literal do texto de entrada; obrigatório se evidencia_insuficiente=false")
+        description="Trecho literal do texto de entrada; obrigatório se "
+        "evidencia_insuficiente=false",
+    )
     evidencia_insuficiente: bool = Field(
-        default=False, description="True quando o texto não sustenta bem esta hipótese")
+        default=False, description="True quando o texto não sustenta bem esta hipótese"
+    )
     dado_que_falta: str | None = Field(
         default=None,
-        description="O dado que confirmaria a hipótese; obrigatório se evidencia_insuficiente=true")
+        description="O dado que confirmaria a hipótese; obrigatório se evidencia_insuficiente=true",
+    )
 
     @model_validator(mode="after")
     def _evidencia_ou_dado_que_falta(self) -> "Hipotese":
@@ -73,26 +87,52 @@ class AnaliseIncidente(BaseModel):
     servico: str | None = None
     resumo: str
     hipoteses: list[Hipotese] = Field(
-        min_length=2, max_length=3,
-        description="2 ou 3 hipóteses, da mais para a menos provável")
+        min_length=2, max_length=3, description="2 ou 3 hipóteses, da mais para a menos provável"
+    )
     proximos_passos: list[str] = Field(min_length=1)
 
     @model_validator(mode="after")
     def _ordena(self) -> "AnaliseIncidente":
-        self.hipoteses.sort(key=lambda h: h.confianca, reverse=True)
+        self.hipoteses.sort(key=lambda hipotese: hipotese.confianca, reverse=True)
         return self
 
     @computed_field  # só na saída; fora do schema de validação (format_instructions)
     @property
     def evidencia_insuficiente(self) -> bool:
         """True quando nenhuma das hipóteses tem evidência suficiente."""
-        return all(h.evidencia_insuficiente for h in self.hipoteses)
+        return all(hipotese.evidencia_insuficiente for hipotese in self.hipoteses)
 
 
 class RespostaFixa(BaseModel):
     texto: str
     camada: Literal[1, 2]
     categoria: str
+
+
+class PassoTrajetoria(BaseModel):
+    """Uma chamada de ferramenta feita pelo agente."""
+
+    ferramenta: str
+    argumentos: dict = Field(default_factory=dict)
+    duracao_ms: int = Field(ge=0)
+    tamanho: int = Field(ge=0, description="Caracteres da observação")
+    erro: str | None = None
+    reserva: bool = Field(default=False, description="True quando a resposta veio da gravação")
+    motivo_reserva: str | None = Field(default=None, description="Por que caiu na gravação")
+
+
+class ResultadoInvestigacao(BaseModel):
+    """Saída do passo 6 na Fase 2: exatamente um entre analise e erro."""
+
+    analise: AnaliseIncidente | None = None
+    erro: str | None = None
+    trajetoria: list[PassoTrajetoria] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _um_entre_analise_e_erro(self) -> "ResultadoInvestigacao":
+        if (self.analise is None) == (self.erro is None):
+            raise ValueError("informe exatamente um entre analise e erro")
+        return self
 
 
 class RespostaTurno(BaseModel):
@@ -102,3 +142,4 @@ class RespostaTurno(BaseModel):
     fixa: RespostaFixa | None = None
     analise: AnaliseIncidente | None = None
     erro: str | None = None
+    trajetoria: list[PassoTrajetoria] = Field(default_factory=list)

@@ -1,0 +1,61 @@
+{
+  "total_commits": 1,
+  "commits": [
+    {
+      "sha": "a356b1f6c036906eb8951c326ba5fcd85345fe4c",
+      "node_id": "C_kwDOVegjkdoAKGEzNTZiMWY2YzAzNjkwNmViODk1MWMzMjZiYTVmY2Q4NTM0NWZlNGM",
+      "commit": {
+        "author": {
+          "name": "Equipe Loja",
+          "email": "loja@example.com",
+          "date": "2026-10-06T12:40:00Z"
+        },
+        "committer": {
+          "name": "Equipe Loja",
+          "email": "loja@example.com",
+          "date": "2026-10-06T12:40:00Z"
+        },
+        "message": "perf: reduz pool máximo de 20 para 10 para aliviar o db-principal",
+        "tree": {
+          "sha": "ccf2ceb63c498a042188a251d02d560cb36ddd92",
+          "url": "https://api.github.com/repos/erato690/incident-shop/git/trees/ccf2ceb63c498a042188a251d02d560cb36ddd92"
+        },
+        "url": "https://api.github.com/repos/erato690/incident-shop/git/commits/a356b1f6c036906eb8951c326ba5fcd85345fe4c",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/erato690/incident-shop/commits/a356b1f6c036906eb8951c326ba5fcd85345fe4c",
+      "html_url": "https://github.com/erato690/incident-shop/commit/a356b1f6c036906eb8951c326ba5fcd85345fe4c",
+      "comments_url": "https://api.github.com/repos/erato690/incident-shop/commits/a356b1f6c036906eb8951c326ba5fcd85345fe4c/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "7a0ac2d08f5876d111373f3e42d71e61cc4279fb",
+          "url": "https://api.github.com/repos/erato690/incident-shop/commits/7a0ac2d08f5876d111373f3e42d71e61cc4279fb",
+          "html_url": "https://github.com/erato690/incident-shop/commit/7a0ac2d08f5876d111373f3e42d71e61cc4279fb"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "sha": "28c1226b463fe80a8d06925591c78339d3f76ace",
+      "filename": "pedidos-api/config.yaml",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "blob_url": "https://github.com/erato690/incident-shop/blob/a356b1f6c036906eb8951c326ba5fcd85345fe4c/pedidos-api%2Fconfig.yaml",
+      "raw_url": "https://github.com/erato690/incident-shop/raw/a356b1f6c036906eb8951c326ba5fcd85345fe4c/pedidos-api%2Fconfig.yaml",
+      "contents_url": "https://api.github.com/repos/erato690/incident-shop/contents/pedidos-api%2Fconfig.yaml?ref=a356b1f6c036906eb8951c326ba5fcd85345fe4c",
+      "patch": "@@ -1,7 +1,7 @@\n servico: pedidos-api\n db:\n   host: db-principal\n-  pool_max: 20          # conexões máximas com o banco\n+  pool_max: 10          # conexões máximas com o banco\n   statement_timeout_ms: 5000\n http:\n   timeout_ms: 3000"
+    }
+  ]
+}

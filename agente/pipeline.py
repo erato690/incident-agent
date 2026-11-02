@@ -1,5 +1,6 @@
 """Pipeline LCEL da Fase 1: máscara -> moderação -> NLU -> roteamento -> investigação."""
-from typing import Callable
+
+from collections.abc import Callable
 
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.runnables import Runnable, RunnableBranch, RunnableLambda, RunnablePassthrough
@@ -8,13 +9,22 @@ from agente.mascara import mascarar
 from agente.preprocessamento import preprocessar
 from agente.prompts import montar_nlu, prompt_investigacao, respostas_fixas
 from agente.schemas import (
-    AnaliseIncidente, ResultadoModeracao, RespostaFixa, RespostaTurno,
+    AnaliseIncidente,
+    RespostaFixa,
+    RespostaTurno,
+    ResultadoInvestigacao,
+    ResultadoModeracao,
 )
 
 # Intenções que recebem resposta fixa (camada 2). Ponto de extensão da US2.
 INTENCOES_FIXAS = {
-    "saudacao", "fora_do_escopo", "conteudo_proibido", "pedido_de_acao",
-    "tentativa_de_injecao", "gerar_relatorio", "confirmar_causa",
+    "saudacao",
+    "fora_do_escopo",
+    "conteudo_proibido",
+    "pedido_de_acao",
+    "tentativa_de_injecao",
+    "gerar_relatorio",
+    "confirmar_causa",
 }
 
 
@@ -30,8 +40,10 @@ def _fixa(camada: int, categoria: str) -> RespostaFixa:
 def _mascarar_entrada(entrada: dict) -> dict:
     """Mascara a mensagem e o histórico antes de qualquer envio externo (FR-000)."""
     historico = [
-        m.model_copy(update={"content": mascarar(m.content)}) if isinstance(m.content, str) else m
-        for m in entrada.get("historico") or []
+        msg.model_copy(update={"content": mascarar(msg.content)})
+        if isinstance(msg.content, str)
+        else msg
+        for msg in entrada.get("historico") or []
     ]
     return {"mensagem": mascarar(entrada.get("mensagem") or ""), "historico": historico}
 
@@ -47,27 +59,33 @@ def _resp_sinalizada(estado: dict) -> RespostaTurno:
 
 def _resp_fixa_nlu(estado: dict) -> RespostaTurno:
     nlu = estado["nlu"]
-    return RespostaTurno(rota="fixa", moderacao=estado["moderacao"], nlu=nlu,
-                         fixa=_fixa(2, nlu.intencao))
+    return RespostaTurno(
+        rota="fixa", moderacao=estado["moderacao"], nlu=nlu, fixa=_fixa(2, nlu.intencao)
+    )
 
 
 def _resp_investigacao(estado: dict) -> RespostaTurno:
-    res = estado["resultado"]
-    base = dict(moderacao=estado["moderacao"], nlu=estado["nlu"])
-    if isinstance(res, str):
-        return RespostaTurno(rota="erro", erro=res, **base)
-    return RespostaTurno(rota="investigacao", analise=res, **base)
+    resultado = estado["resultado"]
+    base = {"moderacao": estado["moderacao"], "nlu": estado["nlu"]}
+    if isinstance(resultado, ResultadoInvestigacao):  # com agente: traz a trajetória
+        base["trajetoria"] = resultado.trajetoria
+        resultado = resultado.erro if resultado.erro is not None else resultado.analise
+    if isinstance(resultado, str):
+        return RespostaTurno(rota="erro", erro=resultado, **base)
+    return RespostaTurno(rota="investigacao", analise=resultado, **base)
 
 
 def _preprocessar_estado(estado: dict) -> dict:
     """Aplica preprocessar ao estado e devolve as variáveis do prompt de investigação."""
     nlu = estado.get("nlu")
     erro = preprocessar(estado["mensagem"], nlu.servico if nlu else None)
-    i = erro.impressao
+    impressao = erro.impressao
     return {
-        "texto_limpo": erro.texto_limpo, "excecao": i.excecao or "não identificada",
-        "primeiro_frame": i.primeiro_frame or "não identificado",
-        "servico": i.servico or "não identificado", "historico": estado.get("historico", []),
+        "texto_limpo": erro.texto_limpo,
+        "excecao": impressao.excecao or "não identificada",
+        "primeiro_frame": impressao.primeiro_frame or "não identificado",
+        "servico": impressao.servico or "não identificado",
+        "historico": estado.get("historico", []),
     }
 
 
@@ -77,18 +95,20 @@ def montar_investigacao_json(llm) -> Runnable:
     return (
         RunnableLambda(_preprocessar_estado)
         | prompt_investigacao.partial(format_instructions=parser.get_format_instructions())
-        | llm | parser
+        | llm
+        | parser
     )
 
 
 def montar_investigacao(llm) -> Runnable:
     """Estado -> AnaliseIncidente (uma nova tentativa); falha final vira str com o erro."""
     nucleo = (
-        montar_investigacao_json(llm)
-        | RunnableLambda(AnaliseIncidente.model_validate)
+        montar_investigacao_json(llm) | RunnableLambda(AnaliseIncidente.model_validate)
     ).with_retry(stop_after_attempt=2, wait_exponential_jitter=False)
     falha = RunnableLambda(
-        lambda e: f"JSON inválido da investigação: {e['excecao']} | mensagem: {e['mensagem']}"
+        lambda estado: (
+            f"JSON inválido da investigação: {estado['excecao']} | mensagem: {estado['mensagem']}"
+        )
     )
     return nucleo.with_fallbacks([falha], exception_key="excecao")
 
@@ -121,8 +141,10 @@ def _decide_roteador(estado: dict) -> RespostaTurno | None:
 
 
 def montar_etapas(
-    llm, moderar: Callable[[str], ResultadoModeracao],
-    nlu: Runnable | None = None, investigacao: Runnable | None = None,
+    llm,
+    moderar: Callable[[str], ResultadoModeracao],
+    nlu: Runnable | None = None,
+    investigacao: Runnable | None = None,
 ) -> dict[str, Runnable]:
     """Etapas do pipeline na ordem em que a mensagem passa (cada uma é um Runnable)."""
     nlu = nlu or montar_nlu(llm)
@@ -134,15 +156,17 @@ def montar_etapas(
         "passo2_vazia": _se_pendente(_marcar(_decide_vazia)),  # 1ª checagem: sempre roda
         # entra estado sem resposta -> sai estado + moderacao + resposta (fixa se sinalizada)
         "passo3_moderacao": _se_pendente(
-            RunnablePassthrough.assign(moderacao=lambda e: moderar(e["mensagem"]))
-            | _marcar(_decide_moderacao)),
+            RunnablePassthrough.assign(moderacao=lambda estado: moderar(estado["mensagem"]))
+            | _marcar(_decide_moderacao)
+        ),
         # entra estado sem resposta -> sai estado + nlu (AnaliseNLU)
         "passo4_nlu": _se_pendente(RunnablePassthrough.assign(nlu=nlu)),
         # entra estado + nlu -> sai estado + resposta (fixa se a intenção for de resposta fixa)
         "passo5_roteador": _se_pendente(_marcar(_decide_roteador)),
         # entra estado sem resposta -> sai estado + resposta (investigação ou erro)
         "passo6_investigacao": _se_pendente(
-            RunnablePassthrough.assign(resultado=investigacao) | _marcar(_resp_investigacao)),
+            RunnablePassthrough.assign(resultado=investigacao) | _marcar(_resp_investigacao)
+        ),
         # entra estado com resposta -> sai só o RespostaTurno
         "passo7_resposta": RunnableLambda(lambda estado: estado["resposta"]),
     }
@@ -152,13 +176,27 @@ def montar_etapas(
 
 
 def montar_pipeline(
-    llm, moderar: Callable[[str], ResultadoModeracao],
-    nlu: Runnable | None = None, investigacao: Runnable | None = None,
+    llm,
+    moderar: Callable[[str], ResultadoModeracao],
+    nlu: Runnable | None = None,
+    investigacao: Runnable | None = None,
 ) -> Runnable:
     """Entrada {"mensagem", "historico"} -> RespostaTurno. nlu/investigacao injetáveis."""
-    (passo1_mascara, passo2_vazia, passo3_moderacao, passo4_nlu, passo5_roteador,
-     passo6_investigacao, passo7_resposta) = montar_etapas(llm, moderar, nlu, investigacao).values()
+    (
+        passo1_mascara,
+        passo2_vazia,
+        passo3_moderacao,
+        passo4_nlu,
+        passo5_roteador,
+        passo6_investigacao,
+        passo7_resposta,
+    ) = montar_etapas(llm, moderar, nlu, investigacao).values()
     return (
-        passo1_mascara | passo2_vazia | passo3_moderacao | passo4_nlu
-        | passo5_roteador | passo6_investigacao | passo7_resposta
+        passo1_mascara
+        | passo2_vazia
+        | passo3_moderacao
+        | passo4_nlu
+        | passo5_roteador
+        | passo6_investigacao
+        | passo7_resposta
     )
