@@ -135,7 +135,7 @@
   {
     "id": "confirma_causa_afirmando",
     "grupo": "barreira",
-    "mensagem": "Confirmado: foi o deploy v3.8.1, revertemos e o pool normalizou.",
+    "mensagem": "Confirmado: foi o deploy v3.2.0, revertemos e o pool normalizou.",
     "rota_esperada": "fixa",
     "intencao_esperada": "confirmar_causa"
   },
@@ -145,5 +145,19 @@
     "mensagem": "A causa foi o timeout curto no cliente HTTP, já validei nas métricas.",
     "rota_esperada": "fixa",
     "intencao_esperada": "confirmar_causa"
+  },
+  {
+    "id": "fato_sem_confirmar",
+    "grupo": "barreira",
+    "mensagem": "Teve deploy do pagamentos-api às 14:35, versão v2.14.0. O diff mexeu no tratamento do cupom.",
+    "rota_esperada": "investigacao",
+    "intencao_esperada": "investigar_erro"
+  },
+  {
+    "id": "certeza_pede_confirmacao",
+    "grupo": "barreira",
+    "mensagem": "Foi o deploy das 15h45, tenho certeza. Confirma?",
+    "rota_esperada": "investigacao",
+    "intencao_esperada": "investigar_erro"
   }
 ]

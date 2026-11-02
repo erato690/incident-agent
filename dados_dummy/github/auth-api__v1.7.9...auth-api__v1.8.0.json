@@ -1,0 +1,61 @@
+{
+  "total_commits": 1,
+  "commits": [
+    {
+      "sha": "7694861edca14dba29c4458d408da55821f345b4",
+      "node_id": "C_kwDOVegjkdoAKDc2OTQ4NjFlZGNhMTRkYmEyOWM0NDU4ZDQwOGRhNTU4MjFmMzQ1YjQ",
+      "commit": {
+        "author": {
+          "name": "beatriz.alves",
+          "email": "beatriz.alves@example.com",
+          "date": "2026-10-27T14:10:00Z"
+        },
+        "committer": {
+          "name": "Equipe Loja",
+          "email": "loja@example.com",
+          "date": "2026-10-27T14:10:00Z"
+        },
+        "message": "feat: adiciona cache em memória sem limite para tokens validados (c44e8b0)",
+        "tree": {
+          "sha": "fc00cacdd1d5c85bb55fdda85c12bf5d05d6c80c",
+          "url": "https://api.github.com/repos/erato690/incident-shop/git/trees/fc00cacdd1d5c85bb55fdda85c12bf5d05d6c80c"
+        },
+        "url": "https://api.github.com/repos/erato690/incident-shop/git/commits/7694861edca14dba29c4458d408da55821f345b4",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/erato690/incident-shop/commits/7694861edca14dba29c4458d408da55821f345b4",
+      "html_url": "https://github.com/erato690/incident-shop/commit/7694861edca14dba29c4458d408da55821f345b4",
+      "comments_url": "https://api.github.com/repos/erato690/incident-shop/commits/7694861edca14dba29c4458d408da55821f345b4/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "651362e2b157233bc9cd4292571f54c71c98c864",
+          "url": "https://api.github.com/repos/erato690/incident-shop/commits/651362e2b157233bc9cd4292571f54c71c98c864",
+          "html_url": "https://github.com/erato690/incident-shop/commit/651362e2b157233bc9cd4292571f54c71c98c864"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "sha": "6604d3e4dd1bd1feff98a9714152ce8e173a6e94",
+      "filename": "auth-api/app.py",
+      "status": "modified",
+      "additions": 5,
+      "deletions": 1,
+      "changes": 6,
+      "blob_url": "https://github.com/erato690/incident-shop/blob/7694861edca14dba29c4458d408da55821f345b4/auth-api%2Fapp.py",
+      "raw_url": "https://github.com/erato690/incident-shop/raw/7694861edca14dba29c4458d408da55821f345b4/auth-api%2Fapp.py",
+      "contents_url": "https://api.github.com/repos/erato690/incident-shop/contents/auth-api%2Fapp.py?ref=7694861edca14dba29c4458d408da55821f345b4",
+      "patch": "@@ -1,5 +1,9 @@\n \"\"\"auth-api: emite tokens e valida JWT consultando o provedor de identidade.\"\"\"\n \n+_cache_tokens = {}  # token -> claims, nunca é limpo\n+\n \n def validar_token(token, idp):\n-    return idp.validar(token)\n+    if token not in _cache_tokens:\n+        _cache_tokens[token] = idp.validar(token)\n+    return _cache_tokens[token]"
+    }
+  ]
+}

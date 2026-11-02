@@ -1,4 +1,5 @@
 """Escolha do LLM por provedor (LLM_PROVEDOR), sem troca automática."""
+
 import importlib
 import os
 

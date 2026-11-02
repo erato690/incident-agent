@@ -1,23 +1,37 @@
 import pytest
 from pydantic import ValidationError
 
-from agente.schemas import AnaliseIncidente, AnaliseNLU, Hipotese
+from agente.schemas import (
+    AnaliseIncidente,
+    AnaliseNLU,
+    Hipotese,
+    PassoTrajetoria,
+    RespostaTurno,
+    ResultadoInvestigacao,
+    ResultadoModeracao,
+)
 
 
-def _hip(causa="a", confianca=0.5, **kw):
-    return Hipotese(causa=causa, confianca=confianca, evidencia="trecho", **kw)
+def _hip(causa="a", confianca=0.5, **opcoes):
+    return Hipotese(causa=causa, confianca=confianca, evidencia="trecho", **opcoes)
 
 
-def _tres(**kw):
-    if kw.get("evidencia_insuficiente"):
-        kw.setdefault("dado_que_falta", "log do pool")
-    return [_hip("a", 0.2, **kw), _hip("b", 0.9, **kw), _hip("c", 0.5, **kw)]
+def _tres(**opcoes):
+    if opcoes.get("evidencia_insuficiente"):
+        opcoes.setdefault("dado_que_falta", "log do pool")
+    return [_hip("a", 0.2, **opcoes), _hip("b", 0.9, **opcoes), _hip("c", 0.5, **opcoes)]
 
 
-def _analise(**kw):
-    base = dict(severidade="alta", categoria="null_pointer", servico="pagamentos-api",
-                resumo="r", hipoteses=_tres(), proximos_passos=["ver logs"])
-    base.update(kw)
+def _analise(**opcoes):
+    base = dict(
+        severidade="alta",
+        categoria="null_pointer",
+        servico="pagamentos-api",
+        resumo="r",
+        hipoteses=_tres(),
+        proximos_passos=["ver logs"],
+    )
+    base.update(opcoes)
     return AnaliseIncidente(**base)
 
 
@@ -35,10 +49,10 @@ def test_hipotese_rejeita_evidencia_vazia():
         Hipotese(causa="x", confianca=0.5, evidencia="  ")
 
 
-@pytest.mark.parametrize("c", [-0.1, 1.1])
-def test_hipotese_rejeita_confianca_fora_da_faixa(c):
+@pytest.mark.parametrize("confianca", [-0.1, 1.1])
+def test_hipotese_rejeita_confianca_fora_da_faixa(confianca):
     with pytest.raises(ValidationError):
-        Hipotese(causa="x", confianca=c, evidencia="trecho")
+        Hipotese(causa="x", confianca=confianca, evidencia="trecho")
 
 
 def test_analise_exige_proximos_passos():
@@ -46,21 +60,21 @@ def test_analise_exige_proximos_passos():
         _analise(proximos_passos=[])
 
 
-@pytest.mark.parametrize("n", [0, 1, 4])
-def test_analise_rejeita_menos_de_duas_ou_mais_de_tres_hipoteses(n):
-    hs = [_hip(str(i), 0.1 * (i + 1)) for i in range(n)]
+@pytest.mark.parametrize("quantidade", [0, 1, 4])
+def test_analise_rejeita_menos_de_duas_ou_mais_de_tres_hipoteses(quantidade):
+    hipoteses = [_hip(str(indice), 0.1 * (indice + 1)) for indice in range(quantidade)]
     with pytest.raises(ValidationError):
-        _analise(hipoteses=hs)
+        _analise(hipoteses=hipoteses)
 
 
-@pytest.mark.parametrize("n", [2, 3])
-def test_analise_aceita_duas_ou_tres_hipoteses(n):
-    hs = [_hip(str(i), 0.1 * (i + 1)) for i in range(n)]
-    assert len(_analise(hipoteses=hs).hipoteses) == n
+@pytest.mark.parametrize("quantidade", [2, 3])
+def test_analise_aceita_duas_ou_tres_hipoteses(quantidade):
+    hipoteses = [_hip(str(indice), 0.1 * (indice + 1)) for indice in range(quantidade)]
+    assert len(_analise(hipoteses=hipoteses).hipoteses) == quantidade
 
 
 def test_hipoteses_ordenadas_por_confianca():
-    assert [x.causa for x in _analise().hipoteses] == ["b", "c", "a"]
+    assert [hipotese.causa for hipotese in _analise().hipoteses] == ["b", "c", "a"]
 
 
 def test_evidencia_insuficiente_por_hipotese_default_falso():
@@ -69,9 +83,9 @@ def test_evidencia_insuficiente_por_hipotese_default_falso():
 
 def test_evidencia_insuficiente_da_analise_so_se_todas_marcadas():
     assert _analise().evidencia_insuficiente is False
-    hs = _tres()
-    hs[0] = _hip("a", 0.2, evidencia_insuficiente=True, dado_que_falta="métrica do pool")
-    assert _analise(hipoteses=hs).evidencia_insuficiente is False
+    hipoteses = _tres()
+    hipoteses[0] = _hip("a", 0.2, evidencia_insuficiente=True, dado_que_falta="métrica do pool")
+    assert _analise(hipoteses=hipoteses).evidencia_insuficiente is False
     assert _analise(hipoteses=_tres(evidencia_insuficiente=True)).evidencia_insuficiente is True
 
 
@@ -82,26 +96,40 @@ def test_evidencia_insuficiente_fora_do_schema_de_validacao():
 # Saída real do modelo (execução com a OpenAI): a 3ª hipótese veio com
 # evidencia_insuficiente=true e SEM o campo "evidencia", o que quebrava a validação.
 JSON_REAL_SEM_EVIDENCIA = {
-    "severidade": "alta", "categoria": "dependencia_externa", "servico": "pagamentos-api",
+    "severidade": "alta",
+    "categoria": "dependencia_externa",
+    "servico": "pagamentos-api",
     "resumo": "Timeouts ao chamar o gateway PagaFácil, que está com falha geral.",
     "hipoteses": [
-        {"causa": "Gateway de pagamento PagaFácil fora do ar", "confianca": 0.9,
-         "evidencia": "A status page da PagaFácil mostra 'Major outage' desde 09:05",
-         "evidencia_insuficiente": False},
-        {"causa": "Timeout de leitura curto demais no cliente HTTP", "confianca": 0.3,
-         "evidencia": "java.net.SocketTimeoutException: Read timed out",
-         "evidencia_insuficiente": False},
-        {"causa": "Possível aumento de carga no pagamentos-api", "confianca": 0.1,
-         "evidencia_insuficiente": True, "dado_que_falta": "taxa de requisições por minuto"},
+        {
+            "causa": "Gateway de pagamento PagaFácil fora do ar",
+            "confianca": 0.9,
+            "evidencia": "A status page da PagaFácil mostra 'Major outage' desde 09:05",
+            "evidencia_insuficiente": False,
+        },
+        {
+            "causa": "Timeout de leitura curto demais no cliente HTTP",
+            "confianca": 0.3,
+            "evidencia": "java.net.SocketTimeoutException: Read timed out",
+            "evidencia_insuficiente": False,
+        },
+        {
+            "causa": "Possível aumento de carga no pagamentos-api",
+            "confianca": 0.1,
+            "evidencia_insuficiente": True,
+            "dado_que_falta": "taxa de requisições por minuto",
+        },
     ],
     "proximos_passos": ["Acompanhar a status page da PagaFácil"],
 }
 
 
 def test_hipotese_insuficiente_sem_evidencia_e_aceita_com_dado_que_falta():
-    a = AnaliseIncidente.model_validate(JSON_REAL_SEM_EVIDENCIA)
-    h = a.hipoteses[-1]
-    assert h.evidencia is None and h.dado_que_falta == "taxa de requisições por minuto"
+    analise = AnaliseIncidente.model_validate(JSON_REAL_SEM_EVIDENCIA)
+    hipotese = analise.hipoteses[-1]
+    assert (
+        hipotese.evidencia is None and hipotese.dado_que_falta == "taxa de requisições por minuto"
+    )
 
 
 def test_hipotese_insuficiente_exige_dado_que_falta():
@@ -112,3 +140,36 @@ def test_hipotese_insuficiente_exige_dado_que_falta():
 def test_hipotese_suficiente_exige_evidencia():
     with pytest.raises(ValidationError):
         Hipotese(causa="x", confianca=0.5)
+
+
+# ---- Trajetória e resultado da investigação com agente ----
+
+
+def _passo(**opcoes):
+    base = dict(ferramenta="buscar_logs", argumentos={"servico": "x"}, duracao_ms=3, tamanho=10)
+    base.update(opcoes)
+    return PassoTrajetoria(**base)
+
+
+def test_passo_trajetoria_padroes():
+    passo = _passo()
+    assert passo.erro is None and passo.reserva is False
+
+
+def test_passo_rejeita_duracao_negativa():
+    with pytest.raises(ValidationError):
+        _passo(duracao_ms=-1)
+
+
+def test_resultado_exige_exatamente_um_entre_analise_e_erro():
+    with pytest.raises(ValidationError):
+        ResultadoInvestigacao()
+    with pytest.raises(ValidationError):
+        ResultadoInvestigacao(analise=_analise(), erro="falhou")
+    assert ResultadoInvestigacao(erro="falhou").trajetoria == []
+    assert ResultadoInvestigacao(analise=_analise(), trajetoria=[_passo()]).erro is None
+
+
+def test_resposta_turno_trajetoria_default_vazio():
+    resposta = RespostaTurno(rota="erro", moderacao=ResultadoModeracao(status="ok"), erro="x")
+    assert resposta.trajetoria == []

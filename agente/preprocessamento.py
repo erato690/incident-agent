@@ -1,4 +1,5 @@
 """Pré-processamento do erro: limpa ruído e extrai a impressão digital."""
+
 import re
 
 from agente.schemas import ErroPreprocessado, ImpressaoDigital
@@ -14,14 +15,14 @@ _EXCECAO = re.compile(r"\b(\w*(?:Exception|Error|Killed))\b")
 
 def _tipo_frame(linha: str) -> str | None:
     """Devolve 'lib', 'app' ou None (linha que não é frame)."""
-    m = _FRAME_JAVA.match(linha)
-    if m:
+    if _FRAME_JAVA.match(linha):
         classe = linha.split("at ", 1)[1].lstrip()
         classe = classe.split("/", 1)[-1]
         return "lib" if classe.startswith(_LIB_JAVA) else "app"
-    m = _FRAME_PY.match(linha)
-    if m:
-        return "lib" if any(p in m.group(1) for p in _LIB_PY) else "app"
+    frame_python = _FRAME_PY.match(linha)
+    if frame_python:
+        arquivo = frame_python.group(1)
+        return "lib" if any(prefixo in arquivo for prefixo in _LIB_PY) else "app"
     return None
 
 
@@ -50,9 +51,11 @@ def preprocessar(texto: str, servico: str | None = None) -> ErroPreprocessado:
     """Limpa o stack trace, limita a 4.000 caracteres e extrai a impressão digital."""
     linhas, primeiro = _limpar(texto)
     limpo = "\n".join(linhas)[:LIMITE]
-    m = _EXCECAO.search(limpo)
-    achado = next((s for s in SERVICOS if s in texto), None)
+    excecao = _EXCECAO.search(limpo)
+    achado = next((nome for nome in SERVICOS if nome in texto), None)
     impressao = ImpressaoDigital(
-        excecao=m.group(1) if m else None, primeiro_frame=primeiro, servico=servico or achado,
+        excecao=excecao.group(1) if excecao else None,
+        primeiro_frame=primeiro,
+        servico=servico or achado,
     )
     return ErroPreprocessado(impressao=impressao, texto_limpo=limpo)

@@ -182,6 +182,13 @@ Seis camadas, na ordem em que atuam. Cada camada entra no notebook na fase indic
   interna de planejamento.
 - Antes de declarar uma tarefa concluída, a seção do notebook correspondente MUST rodar com
   dados dummy.
+- Código limpo: nomes que digam o que a coisa é, em português consistente (snake_case para
+  funções e variáveis, PascalCase para classes, MAIÚSCULAS para constantes), sem número de fase
+  nem letra solta; funções curtas; comentário só quando explica o porquê. O código em `agente/`,
+  `scripts/`, `tests/` e o notebook MUST seguir a PEP 8 e passar em `ruff check` e
+  `ruff format --check` sem avisos (configuração no `pyproject.toml`).
+- Notebook: os imports ficam na célula de Setup, e nenhuma seção depende de variável criada em
+  outra seção sem recriá-la; cada seção MUST rodar a partir do Setup sozinha.
 
 ## Governance
 
@@ -198,6 +205,7 @@ Seis camadas, na ordem em que atuam. Cada camada entra no notebook na fase indic
   explícita do LLM (`LLM_PROVEDOR`, padrão `openai`) no lugar do plano B. 1.3.0 (2026-11-01) análise com 2 ou 3
   hipóteses e `evidencia_insuficiente` por hipótese (princípio II). 1.4.0 (2026-11-01) moderação com limiar por
   categoria e status `aviso` contra falso positivo de jargão técnico (Guardrails, camada 1). 1.4.1 (2026-11-01) hipótese sem
-  sustentação traz `dado_que_falta` em vez de evidência inventada.
+  sustentação traz `dado_que_falta` em vez de evidência inventada. 1.5.0 (2026-11-01) código limpo,
+  PEP 8 com `ruff` sem avisos e notebook com imports no Setup e seções independentes.
 
-**Version**: 1.4.1 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-01
+**Version**: 1.5.0 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-01

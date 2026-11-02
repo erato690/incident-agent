@@ -1,0 +1,61 @@
+{
+  "total_commits": 1,
+  "commits": [
+    {
+      "sha": "60b41c3c6fa1291eed9e7b19a65be165161f841d",
+      "node_id": "C_kwDOVegjkdoAKDYwYjQxYzNjNmZhMTI5MWVlZDllN2IxOWE2NWJlMTY1MTYxZjg0MWQ",
+      "commit": {
+        "author": {
+          "name": "joao.pereira",
+          "email": "joao.pereira@example.com",
+          "date": "2026-10-08T18:30:00Z"
+        },
+        "committer": {
+          "name": "Equipe Loja",
+          "email": "loja@example.com",
+          "date": "2026-10-08T18:30:00Z"
+        },
+        "message": "fix: corrige texto do e-mail de confirmação (e90a4d7)",
+        "tree": {
+          "sha": "4fb00c0b8e7b907bf9dc393e5ab8a415b84b0248",
+          "url": "https://api.github.com/repos/erato690/incident-shop/git/trees/4fb00c0b8e7b907bf9dc393e5ab8a415b84b0248"
+        },
+        "url": "https://api.github.com/repos/erato690/incident-shop/git/commits/60b41c3c6fa1291eed9e7b19a65be165161f841d",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/erato690/incident-shop/commits/60b41c3c6fa1291eed9e7b19a65be165161f841d",
+      "html_url": "https://github.com/erato690/incident-shop/commit/60b41c3c6fa1291eed9e7b19a65be165161f841d",
+      "comments_url": "https://api.github.com/repos/erato690/incident-shop/commits/60b41c3c6fa1291eed9e7b19a65be165161f841d/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "a356b1f6c036906eb8951c326ba5fcd85345fe4c",
+          "url": "https://api.github.com/repos/erato690/incident-shop/commits/a356b1f6c036906eb8951c326ba5fcd85345fe4c",
+          "html_url": "https://github.com/erato690/incident-shop/commit/a356b1f6c036906eb8951c326ba5fcd85345fe4c"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "sha": "9a9223251fcaeaef0f3212abf8f1584f48617a6c",
+      "filename": "pedidos-api/templates/email_confirmacao.txt",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "blob_url": "https://github.com/erato690/incident-shop/blob/60b41c3c6fa1291eed9e7b19a65be165161f841d/pedidos-api%2Ftemplates%2Femail_confirmacao.txt",
+      "raw_url": "https://github.com/erato690/incident-shop/raw/60b41c3c6fa1291eed9e7b19a65be165161f841d/pedidos-api%2Ftemplates%2Femail_confirmacao.txt",
+      "contents_url": "https://api.github.com/repos/erato690/incident-shop/contents/pedidos-api%2Ftemplates%2Femail_confirmacao.txt?ref=60b41c3c6fa1291eed9e7b19a65be165161f841d",
+      "patch": "@@ -1,4 +1,4 @@\n Assunto: Pedido recebido\n \n Olá {{nome}}, recebemos seu pedido {{pedido_id}}.\n-Em breve vc recebera a confirmacao do pagamento.\n+Em breve você receberá a confirmação do pagamento."
+    }
+  ]
+}

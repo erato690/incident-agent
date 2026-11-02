@@ -1,0 +1,61 @@
+{
+  "total_commits": 1,
+  "commits": [
+    {
+      "sha": "6245f8666a3b165f991a9820aa17f3b960f5252b",
+      "node_id": "C_kwDOVegjkdoAKDYyNDVmODY2NmEzYjE2NWY5OTFhOTgyMGFhMTdmM2I5NjBmNTI1MmI",
+      "commit": {
+        "author": {
+          "name": "ana.souza",
+          "email": "ana.souza@example.com",
+          "date": "2026-10-14T17:20:00Z"
+        },
+        "committer": {
+          "name": "Equipe Loja",
+          "email": "loja@example.com",
+          "date": "2026-10-14T17:20:00Z"
+        },
+        "message": "feat: aplica desconto de cupom na confirmação do pagamento (a1f3c9e)",
+        "tree": {
+          "sha": "b408286ab4610cb20f8286b9a4c325e8fda9b25c",
+          "url": "https://api.github.com/repos/erato690/incident-shop/git/trees/b408286ab4610cb20f8286b9a4c325e8fda9b25c"
+        },
+        "url": "https://api.github.com/repos/erato690/incident-shop/git/commits/6245f8666a3b165f991a9820aa17f3b960f5252b",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/erato690/incident-shop/commits/6245f8666a3b165f991a9820aa17f3b960f5252b",
+      "html_url": "https://github.com/erato690/incident-shop/commit/6245f8666a3b165f991a9820aa17f3b960f5252b",
+      "comments_url": "https://api.github.com/repos/erato690/incident-shop/commits/6245f8666a3b165f991a9820aa17f3b960f5252b/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "93bfa78b500ca6e1dafa6a4275f17bbc13c46e72",
+          "url": "https://api.github.com/repos/erato690/incident-shop/commits/93bfa78b500ca6e1dafa6a4275f17bbc13c46e72",
+          "html_url": "https://github.com/erato690/incident-shop/commit/93bfa78b500ca6e1dafa6a4275f17bbc13c46e72"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "sha": "3f3c9e1b65bc20cb158babd10249f45cba20640e",
+      "filename": "pagamentos-api/src/PagamentoService.java",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "blob_url": "https://github.com/erato690/incident-shop/blob/6245f8666a3b165f991a9820aa17f3b960f5252b/pagamentos-api%2Fsrc%2FPagamentoService.java",
+      "raw_url": "https://github.com/erato690/incident-shop/raw/6245f8666a3b165f991a9820aa17f3b960f5252b/pagamentos-api%2Fsrc%2FPagamentoService.java",
+      "contents_url": "https://api.github.com/repos/erato690/incident-shop/contents/pagamentos-api%2Fsrc%2FPagamentoService.java?ref=6245f8666a3b165f991a9820aa17f3b960f5252b",
+      "patch": "@@ -3,7 +3,7 @@\n public class PagamentoService {\n \n     public Pagamento confirmar(Pedido pedido, Cupom cupom) {\n-        double valor = pedido.getTotal();\n+        double valor = pedido.getTotal() - cupom.getDesconto();\n         return gateway.cobrar(pedido.getId(), valor);\n     }\n }"
+    }
+  ]
+}

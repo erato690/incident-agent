@@ -1,0 +1,85 @@
+{
+  "total_commits": 1,
+  "commits": [
+    {
+      "sha": "d5c8f27d53204d0f840fff5d5cbe809e7b73b0d1",
+      "node_id": "C_kwDOVegjkdoAKGQ1YzhmMjdkNTMyMDRkMGY4NDBmZmY1ZDVjYmU4MDllN2I3M2IwZDE",
+      "commit": {
+        "author": {
+          "name": "carlos.lima",
+          "email": "carlos.lima@example.com",
+          "date": "2026-10-19T19:05:00Z"
+        },
+        "committer": {
+          "name": "Equipe Loja",
+          "email": "loja@example.com",
+          "date": "2026-10-19T19:05:00Z"
+        },
+        "message": "refactor: lê a URL da fila da variável de ambiente ESTOQUE_QUEUE_URL (7bd0e21)",
+        "tree": {
+          "sha": "5ff27f96c3209c6d5f3413b689b304e774d232b1",
+          "url": "https://api.github.com/repos/erato690/incident-shop/git/trees/5ff27f96c3209c6d5f3413b689b304e774d232b1"
+        },
+        "url": "https://api.github.com/repos/erato690/incident-shop/git/commits/d5c8f27d53204d0f840fff5d5cbe809e7b73b0d1",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/erato690/incident-shop/commits/d5c8f27d53204d0f840fff5d5cbe809e7b73b0d1",
+      "html_url": "https://github.com/erato690/incident-shop/commit/d5c8f27d53204d0f840fff5d5cbe809e7b73b0d1",
+      "comments_url": "https://api.github.com/repos/erato690/incident-shop/commits/d5c8f27d53204d0f840fff5d5cbe809e7b73b0d1/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "d63ba403e2b6e0a923b6ab1947ff81e680c84f3a",
+          "url": "https://api.github.com/repos/erato690/incident-shop/commits/d63ba403e2b6e0a923b6ab1947ff81e680c84f3a",
+          "html_url": "https://github.com/erato690/incident-shop/commit/d63ba403e2b6e0a923b6ab1947ff81e680c84f3a"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "sha": "031646780fb3801ba156b1f93b5d0471923028c3",
+      "filename": "estoque-worker/.env.example",
+      "status": "modified",
+      "additions": 0,
+      "deletions": 1,
+      "changes": 1,
+      "blob_url": "https://github.com/erato690/incident-shop/blob/d5c8f27d53204d0f840fff5d5cbe809e7b73b0d1/estoque-worker%2F.env.example",
+      "raw_url": "https://github.com/erato690/incident-shop/raw/d5c8f27d53204d0f840fff5d5cbe809e7b73b0d1/estoque-worker%2F.env.example",
+      "contents_url": "https://api.github.com/repos/erato690/incident-shop/contents/estoque-worker%2F.env.example?ref=d5c8f27d53204d0f840fff5d5cbe809e7b73b0d1",
+      "patch": "@@ -1,2 +1 @@\n-ESTOQUE_QUEUE_URL=https://sqs.sa-east-1.example.com/estoque-reservas\n LOG_LEVEL=INFO"
+    },
+    {
+      "sha": "d5b61d2d19a1a3fd7a4c893be53781512089c55f",
+      "filename": "estoque-worker/config.py",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "blob_url": "https://github.com/erato690/incident-shop/blob/d5c8f27d53204d0f840fff5d5cbe809e7b73b0d1/estoque-worker%2Fconfig.py",
+      "raw_url": "https://github.com/erato690/incident-shop/raw/d5c8f27d53204d0f840fff5d5cbe809e7b73b0d1/estoque-worker%2Fconfig.py",
+      "contents_url": "https://api.github.com/repos/erato690/incident-shop/contents/estoque-worker%2Fconfig.py?ref=d5c8f27d53204d0f840fff5d5cbe809e7b73b0d1",
+      "patch": "@@ -1,3 +1,3 @@\n import os\n \n-QUEUE_URL = os.environ.get(\"ESTOQUE_QUEUE_URL\", \"https://sqs.sa-east-1.example.com/estoque-reservas\")\n+QUEUE_URL = os.environ[\"ESTOQUE_QUEUE_URL\"]"
+    },
+    {
+      "sha": "bf2f05f64cf69e7ec2caed28c85d23f674926ced",
+      "filename": "estoque-worker/config.yaml",
+      "status": "modified",
+      "additions": 0,
+      "deletions": 1,
+      "changes": 1,
+      "blob_url": "https://github.com/erato690/incident-shop/blob/d5c8f27d53204d0f840fff5d5cbe809e7b73b0d1/estoque-worker%2Fconfig.yaml",
+      "raw_url": "https://github.com/erato690/incident-shop/raw/d5c8f27d53204d0f840fff5d5cbe809e7b73b0d1/estoque-worker%2Fconfig.yaml",
+      "contents_url": "https://api.github.com/repos/erato690/incident-shop/contents/estoque-worker%2Fconfig.yaml?ref=d5c8f27d53204d0f840fff5d5cbe809e7b73b0d1",
+      "patch": "@@ -3,5 +3,4 @@ db:\n   host: db-principal\n   pool_max: 10\n fila:\n-  queue_url: https://sqs.sa-east-1.example.com/estoque-reservas\n   poll_interval_ms: 500"
+    }
+  ]
+}

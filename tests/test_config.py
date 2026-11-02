@@ -5,9 +5,9 @@ from agente import config
 
 @pytest.fixture(autouse=True)
 def _sem_env(monkeypatch):
-    monkeypatch.setattr(config, "load_dotenv", lambda *a, **k: None)
-    for v in ("DEEPSEEK_API_KEY", "OPENAI_API_KEY", "LLM_PROVEDOR"):
-        monkeypatch.delenv(v, raising=False)
+    monkeypatch.setattr(config, "load_dotenv", lambda *args, **kwargs: None)
+    for variavel in ("DEEPSEEK_API_KEY", "OPENAI_API_KEY", "LLM_PROVEDOR"):
+        monkeypatch.delenv(variavel, raising=False)
 
 
 def test_padrao_openai_sem_llm_provedor(monkeypatch):

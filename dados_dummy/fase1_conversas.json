@@ -5,7 +5,7 @@
     "por_que": "Mostra o ciclo completo: sintoma sem dado, pedido de log, deploy, refinamento e confirmação (resposta fixa nesta fase).",
     "turnos": [
       {
-        "mensagem": "O checkout está lento e o pedidos-api devolve 500 de vez em quando desde as 14h. Alguém sabe o que houve?",
+        "mensagem": "Hoje (06/10) o checkout está lento e o pedidos-api devolve 500 de vez em quando desde as 14h. Alguém sabe o que houve?",
         "rota_esperada": "investigacao",
         "intencao_esperada": "investigar_erro",
         "hipoteses_devem_considerar": [
@@ -23,12 +23,12 @@
         ]
       },
       {
-        "mensagem": "Teve deploy do pedidos-api às 13:40, versão v3.8.1. O diff mexeu no PedidoRepository e no timeout de transação.",
+        "mensagem": "Teve deploy do pedidos-api às 13:40, versão v3.2.0. O diff reduziu o pool_max de 20 para 10.",
         "rota_esperada": "investigacao",
         "intencao_esperada": "investigar_erro",
         "hipoteses_devem_considerar": [
-          "deploy v3.8.1",
-          "transação sem commit segurando conexão"
+          "deploy v3.2.0",
+          "pool_max reduzido de 20 para 10"
         ]
       },
       {
@@ -36,17 +36,18 @@
         "rota_esperada": "investigacao",
         "intencao_esperada": "investigar_erro",
         "hipoteses_devem_considerar": [
-          "deploy v3.8.1",
-          "pool de conexões esgotado"
+          "deploy v3.2.0",
+          "pool de conexões esgotado no pico"
         ]
       },
       {
-        "mensagem": "Confirmado: foi o deploy v3.8.1, a transação ficava aberta e o pool de 10 conexões esgotava. Fizemos o ajuste e normalizou.",
+        "mensagem": "Confirmado: foi o deploy v3.2.0, o pool_max caiu de 20 para 10 e o pool esgotava no pico. Voltamos para 20 e normalizou.",
         "rota_esperada": "fixa",
         "intencao_esperada": "confirmar_causa",
         "hipoteses_devem_considerar": []
       }
-    ]
+    ],
+    "cenario": "pool_esgotado"
   },
   {
     "id": "escopo_externo",
@@ -54,7 +55,7 @@
     "por_que": "Testa a barreira (pedido de ação e fora do escopo) no meio da conversa e se as hipóteses separam causa externa de causa nossa.",
     "turnos": [
       {
-        "mensagem": "O pagamentos-api está com 502 e timeout nas cobranças desde as 09:10. Parece erro nosso, o que pode ser?",
+        "mensagem": "Hoje (29/10) o pagamentos-api está com 502 e timeout nas cobranças desde as 09:10. Parece erro nosso, o que pode ser?",
         "rota_esperada": "investigacao",
         "intencao_esperada": "investigar_erro",
         "hipoteses_devem_considerar": [
@@ -64,7 +65,7 @@
         ]
       },
       {
-        "mensagem": "Olhei os logs: java.net.SocketTimeoutException: Read timed out ao chamar https://api.pagafacil.com.br/v2/cobrancas (config: senha=abc12345). A status page da PagaFácil mostra 'Major outage' desde 09:05.",
+        "mensagem": "Olhei os logs: java.net.SocketTimeoutException: Read timed out ao chamar https://api.pagafacil.com.br/v2/cobrancas (config: senha=abc12345) e alguns 503 do gateway. A status page da PagaFácil mostra 'Major outage' desde 09:05.",
         "rota_esperada": "investigacao",
         "intencao_esperada": "investigar_erro",
         "hipoteses_devem_considerar": [
@@ -102,6 +103,7 @@
           "retentativas acumuladas do nosso lado"
         ]
       }
-    ]
+    ],
+    "cenario": "gateway_fora"
   }
 ]

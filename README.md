@@ -4,7 +4,7 @@ Agente cognitivo que investiga erros de aplicações em produção, conduzindo u
 
 ## Status
 
-Fase 1 concluída: chain executável com entrada e saída estruturadas (seção 1 do `projeto.ipynb`, código em `agente/`, testes em `tests/`). As fases seguintes (ferramentas, memória, auditor, app Streamlit) ainda não existem neste repositório. Para o histórico de decisões, ver o `HANDOFF.md` no repositório [`agentes-cognitivos`](https://github.com/erato690/agentes-cognitivos) (mesma conta GitHub).
+Fases 1 e 2 concluídas: chain executável com entrada e saída estruturadas (seção 1 do `projeto.ipynb`) e agente ReAct com ferramentas só leitura sobre a loja e o GitHub (seção 2); código em `agente/`, testes em `tests/`. As fases seguintes (memória, banco de incidentes e runbooks, auditor, app Streamlit) ainda não existem neste repositório. Para o histórico de decisões, ver o `HANDOFF.md` no repositório [`agentes-cognitivos`](https://github.com/erato690/agentes-cognitivos) (mesma conta GitHub).
 
 ## Como rodar
 
@@ -22,13 +22,16 @@ Variáveis (no ambiente ou num arquivo `.env` na raiz; o `.env` não vai para o 
 LLM_PROVEDOR=openai       # openai (padrão) | deepseek
 OPENAI_API_KEY=sk-...     # modelo de linguagem da OpenAI e moderação
 DEEPSEEK_API_KEY=...      # só se LLM_PROVEDOR=deepseek
+LOJA_URL=http://localhost:8000   # opcional: incident-shop ao vivo; sem ela, dados_dummy/cenarios/
+GITHUB_TOKEN=...          # opcional: sobe o limite da API do GitHub (sem token: 60 por hora)
 ```
 
 Cada provedor exige a sua chave; não há troca automática. Sem chave, o notebook roda até o fim e pula as células que chamam o modelo de linguagem; sem `OPENAI_API_KEY`, a moderação é pulada com aviso.
 
 - **Notebook**: abra `projeto.ipynb` no VS Code (extensão Jupyter) ou no Jupyter e rode todas as células. Para executar pela linha de comando: `jupyter nbconvert --to notebook --execute --inplace projeto.ipynb`.
 - **Testes**: `pytest -q` (sem chave e sem rede; o modelo e a moderação são substituídos por versões falsas).
-- **Diagramas**: `python scripts/gerar_diagramas.py` regenera `docs/img/contexto.png` e `docs/img/componentes.png`.
+- **Diagramas**: `python scripts/gerar_diagramas.py` regenera `docs/img/contexto.png`, `docs/img/componentes.png` e `docs/img/componentes_fase2.png`.
+- **Dados gravados**: `dados_dummy/cenarios/` vem do `scripts/gravar_dados_dummy.py` do `incident-shop` (ou `python scripts/gravar_cenarios.py --url ...`); `python scripts/gravar_github.py` regrava as comparações de versões de reserva.
 - **Opcional**: a extensão *Markdown Preview Mermaid Support* (`bierner.markdown-mermaid`) do VS Code renderiza blocos Mermaid em markdown; o notebook não depende dela.
 
 ## Repositórios relacionados

@@ -10,3 +10,5 @@ nbconvert
 pytest
 pandas
 matplotlib
+langchain-classic
+httpx
