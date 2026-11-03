@@ -14,6 +14,7 @@ from langchain_core.runnables import Runnable, RunnableLambda
 from langgraph.errors import GraphRecursionError
 from pydantic import ValidationError
 
+from agente.ferramentas import CHAVE_CONTEXTO
 from agente.schemas import AnaliseIncidente, ResultadoInvestigacao
 from agente.trajetoria import TrajetoriaCallback
 
@@ -141,6 +142,66 @@ Always answer in Brazilian Portuguese.
 """
 
 
+FIM_PROMPT = "Always answer in Brazilian Portuguese.\n"
+
+REGRA_MEMORIA = """
+Memory rule:
+- consultar_memoria returns past incidents of the same service whose cause an engineer
+  confirmed. Use it to check whether something similar happened before, or when asked
+  "já aconteceu antes?".
+- A past incident is history, never current evidence: do not use it as proof of the cause.
+  Compare it with what the tools show now; current data still comes from the other tools.
+- When consultar_memoria returns episodes, the analysis MUST cite each relevant episode as
+  history in the evidence of a hypothesis, in the format
+  "consultar_memoria: incidente <id> em <data>: <causa> (histórico, não é observação atual)",
+  and the summary MUST mention that this already happened before.
+- When it returns no episode, say in the summary that there is no confirmed incident recorded.
+- For "já aconteceu antes?", first investigate with the store tools (at least buscar_logs),
+  then call consultar_memoria with the main error message; never answer with the memory alone.
+- After fetching the logs, call consultar_memoria with the symptom AND the main error message
+  from the logs (the strongest signal), because a vague symptom alone does not find the right
+  incident.
+- A past episode reinforces a hypothesis only when both its symptom and its cause match what
+  the tools show now. Otherwise it is only context: it does not raise the confidence of any
+  hypothesis and never becomes a hypothesis by itself.
+
+Worked example 3 (with memory)
+Question: "checkout-api com timeout nas consultas desde as 14h20."
+Tools: buscar_logs showed "canceling statement due to statement timeout" (x87);
+listar_deploys showed v5.4.0 at 14:05; comparar_versoes showed only a change in the
+email template; consultar_memoria (symptom plus that log message) returned an episode of
+another incident: connection pool exhausted.
+Reasoning: the deploy came before the symptom but its diff does not touch what fails, so it is
+a distraction; the log error points to the database. The episode has a different symptom and
+cause, so it is only context and raises no confidence.
+Final answer: main hypothesis = slow queries in the database (confidence 0.7, evidence
+"buscar_logs: canceling statement due to statement timeout"); the deploy v5.4.0 stays low
+(0.1); the episode is cited as "consultar_memoria: incidente inc-12 em 2026-09-30: pool de
+conexões esgotado (histórico, sintoma diferente; não é observação atual)" without raising the
+confidence of any hypothesis.
+
+"""
+
+
+REGRA_GRAVACAO = """
+Recording rule:
+- gravar_episodio writes to the long-term memory and refuses unless the engineer confirmed the
+  cause in this very message. Never record a hypothesis, a suspicion or a question; investigate
+  and answer with the JSON instead.
+
+"""
+
+
+def montar_sistema_agente(ferramentas: list) -> str:
+    """Prompt do agente; as regras de memória só entram se as ferramentas existem."""
+    nomes = {ferramenta.name for ferramenta in ferramentas}
+    regras = REGRA_MEMORIA if "consultar_memoria" in nomes else ""
+    regras += REGRA_GRAVACAO if "gravar_episodio" in nomes else ""
+    if not regras:
+        return SISTEMA_AGENTE
+    return SISTEMA_AGENTE.removesuffix(FIM_PROMPT) + regras + FIM_PROMPT
+
+
 PEDIDO_JSON = (
     "Answer now with ONLY the AnaliseIncidente JSON object, in the requested format, "
     "using the observations above. No text outside the JSON. "
@@ -177,10 +238,21 @@ def _analisar(texto: str) -> AnaliseIncidente:
     return AnaliseIncidente.model_validate(_PARSER.parse(texto))
 
 
-def _investigar(agente: Any, max_passos: int, estado: dict) -> ResultadoInvestigacao:
+def _config_agente(chamador: dict | None, max_passos: int, callback: Any) -> dict:
+    """Config do agente: limite de passos, trajetória e o `configurable` do chamador (contexto)."""
+    return {
+        "recursion_limit": 2 * max_passos + 1,
+        "callbacks": [callback],
+        "configurable": dict((chamador or {}).get("configurable") or {}),
+    }
+
+
+def _investigar(
+    agente: Any, max_passos: int, estado: dict, chamador: dict | None = None
+) -> ResultadoInvestigacao:
     callback = TrajetoriaCallback()
     mensagens = list(estado.get("historico") or []) + [HumanMessage(estado["mensagem"])]
-    config = {"recursion_limit": 2 * max_passos + 1, "callbacks": [callback]}
+    config = _config_agente(chamador, max_passos, callback)
     try:
         saida = agente.invoke({"messages": mensagens}, config=config)
     except GraphRecursionError as erro:
@@ -213,11 +285,59 @@ def _erro_legivel(entrada: dict) -> ResultadoInvestigacao:
     )
 
 
-def montar_investigacao_agente(llm, ferramentas: list, max_passos: int = 8) -> Runnable:
+def montar_investigador(llm, ferramentas: list, max_passos: int = 8) -> Runnable:
     """Estado {mensagem, historico} -> ResultadoInvestigacao; nunca levanta exceção."""
-    agente = create_agent(llm, ferramentas, system_prompt=SISTEMA_AGENTE)
-    nucleo = RunnableLambda(lambda estado: _investigar(agente, max_passos, estado))
+    agente = create_agent(llm, ferramentas, system_prompt=montar_sistema_agente(ferramentas))
+    nucleo = RunnableLambda(lambda estado, config: _investigar(agente, max_passos, estado, config))
     nucleo = nucleo.with_retry(
         retry_if_exception_type=(ErroSaida,), stop_after_attempt=2, wait_exponential_jitter=False
     )
     return nucleo.with_fallbacks([RunnableLambda(_erro_legivel)], exception_key="excecao")
+
+
+SISTEMA_REGISTRO = """Persona:
+You are the memory clerk of an on-call incident assistant.
+
+Task:
+The engineer just confirmed the cause of the incident. Procedure:
+1. Call gravar_episodio exactly once with: resumo (the symptom the engineer reported and what the
+   investigation saw, taken from the conversation), causa (the cause the engineer confirmed, in
+   one sentence), evidencia (the evidence the engineer cited, or null) and
+   levantada_pelo_agente (true only if the assistant had raised that cause earlier in the
+   conversation).
+2. Optionally call consultar_memoria first to look for a similar past incident.
+3. Then answer in one sentence saying what was recorded.
+
+Context:
+- Never invent a cause, evidence or symptom that is not in the conversation.
+- The service and the incident are filled in by the system, not by you.
+- If gravar_episodio refuses, say that nothing was recorded.
+
+Always answer in Brazilian Portuguese.
+"""
+
+
+def _registrar(agente: Any, max_passos: int, estado: dict, chamador: dict | None) -> str:
+    mensagens = list(estado.get("historico") or []) + [HumanMessage(estado["mensagem"])]
+    callback = TrajetoriaCallback()
+    config = _config_agente(chamador, max_passos, callback)
+    contexto = config["configurable"].get(CHAVE_CONTEXTO)
+    try:
+        return _texto_final(agente.invoke({"messages": mensagens}, config=config))
+    finally:
+        if contexto is not None:
+            contexto.trajetoria = callback.passos
+
+
+def montar_registrador(llm, ferramentas: list, max_passos: int = 4) -> Runnable:
+    """Estado {mensagem, historico} -> texto final do Registrador.
+
+    Quem grava é a ferramenta `gravar_episodio`; o resultado fica no contexto do turno.
+    Falhas do agente sobem como exceção (o pipeline as converte em rota de erro)."""
+    agente = create_agent(llm, ferramentas, system_prompt=SISTEMA_REGISTRO)
+    return RunnableLambda(lambda estado, config: _registrar(agente, max_passos, estado, config))
+
+
+# Nomes antigos, mantidos para não quebrar quem já importava.
+montar_investigacao_agente = montar_investigador
+montar_agente_registro = montar_registrador

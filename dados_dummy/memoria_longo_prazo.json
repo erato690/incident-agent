@@ -1,0 +1,20 @@
+{
+  "episodica": [
+    {
+      "id_memoria": "6f1c2a52-0b0e-4c6e-9a43-3d5f2b7a8c10",
+      "incidente_id": "inc-2026-09-03-pedidos",
+      "session_id": "b1a3c9de-7d7f-4a52-8c3e-1f0a5e9d2c44",
+      "servico": "pedidos-api",
+      "resumo": "Checkout lento e pedidos-api devolvendo 500 no pico da tarde; o deploy das 13:40 reduziu o pool_max e o log mostrou HikariPool sem conexões.",
+      "causa": "Pool de conexões esgotado: um deploy reduziu o pool_max de 20 para 10 e o pico de tráfego esgotou o pool.",
+      "evidencia": "Logs com HikariPool-1 Connection is not available e métrica de conexões ativas no teto.",
+      "origem": "engenheiro",
+      "criado_em": "2026-09-03T14:30:00",
+      "status": "ativo",
+      "substitui": null,
+      "motivo_registro": "Nenhum episódio ativo parecido no serviço; é um incidente novo.",
+      "acessos": 0
+    }
+  ],
+  "semantica": []
+}

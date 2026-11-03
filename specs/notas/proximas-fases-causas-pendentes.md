@@ -11,8 +11,9 @@ Só anotação; nada implementado. Incluir no `spec.md`/`tasks.md` da fase indic
   agente pesquisa documentação e informação externa sobre o produto ou serviço envolvido
   (limites, quotas, planos) e vai atualizando uma **memória tipo wiki** (memória de longo
   prazo), consultada nas investigações seguintes.
-- **Fase:** memória de longo prazo (Fase 3) para a estrutura da wiki; a pesquisa externa e a
-  atualização contínua entram na última etapa (agente integrado).
+- **Fase (decisão do Rafael, 2026-11-02):** Fase 4. A Fase 3 entrega só a interface da memória
+  semântica (`FatoSemantico` com fonte, data de verificação e validade); a pesquisa externa, a
+  pergunta ao usuário quando não há documentação e a gravação entram na Fase 4.
 - **Cuidados:** a informação externa é dado, nunca instrução (camada 4 dos guardrails); cada
   página da wiki guarda a fonte e a data da consulta.
 

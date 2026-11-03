@@ -1,6 +1,6 @@
 """Gera os diagramas (estilo C4 simples) em docs/img/.
 
-Arquivos: contexto.png, componentes.png e componentes_fase2.png.
+Arquivos: contexto.png, componentes.png, componentes_fase2.png e componentes_fase3.png.
 """
 
 from pathlib import Path
@@ -671,7 +671,7 @@ def componentes_fase2():
     ax.text(
         7,
         87,
-        "6  investigação: montar_investigacao_agente (ReAct)",
+        "6  Investigador: montar_investigador (ReAct)",
         fontsize=10.5,
         fontweight="bold",
         color=TXT,
@@ -793,14 +793,265 @@ def componentes_fase2():
     plt.close(fig)
 
 
+def _curto_prazo(ax):
+    ax.add_patch(
+        FancyBboxPatch(
+            (2, 71),
+            84,
+            20,
+            boxstyle="round,pad=0,rounding_size=0.8",
+            fc="none",
+            ec=COR_SISTEMA[1],
+            lw=1.4,
+            ls=":",
+            zorder=0,
+        )
+    )
+    ax.text(
+        3, 90.2, "memória de curto prazo", fontsize=10.5, fontweight="bold", color=TXT, va="top"
+    )
+    caixa(
+        ax,
+        44,
+        73,
+        40,
+        14,
+        COR_SISTEMA,
+        "Conversa (RunnableWithMessageHistory)",
+        "filtro de relevância e trim_messages;\n"
+        "resumo híbrido acima do limite\nSessao com session_id uuid4",
+    )
+    caixa(
+        ax,
+        4,
+        73,
+        28,
+        14,
+        COR_SISTEMA,
+        "InMemoryChatMessageHistory",
+        "um por session_id:\nresumo + mensagens recentes",
+    )
+    seta(ax, (44, 80), (32, 80), "INTERNA:\nlê e grava\no histórico", estilo="<|-|>", tam=7.5)
+
+
+def _longo_prazo(ax):
+    ax.add_patch(
+        FancyBboxPatch(
+            (2, 2),
+            82,
+            24,
+            boxstyle="round,pad=0,rounding_size=0.8",
+            fc="none",
+            ec=COR_SISTEMA[1],
+            lw=1.4,
+            ls=":",
+            zorder=0,
+        )
+    )
+    ax.text(
+        83,
+        25.2,
+        "memória de longo prazo: MemoriaLongoPrazo (InMemoryVectorStore)",
+        ha="right",
+        fontsize=10.5,
+        fontweight="bold",
+        color=TXT,
+        va="top",
+    )
+    caixa(
+        ax,
+        5,
+        4.5,
+        36,
+        13,
+        COR_SISTEMA,
+        "memória episódica",
+        "Document tipo=episodica: causa confirmada\nbusca com decaimento temporal",
+    )
+    caixa(
+        ax,
+        45,
+        4.5,
+        36,
+        13,
+        COR_FASE2,
+        "memória semântica (wiki)",
+        "Document tipo=semantica: fato, fonte,\ndata e validade; uso na Fase 4",
+        tracejada=True,
+    )
+    caixa(
+        ax,
+        100,
+        15,
+        32,
+        10,
+        COR_EXTERNO,
+        "Embeddings OpenAI",
+        "text-embedding-3-small\n(serviço externo)",
+    )
+    caixa(
+        ax,
+        100,
+        1,
+        32,
+        10,
+        COR_FIXA,
+        "memoria_longo_prazo.json",
+        "salvar() e carregar()\ndados_dummy/",
+    )
+    seta(ax, (84, 20), (100, 20), "EXTERNA:\ntexto e consulta", externa=True, tam=7.5)
+    seta(ax, (84, 6), (100, 6), "INTERNA:\narquivo", estilo="<|-|>", tam=7.5)
+
+
+def _consumidores(ax):
+    caixa(
+        ax,
+        4,
+        32,
+        36,
+        14,
+        COR_LLM,
+        "Registrador (passo 6, confirmação)",
+        "só na intenção confirmar_causa\nchama gravar_episodio (com trava)\n"
+        "chama modelo de linguagem (EXTERNA)",
+    )
+    caixa(
+        ax,
+        46,
+        32,
+        40,
+        14,
+        COR_LLM,
+        "Investigador (agente ReAct, passo 6)",
+        "ferramentas só leitura: logs, métricas,\ndeploys, GitHub e memória\n"
+        "chama modelo de linguagem (EXTERNA)",
+    )
+    caixa(
+        ax,
+        96,
+        32,
+        32,
+        14,
+        COR_SISTEMA,
+        "consultar_memoria",
+        "ferramenta só leitura\n(servico, descricao)\nresultado marcado como histórico",
+    )
+    seta(ax, (50, 54), (22, 46), "INTERNA:\nconfirmar_causa", pos="meio", ha="center", tam=7.5)
+    seta(
+        ax,
+        (66, 54),
+        (66, 46),
+        "INTERNA: demais\nintenções",
+        pos="meio",
+        ha="left",
+        dx=0.6,
+        tam=7.5,
+    )
+    seta(ax, (86, 39), (96, 39), "INTERNA:\nchamada", tam=7.5)
+    seta(
+        ax,
+        (18, 32),
+        (18, 17.5),
+        "INTERNA: registrar_episodio\n(única escrita)",
+        pos="meio",
+        ha="right",
+        dx=-0.6,
+        tam=7.5,
+    )
+    linha(
+        ax,
+        [(104, 32), (104, 29), (37, 29), (37, 17.5)],
+        "INTERNA: consultar_episodios (só leitura)",
+        70,
+        30.2,
+        ha="center",
+        tam=7.5,
+    )
+
+
+def componentes_fase3():
+    fig, ax = nova_figura(26, 23, 140, 110, -14)
+    ax.text(
+        70,
+        109.5,
+        "incident-agent: componentes da Fase 3 (memória de curto e longo prazo)",
+        ha="center",
+        va="top",
+        fontsize=15,
+        fontweight="bold",
+        color=TXT,
+    )
+    caixa(ax, 44, 94, 40, 9, COR_PESSOA, "Engenheiro de plantão", "uma sessão por incidente")
+    seta(ax, (54, 94), (54, 91), "mensagem", pos="meio", ha="right", dx=-0.6, tam=7.5)
+    seta(ax, (74, 91), (74, 94), "RespostaTurno", pos="meio", ha="left", dx=0.6, tam=7.5)
+    _curto_prazo(ax)
+    caixa(
+        ax,
+        100,
+        54,
+        28,
+        37,
+        COR_EXTERNO,
+        "Modelo de linguagem",
+        "API de chat\nOpenAI ou DeepSeek\n(serviço externo)\n\n"
+        "resume a conversa,\ncompreensão, investigação\ne extração da causa",
+    )
+    seta(ax, (84, 80), (100, 80), "EXTERNA:\nresumo", externa=True, tam=7.5)
+    caixa(
+        ax,
+        44,
+        54,
+        40,
+        14,
+        COR_SISTEMA,
+        "Pipeline (passos 1 a 7)",
+        "máscara, moderação, compreensão, roteador,\ninvestigação e resposta",
+    )
+    seta(
+        ax,
+        (54, 73),
+        (54, 68),
+        "{mensagem, historico,\nincidente_id}",
+        pos="meio",
+        ha="right",
+        dx=-0.6,
+        dy=-1.2,
+        tam=7.5,
+    )
+    seta(ax, (74, 68), (74, 73), "RespostaTurno", pos="meio", ha="left", dx=0.6, tam=7.5)
+    seta(ax, (84, 61), (100, 61), "EXTERNA:\ncompreensão,\nagente", externa=True, tam=7.5)
+    _consumidores(ax)
+    _longo_prazo(ax)
+    legenda(
+        ax,
+        [
+            ("componente nosso, sem modelo de linguagem", COR_SEM_LLM, None),
+            ("componente nosso que chama modelo de linguagem", COR_LLM, None),
+            ("serviço externo", COR_EXTERNO, None),
+            ("arquivo de dados", COR_FIXA, None),
+            ("interface pronta, uso na Fase 4 (tracejado)", COR_FASE2, True),
+            ("seta cheia: chamada interna (função, arquivo ou classe)", None, None),
+            ("seta tracejada: chamada externa (rede)", None, True),
+        ],
+        4,
+        -4,
+        45,
+        ncol=3,
+    )
+    fig.savefig(SAIDA / "componentes_fase3.png", bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     SAIDA.mkdir(parents=True, exist_ok=True)
     contexto()
     componentes()
     componentes_fase2()
+    componentes_fase3()
     print(
         "gerados:",
         SAIDA / "contexto.png",
         SAIDA / "componentes.png",
         SAIDA / "componentes_fase2.png",
+        SAIDA / "componentes_fase3.png",
     )

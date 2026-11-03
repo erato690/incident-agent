@@ -1,6 +1,8 @@
-"""Modelos Pydantic das Fases 1 e 2 (data-model.md)."""
+"""Modelos Pydantic das Fases 1 a 3 (data-model.md)."""
 
+from datetime import datetime
 from typing import Literal
+from uuid import uuid4
 
 from langchain_core.messages import BaseMessage
 from pydantic import BaseModel, Field, computed_field, model_validator
@@ -135,11 +137,123 @@ class ResultadoInvestigacao(BaseModel):
         return self
 
 
+class Episodio(BaseModel):
+    """Memória episódica: um incidente com a causa confirmada pelo engenheiro."""
+
+    id_memoria: str = Field(default_factory=lambda: str(uuid4()))
+    incidente_id: str
+    session_id: str
+    servico: str
+    resumo: str
+    causa: str
+    evidencia: str | None = None
+    origem: Literal["agente", "engenheiro"]
+    criado_em: datetime
+    status: Literal["ativo", "arquivado"] = "ativo"
+    substitui: str | None = None
+    motivo_registro: str | None = None
+    acessos: int = Field(default=0, ge=0)
+
+
+class ResolucaoMemoria(BaseModel):
+    """Decisão do modelo sobre um episódio novo diante dos ativos parecidos."""
+
+    acao: Literal["inserir_novo", "atualizar_existente"] = Field(
+        description="atualizar_existente só se o novo episódio corrige ou substitui um existente "
+        "do MESMO incidente; qualquer outro caso é inserir_novo"
+    )
+    id_memoria_antiga: str | None = Field(
+        default=None, description="Se for atualizar, o ID do episódio que será arquivado"
+    )
+    motivo: str = Field(description="Explicação curta da decisão")
+
+
+class ResultadoRegistro(BaseModel):
+    decisao: ResolucaoMemoria
+    episodio: Episodio
+    arquivado: Episodio | None = None
+
+
+class EpisodioEncontrado(BaseModel):
+    episodio: Episodio
+    similaridade: float = Field(ge=0, le=1)
+    dias: int = Field(ge=0)
+    acessos: int = Field(ge=0)
+    pontuacao: float = Field(ge=0)
+
+
+class FatoSemantico(BaseModel):
+    """Memória semântica (só interface nesta fase): fato com fonte, data e validade."""
+
+    assunto: str
+    fato: str
+    fonte: Literal["documentacao", "usuario", "incidente"]
+    verificado_em: datetime
+    valido_ate: datetime | None = None
+
+
+class FatoSemanticoEncontrado(BaseModel):
+    fato: str
+    fonte: Literal["documentacao", "usuario", "incidente"]
+    verificado_em: datetime
+    valido_ate: datetime | None = None
+    similaridade: float = Field(ge=0, le=1)
+    vencido: bool
+
+
+class CausaConfirmada(BaseModel):
+    """Argumentos de `gravar_episodio`; serviço e incidente vêm do contexto do turno."""
+
+    resumo: str = Field(
+        description="Sintoma relatado pelo engenheiro e o que a investigação viu, em poucas frases"
+    )
+    causa: str = Field(description="Causa confirmada pelo engenheiro, em uma frase")
+    evidencia: str | None = Field(default=None, description="Evidência que ele citou")
+    levantada_pelo_agente: bool = Field(
+        description="True se a causa foi levantada antes pelo agente no histórico"
+    )
+
+
+class AvaliacaoRelevancia(BaseModel):
+    nivel: Literal["baixa", "alta", "critica"] = Field(
+        description="Relevância da mensagem para a solução do problema. Conversa fiada ou pausas "
+        "= baixa. Informação útil = alta. Dados exatos de sistema ou erros = critica."
+    )
+    motivo: str = Field(description="Justificativa curta da classificação")
+
+
+class ContextoTurno(BaseModel):
+    """Estado do turno que trava as ferramentas de memória; o pipeline preenche, nunca o modelo."""
+
+    intencao: str | None = None
+    servico: str | None = None
+    incidente_id: str | None = None
+    session_id: str | None = None
+    registro: ResultadoRegistro | None = None
+    erro_registro: str | None = None
+    trajetoria: list[PassoTrajetoria] = Field(default_factory=list)
+    # Episódios que consultar_memoria devolveu acima do limiar neste turno (SC-002).
+    episodios_consultados: list[EpisodioEncontrado] = Field(default_factory=list)
+
+
+class Sessao(BaseModel):
+    """Metadados de uma conversa (curto prazo)."""
+
+    session_id: str
+    criada_em: datetime
+    servico: str | None = None
+    cenario: str | None = None
+    turnos: int = 0
+
+
 class RespostaTurno(BaseModel):
-    rota: Literal["fixa", "investigacao", "erro"]
+    rota: Literal["fixa", "investigacao", "erro", "memoria"]
     moderacao: ResultadoModeracao
     nlu: AnaliseNLU | None = None
     fixa: RespostaFixa | None = None
     analise: AnaliseIncidente | None = None
     erro: str | None = None
     trajetoria: list[PassoTrajetoria] = Field(default_factory=list)
+    episodio: Episodio | None = None
+    episodio_anterior: Episodio | None = None
+    resolucao: ResolucaoMemoria | None = None
