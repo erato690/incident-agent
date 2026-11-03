@@ -1,23 +1,26 @@
 """Relatório da bateria de mensagens de teste: tabela-resumo por grupo e detalhe recolhível.
 
 Reaproveitável nas próximas fases: cada mensagem do JSON traz `id`, `grupo`, `mensagem` e
-`rota_esperada`; cada resultado é um `RespostaTurno`.
+`rota_esperada` (e, na Fase 3, `registra_esperado`); cada resultado é um `RespostaTurno`.
 """
 
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from html import escape
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.runnables import Runnable
 
+from agente.conversa import Conversa, abrir_sessao, texto_resposta
 from agente.mascara import mascarar
-from agente.schemas import AnaliseIncidente, RespostaTurno
+from agente.schemas import AnaliseIncidente, RespostaTurno, Sessao
 
 # Chave do JSON -> subtítulo exibido (a ordem define a ordem dos grupos no relatório).
 GRUPOS = {
     "investigacao": "Investigação (cenários de erro)",
     "barreira": "Barreira (saudação, fora do escopo, pedido de ação, injeção, vazia, causa)",
     "guardrails": "Guardrails (segredos mascarados, moderação com aviso)",
+    "memoria": "Memória (causa confirmada, perguntas, histórico, barreira)",
 }
 
 
@@ -42,9 +45,38 @@ def nomes_ferramentas(resposta: RespostaTurno) -> list[str]:
     return nomes
 
 
+def memoria_registrada(resposta: RespostaTurno) -> str:
+    """Episódio gravado neste turno: "registrado", "atualizado" (arquivou o anterior) ou "-"."""
+    if resposta.episodio is None:
+        return "-"
+    return "atualizado" if resposta.episodio_anterior else "registrado"
+
+
+def memoria_consultada(resposta: RespostaTurno) -> bool:
+    """True quando a trajetória do turno chamou `consultar_memoria`."""
+    return "consultar_memoria" in nomes_ferramentas(resposta)
+
+
+def acertou(mensagem: dict, resposta: RespostaTurno) -> bool:
+    """Rota esperada e, quando o item traz `registra_esperado`, se gravou ou não um episódio."""
+    if resposta.rota != mensagem["rota_esperada"]:
+        return False
+    esperado = mensagem.get("registra_esperado")
+    return esperado is None or esperado == (resposta.episodio is not None)
+
+
+def _tem_registra(mensagem: dict) -> bool:
+    return "registra_esperado" in mensagem
+
+
 def linhas_bateria(mensagens: list[dict], resultados: list[RespostaTurno]) -> list[dict]:
-    """Uma linha por teste; a coluna "ferramentas" só aparece se algum turno usou ferramentas."""
+    """Uma linha por teste. As colunas "ferramentas" e "memória registrada"/"memória consultada"
+    só aparecem se algum turno usou ferramentas ou mexeu na memória (Fases 1 e 2 não mudam)."""
     com_ferramentas = any(resposta.trajetoria for resposta in resultados)
+    com_memoria = any(
+        resposta.episodio or memoria_consultada(resposta) or _tem_registra(mensagem)
+        for mensagem, resposta in zip(mensagens, resultados, strict=True)
+    )
     linhas = []
     for mensagem, resposta in zip(mensagens, resultados, strict=True):
         linha = {
@@ -57,7 +89,10 @@ def linhas_bateria(mensagens: list[dict], resultados: list[RespostaTurno]) -> li
         }
         if com_ferramentas:
             linha["ferramentas"] = " → ".join(nomes_ferramentas(resposta)) or "-"
-        linhas.append({**linha, "ok": resposta.rota == mensagem["rota_esperada"]})
+        if com_memoria:
+            linha["memória registrada"] = memoria_registrada(resposta)
+            linha["memória consultada"] = "sim" if memoria_consultada(resposta) else "-"
+        linhas.append({**linha, "ok": acertou(mensagem, resposta)})
     return linhas
 
 
@@ -104,18 +139,45 @@ def _itens_analise(mensagem: dict, analise: AnaliseIncidente) -> list[str]:
     return itens
 
 
+def _episodio_html(resposta: RespostaTurno) -> str:
+    episodio = resposta.episodio
+    if resposta.rota == "memoria":
+        rotulo = "Memória: episódio registrado"
+        if resposta.episodio_anterior:
+            rotulo = "Memória: episódio atualizado (anterior arquivado)"
+    else:
+        rotulo = f"Memória {memoria_registrada(resposta)}"
+    texto = (
+        f"<b>{rotulo}:</b> incidente "
+        f"<code>{escape(episodio.incidente_id)}</code> · {escape(episodio.servico)} · "
+        f"causa: {escape(episodio.causa)}"
+    )
+    if resposta.episodio_anterior:
+        texto += f" · causa anterior (arquivada): {escape(resposta.episodio_anterior.causa)}"
+    if resposta.resolucao:
+        texto += (
+            f" · decisão: {escape(resposta.resolucao.acao)} ({escape(resposta.resolucao.motivo)})"
+        )
+    return texto
+
+
 def _itens_desfecho(mensagem: dict, resposta: RespostaTurno) -> list[str]:
     itens = []
     if resposta.analise:
         itens += _itens_analise(mensagem, resposta.analise)
     elif resposta.fixa:
-        itens.append(
-            f"<b>Resposta fixa (camada {resposta.fixa.camada}):</b> {escape(resposta.fixa.texto)}"
+        rotulo = (
+            "Registro na memória episódica"
+            if resposta.rota == "memoria"
+            else f"Resposta fixa (camada {resposta.fixa.camada})"
         )
+        itens.append(f"<b>{rotulo}:</b> {escape(resposta.fixa.texto)}")
     elif resposta.erro:
         itens.append(f"<b>Erro:</b> {escape(resposta.erro)}")
     if resposta.trajetoria:
         itens.append(_passos_html(resposta))
+    if resposta.episodio:
+        itens.append(_episodio_html(resposta))
     if mensagem.get("causa_esperada"):
         itens.append(
             f"<b>Causa esperada (informativo, não foi enviada ao modelo):</b> "
@@ -126,7 +188,7 @@ def _itens_desfecho(mensagem: dict, resposta: RespostaTurno) -> list[str]:
 
 def detalhe_html(mensagem: dict, resposta: RespostaTurno) -> str:
     """Bloco <details> com o que foi enviado e o que voltou (texto sempre escapado)."""
-    acertou = resposta.rota == mensagem["rota_esperada"]
+    certo = acertou(mensagem, resposta)
     scores = ", ".join(
         f"{categoria}={score:.2f}" for categoria, score in resposta.moderacao.scores.items()
     )
@@ -138,8 +200,8 @@ def detalhe_html(mensagem: dict, resposta: RespostaTurno) -> str:
         f"<b>Intenção (etapa de compreensão):</b> {escape(_intencao(resposta))}",
         *_itens_desfecho(mensagem, resposta),
     ]
-    status = "ok" if acertou else "FALHOU"
-    cor = "#1a7f37" if acertou else "#cf222e"
+    status = "ok" if certo else "FALHOU"
+    cor = "#1a7f37" if certo else "#cf222e"
     corpo = "".join(f"<li>{item}</li>" for item in itens)
     return (
         f"<details><summary><b style='color:{cor}'>{escape(mensagem['id'])} — {status}</b> "
@@ -169,19 +231,9 @@ def exibir_bateria(
         do_grupo = [(msg, resp) for msg, resp in pares if msg.get("grupo") == chave]
         if not do_grupo:
             continue
-        acertos_grupo = sum(resp.rota == msg["rota_esperada"] for msg, resp in do_grupo)
+        acertos_grupo = sum(acertou(msg, resp) for msg, resp in do_grupo)
         display(Markdown(f"#### {GRUPOS.get(chave, chave)}: {acertos_grupo}/{len(do_grupo)}"))
         display(HTML("".join(detalhe_html(msg, resp) for msg, resp in do_grupo)))
-
-
-def texto_resposta(resposta: RespostaTurno) -> str:
-    """Texto curto da resposta do agente, para entrar no histórico da conversa."""
-    if resposta.fixa:
-        return resposta.fixa.texto
-    if resposta.analise:
-        hipoteses = [f"- {hip.causa} ({hip.confianca:.2f})" for hip in resposta.analise.hipoteses]
-        return "\n".join([resposta.analise.resumo, *hipoteses])
-    return resposta.erro or ""
 
 
 PipelineOuFabrica = Runnable | Callable[[str], Runnable]
@@ -204,7 +256,12 @@ def rodar_bateria(origem: PipelineOuFabrica, mensagens: list[dict]) -> list[Resp
     cache: dict = {}
     return [
         _pipeline(origem, mensagem.get("cenario"), cache).invoke(
-            {"mensagem": mensagem["mensagem"], "historico": []}
+            {
+                "mensagem": mensagem["mensagem"],
+                "historico": [],
+                "incidente_id": mensagem["id"],
+                "session_id": f"bateria-{mensagem['id']}",
+            }
         )
         for mensagem in mensagens
     ]
@@ -230,3 +287,74 @@ def exibir_conversa(conversa: dict, resultados: list[RespostaTurno]) -> None:
         for indice, turno in enumerate(conversa["turnos"], 1)
     ]
     exibir_bateria(mensagens, resultados, titulo=conversa["titulo"])
+
+
+ConversaOuFabrica = Conversa | Callable[[str], Conversa]
+
+
+def rodar_conversa_sessao(
+    origem: ConversaOuFabrica, conversa: dict, sessao: Sessao | None = None
+) -> list[RespostaTurno]:
+    """Roda os turnos numa sessão nova (a memória de curto prazo guarda o histórico).
+
+    `origem` é uma `Conversa` ou uma fábrica `cenario -> Conversa`; o cenário vem da conversa e
+    nunca é enviado ao modelo. Passe `sessao` para inspecionar turnos e serviço depois."""
+    if isinstance(origem, Conversa):
+        grafo = origem
+    else:
+        if conversa.get("cenario") is None:
+            raise ValueError("fábrica de conversa exige `cenario` na conversa")
+        grafo = origem(conversa["cenario"])
+    sessao = sessao or abrir_sessao(cenario=conversa.get("cenario"))
+    return [grafo.turno(sessao, turno["mensagem"]) for turno in conversa["turnos"]]
+
+
+def _profundidade(conversas: list[dict], i: int) -> int:
+    """Quantas dependências encadeadas a conversa `i` tem dentro da lista (0 = independente)."""
+    indice = {conversa["id"]: j for j, conversa in enumerate(conversas)}
+    passos = 0
+    while (pai := indice.get(conversas[i].get("depende_de"))) is not None and passos < len(
+        conversas
+    ):
+        i, passos = pai, passos + 1
+    return passos
+
+
+def _linhas_de_execucao(conversas: list[dict]) -> list[list[int]]:
+    """Índices agrupados por linha: quem depende de outra conversa da lista vai na linha dela."""
+    indice = {conversa["id"]: i for i, conversa in enumerate(conversas)}
+
+    def raiz(i: int) -> int:
+        visitados = {i}
+        while (pai := indice.get(conversas[i].get("depende_de"))) is not None:
+            if pai in visitados:
+                break
+            visitados.add(pai)
+            i = pai
+        return i
+
+    linhas: dict[int, list[int]] = {}
+    for i in range(len(conversas)):
+        linhas.setdefault(raiz(i), []).append(i)
+    return list(linhas.values())
+
+
+def rodar_conversas_paralelas(
+    origem: ConversaOuFabrica, conversas: list[dict], max_workers: int = 4
+) -> list[list[RespostaTurno]]:
+    """Roda conversas independentes em paralelo; `depende_de` mantém a ordem na mesma linha.
+
+    Cada linha de execução roda suas conversas em sequência (a dependência primeiro, na ordem da
+    lista); o resultado volta na ordem original de `conversas`."""
+    resultados: list[list[RespostaTurno]] = [[] for _ in conversas]
+
+    def rodar_linha(linha: list[int]) -> None:
+        for i in sorted(linha, key=lambda j: _profundidade(conversas, j)):
+            resultados[i] = rodar_conversa_sessao(origem, conversas[i])
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        for futuro in [
+            executor.submit(rodar_linha, linha) for linha in _linhas_de_execucao(conversas)
+        ]:
+            futuro.result()
+    return resultados

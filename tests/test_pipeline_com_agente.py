@@ -4,7 +4,7 @@ from pathlib import Path
 
 from langchain_core.runnables import RunnableLambda
 
-from agente.agente_react import montar_investigacao_agente
+from agente.agente_react import montar_investigador
 from agente.ferramentas import montar_ferramentas
 from agente.loja import FonteLoja
 from agente.pipeline import montar_pipeline
@@ -27,7 +27,7 @@ def _moderar(texto):
 def _pipe(modelo, intencao="investigar_erro"):
     ferr = montar_ferramentas(FonteLoja.gravada("cenario_teste", raiz=RAIZ))
     return montar_pipeline(
-        None, _moderar, nlu=_nlu(intencao), investigacao=montar_investigacao_agente(modelo, ferr)
+        None, _moderar, nlu=_nlu(intencao), investigacao=montar_investigador(modelo, ferr)
     )
 
 
@@ -65,7 +65,7 @@ def test_texto_mascarado_chega_as_ferramentas():
     ferr = montar_ferramentas(fonte, espia)
     modelo = roteiro(chamada("comparar_versoes", {"tag_base": "a", "tag_nova": "b"}), JSON_OK)
     pipeline = montar_pipeline(
-        None, _moderar, nlu=_nlu(), investigacao=montar_investigacao_agente(modelo, ferr)
+        None, _moderar, nlu=_nlu(), investigacao=montar_investigador(modelo, ferr)
     )
     pipeline.invoke({"mensagem": "erro com token=abc123segredo no pagamentos-api"})
     enviado = " ".join(str(mensagem.content) for mensagem in modelo.chamadas[0])

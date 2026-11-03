@@ -5,7 +5,7 @@ from pathlib import Path
 
 from langchain_core.runnables import RunnableLambda
 
-from agente.agente_react import montar_investigacao_agente
+from agente.agente_react import montar_investigador
 from agente.bateria import (
     detalhe_html,
     linhas_bateria,
@@ -42,7 +42,7 @@ def _fabrica(modelos: dict, cenarios_pedidos: list, esperadas: dict):
         fonte = FonteLoja.gravada("cenario_teste", raiz=RAIZ)
         modelo = roteiro(chamada("buscar_logs", {"servico": "pagamentos-api"}), JSON_OK)
         modelos[cenario] = modelo
-        investigacao = montar_investigacao_agente(modelo, montar_ferramentas(fonte))
+        investigacao = montar_investigador(modelo, montar_ferramentas(fonte))
         return montar_pipeline(
             None, _moderar, nlu=_nlu_pela_esperada(esperadas), investigacao=investigacao
         )

@@ -45,8 +45,12 @@ Razão: economiza custo e impede que o agente seja usado fora do propósito.
 
 ### IV. Memória só com fato confirmado
 
-- Memória de curto prazo: `MemorySaver` com um `thread_id` por incidente. Quando o histórico
-  crescer, MUST resumir as mensagens antigas. Corte por limite de tokens MUST NOT ser usado.
+- Memória de curto prazo: `RunnableWithMessageHistory` com um `InMemoryChatMessageHistory` por
+  `session_id` (um por incidente). O histórico enviado ao modelo passa pelo filtro de relevância
+  e por `trim_messages` (janela deslizante). Quando o histórico crescer, MUST resumir as mensagens
+  antigas no padrão híbrido (resumo numa mensagem de sistema + mensagens recentes intactas).
+- Memória de longo prazo em `InMemoryVectorStore` com `Document` (texto indexado no
+  `page_content`, identificadores, status e acessos no `metadata`), persistida em JSON.
 - Memória de longo prazo (episódica, semântica e procedural, conforme o CoALA) MUST receber
   apenas fatos que o engenheiro confirmou explicitamente.
 - O agente MAY ler a memória de longo prazo a qualquer momento.
@@ -55,8 +59,12 @@ Razão: memória contaminada por hipótese não confirmada propaga erros para in
 
 ### V. Padrões das aulas
 
-- O código MUST usar o LangChain moderno ensinado no curso: `create_agent`, `@tool`,
-  `MemorySaver`, `with_structured_output` e LCEL.
+- O código MUST usar só peças do LangChain/LangGraph ensinadas no curso: `create_agent`,
+  `@tool`, `MemorySaver` (checkpointer do `create_agent`), `with_structured_output`, LCEL,
+  `RunnableWithMessageHistory`, `InMemoryChatMessageHistory`, `trim_messages`,
+  `InMemoryVectorStore`/FAISS com `Document`, callbacks. Peça que não aparece no material do
+  curso (ex.: `StateGraph`, `InMemoryStore` do LangGraph) MUST NOT ser usada; se não houver
+  equivalente no material, a decisão vai ao Rafael (nível 3) com as opções.
 - Etapas em Python dentro das chains (ex.: pré-processamento do stack trace) MUST usar
   `RunnableLambda`: função comum passada a `RunnableLambda` ou colocada direto no pipe LCEL.
 - O decorador `@chain` MUST aparecer em uma célula curta de demonstração na seção 1 do notebook:
@@ -189,6 +197,14 @@ Seis camadas, na ordem em que atuam. Cada camada entra no notebook na fase indic
   `ruff format --check` sem avisos (configuração no `pyproject.toml`).
 - Notebook: os imports ficam na célula de Setup, e nenhuma seção depende de variável criada em
   outra seção sem recriá-la; cada seção MUST rodar a partir do Setup sozinha.
+- Decisões com o Jev (TypeSafe), pelos níveis do `~/.claude/CLAUDE.md`. Exemplos deste projeto:
+  - Nível 1 (trivial): ordem de células, texto de markdown, nomes.
+  - Nível 2 (moderado): prompts do agente, ferramenta nova, schema interno.
+  - Nível 3 (alto, pergunta ao Rafael com a recomendação do Jev): item da rubrica, contrato do
+    `incident-shop`, escopo da fase, prazo de 2026-11-09.
+  - Nível 4 (externo): push, publicação, gasto novo; sempre o Rafael.
+  A decisão, o nível e a confiança ficam registrados na spec, no `research.md` ou no
+  `task-log.md`.
 
 ## Governance
 
@@ -206,6 +222,9 @@ Seis camadas, na ordem em que atuam. Cada camada entra no notebook na fase indic
   hipóteses e `evidencia_insuficiente` por hipótese (princípio II). 1.4.0 (2026-11-01) moderação com limiar por
   categoria e status `aviso` contra falso positivo de jargão técnico (Guardrails, camada 1). 1.4.1 (2026-11-01) hipótese sem
   sustentação traz `dado_que_falta` em vez de evidência inventada. 1.5.0 (2026-11-01) código limpo,
-  PEP 8 com `ruff` sem avisos e notebook com imports no Setup e seções independentes.
+  PEP 8 com `ruff` sem avisos e notebook com imports no Setup e seções independentes. 1.6.0 (2026-11-02) níveis de decisão com o Jev e exemplos do projeto
+  (Fluxo de trabalho). 2.0.0 (2026-11-02) só peças do LangChain/LangGraph ensinadas no curso
+  (princípio V); memória de curto prazo com `RunnableWithMessageHistory`, `trim_messages` e
+  resumo híbrido, e de longo prazo com `InMemoryVectorStore` (princípio IV redefinido, D9).
 
-**Version**: 1.5.0 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-01
+**Version**: 2.0.0 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-02

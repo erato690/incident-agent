@@ -49,6 +49,44 @@ def montar_nlu(llm):
     return prompt_nlu | llm.with_structured_output(AnaliseNLU)
 
 
+SISTEMA_RESOLUCAO = """You manage the long-term incident memory of an on-call assistant.
+You receive the existing ACTIVE episodes of a service and a new episode the engineer just
+confirmed. Decide:
+- atualizar_existente: only when the new episode corrects or replaces an existing one of the SAME
+  incident (same incident id), for example the engineer corrected the confirmed cause. Give the
+  ID of that existing episode in id_memoria_antiga.
+- inserir_novo: in every other case. A different incident is ALWAYS inserir_novo, even when the
+  symptom and the cause look the same: a recurrence is a new episode, never an update.
+Explain the decision in one short sentence in motivo.
+
+Always answer in Brazilian Portuguese."""  # noqa: E501 - texto do prompt
+
+prompt_resolucao = ChatPromptTemplate.from_messages(
+    [
+        ("system", SISTEMA_RESOLUCAO),
+        ("human", "Existing active episodes:\n{existentes}\n\nNew episode:\n{novo}"),
+    ]
+)
+
+
+def montar_resolucao_memoria(llm):
+    """Resolução de memória: prompt | LLM com saída estruturada ResolucaoMemoria."""
+    from agente.schemas import ResolucaoMemoria
+
+    return prompt_resolucao | llm.with_structured_output(ResolucaoMemoria)
+
+
+SISTEMA_AVALIACAO = """You are the context manager of a technical incident chatbot. Rate how
+relevant the message is for solving the incident: small talk and pauses are baixa, useful
+information is alta, exact system data or errors are critica. Give a short reason.
+
+Always answer in Brazilian Portuguese."""  # noqa: E501 - texto do prompt
+
+prompt_avaliacao = ChatPromptTemplate.from_messages(
+    [("system", SISTEMA_AVALIACAO), ("human", "{mensagem}")]
+)
+
+
 SISTEMA_INVESTIGACAO = """You are a senior SRE who analyzes production incidents using only the text received.
 Rules:
 - A hypothesis supported by the text: evidencia_insuficiente=false and "evidencia" with a LITERAL
@@ -97,9 +135,44 @@ _FIXAS = {
     "conteudo_proibido": "Não posso responder a esse tipo de conteúdo. "
     "Descreva um incidente de produção.",
     "gerar_relatorio": "Ainda não gero relatório: o post-mortem chega na Fase 5.",
+    "pedir_servico": "Para registrar a causa, diga de qual serviço é este incidente.",
+    "pedir_incidente": "Para registrar a causa, não recebi o identificador do incidente.",
+    "pedir_sessao": "Para registrar a causa, não recebi a sessão da conversa; "
+    "abra uma sessão e confirme de novo.",
     "confirmar_causa": "Ainda não registro a causa: registrar a causa confirmada chega na Fase 3.",
 }
 respostas_fixas = {
     categoria: PromptTemplate.from_template(texto.replace("{", "{{").replace("}", "}}"))
     for categoria, texto in _FIXAS.items()
 }
+
+# Respostas do registro da causa (com variáveis, por isso fora de `respostas_fixas`).
+texto_causa_registrada = PromptTemplate.from_template(
+    "Causa registrada para {servico}: {causa}. Vou lembrar disso em incidentes futuros."
+)
+texto_causa_trocada = PromptTemplate.from_template(
+    'Causa atualizada para {servico}: era "{anterior}", agora "{causa}". '
+    "A causa anterior foi arquivada e continua no histórico da memória."
+)
+
+
+SISTEMA_RESUMO = """You maintain the running summary of an on-call engineer's conversation with an incident assistant.
+You receive the previous summary (may be empty) and the older messages that are leaving the window.
+Write one updated summary that merges both. Preserve, when present:
+- the service and the symptom (errors, times, environment);
+- the hypotheses that were raised and the ones that were discarded, with the reason;
+- the causes the engineer confirmed.
+Never invent facts that are not in the summary or in the messages. Be concise.
+
+Always answer in Brazilian Portuguese."""  # noqa: E501 - texto do prompt
+
+prompt_resumo = ChatPromptTemplate.from_messages(
+    [
+        ("system", SISTEMA_RESUMO),
+        (
+            "human",
+            "Previous summary:\n{resumo}\n\nOlder messages:\n{conversa}\n\n"
+            "Write the updated summary.",
+        ),
+    ]
+)

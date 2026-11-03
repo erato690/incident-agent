@@ -5,7 +5,7 @@ from pathlib import Path
 
 from langchain_core.messages import AIMessage, HumanMessage
 
-from agente.agente_react import SISTEMA_AGENTE, montar_investigacao_agente
+from agente.agente_react import SISTEMA_AGENTE, montar_investigador
 from agente.ferramentas import PREFIXO, montar_ferramentas
 from agente.loja import FonteLoja
 from agente.schemas import ResultadoInvestigacao
@@ -38,7 +38,7 @@ JSON_OK = json.dumps(
 
 def _agente(modelo, max_passos=6):
     fonte = FonteLoja.gravada("cenario_teste", raiz=RAIZ)
-    return montar_investigacao_agente(modelo, montar_ferramentas(fonte), max_passos=max_passos)
+    return montar_investigador(modelo, montar_ferramentas(fonte), max_passos=max_passos)
 
 
 def _estado(texto="pagamentos-api com 500", historico=None):
