@@ -22,8 +22,10 @@ SISTEMA_EXTRACAO = """Persona:
 You are a meticulous fact extractor for incident analyses.
 
 Task:
-Extract the verifiable claims from the analysis: versions, times, counts, limits, tables and
-services. Extract only what the analysis states; never add facts of your own.
+Extract the verifiable factual claims from the analysis: versions, times, counts, limits, tables
+and services that the analysis says were observed. Extract only what the analysis states; never
+add facts of your own. Skip recommendations, suggested actions and next steps. A causal statement
+without a concrete value (version, time, number, table or service) gets the key outro.
 
 Format:
 A list of claims, each with the claim text, a canonical key (versao, horario, numero, tabela,
@@ -40,7 +42,9 @@ Task:
 Given the tool observations and the analysis, decide whether the observations support (apoia),
 refute (refuta) or are neutral about (neutro) the main hypothesis. Decide whether the analysis is
 coherent (e_coerente). List the domain fallacies you find:
-- deploy_posterior_ao_sintoma: blames a deploy made after the symptom started;
+- deploy_posterior_ao_sintoma: blames a deploy whose time is LATER than the time the symptom
+  started. Compare the times numerically: a deploy at 13:40 with the first error at 14:00 came
+  BEFORE the symptom and is NOT this fallacy;
 - sintoma_como_causa: the main cause is only the symptom (for example "5xx errors", "load
   spikes", "OOMKilled");
 - contradicao_premissa_conclusao: the conclusion contradicts the premises;
@@ -64,12 +68,19 @@ _VERSAO = re.compile(r"v?\d+(?:\.\d+)+")
 _NUMERO = re.compile(r"\d+(?:\.\d+)?")
 
 
+_HORARIO = re.compile(r"(?<![\d:])(\d{1,2})(?:h|:)(\d{2})(?![\d])")
+
+
 def _normalizar(texto: str) -> str:
-    return re.sub(r"(?<=\d),(?=\d)", ".", texto.casefold())
+    """Caixa, vírgula decimal e horário (9h10, 09h10, 9:10 -> 09:10) num formato só."""
+    texto = re.sub(r"(?<=\d),(?=\d)", ".", texto.casefold())
+    return _HORARIO.sub(lambda m: f"{int(m.group(1)):02d}:{m.group(2)}", texto)
 
 
-def _fonte(trajetoria: list[PassoTrajetoria]) -> str:
-    return _normalizar("\n".join(p.observacao for p in trajetoria if p.observacao))
+def _fonte(trajetoria: list[PassoTrajetoria], mensagem: str = "") -> str:
+    """Fonte da verdade: observações das ferramentas e o que o próprio engenheiro escreveu."""
+    textos = [p.observacao for p in trajetoria if p.observacao] + [mensagem or ""]
+    return _normalizar("\n".join(textos))
 
 
 def _presente(padrao: str, fonte: str) -> bool:
@@ -87,9 +98,14 @@ def _status_versao(valor: str, fonte: str) -> str:
     return "contraditoria" if outras else "nao_verificada"
 
 
+def _numero_presente(numero: str, fonte: str) -> bool:
+    """Número isolado de outros dígitos: "x338" conta 338; 284 não conta como 28."""
+    return re.search(rf"(?<![\d.]){re.escape(numero)}(?!\d|\.\d)", fonte) is not None
+
+
 def _status_numero(valor: str, fonte: str) -> str:
     achado = _NUMERO.search(valor)
-    presente = achado and _presente(achado.group(), fonte)
+    presente = achado and _numero_presente(achado.group(), fonte)
     return "confirmada" if presente else "nao_verificada"
 
 
@@ -112,15 +128,50 @@ _FONTES = {
 
 
 def checar_fatos(
-    afirmacoes: list[Afirmacao], trajetoria: list[PassoTrajetoria]
+    afirmacoes: list[Afirmacao], trajetoria: list[PassoTrajetoria], mensagem: str = ""
 ) -> list[ChecagemFato]:
-    """Fact-check determinístico (sem LLM) contra o texto das observações das ferramentas."""
-    fonte = _fonte(trajetoria)
+    """Fact-check determinístico (sem LLM) contra as observações das ferramentas e a mensagem."""
+    fonte = _fonte(trajetoria, mensagem)
     checagens = []
     for afirmacao in afirmacoes:
         status = _status(afirmacao, fonte)
         checagens.append(ChecagemFato(afirmacao=afirmacao, status=status, fonte=_FONTES[status]))
     return checagens
+
+
+_DEPLOY = re.compile(r"T(\d{2}:\d{2}):\d{2}[-+]\d{2}:\d{2} (\S+/(v\d+(?:\.\d+)+))")
+_INICIO_LOG = re.compile(r"\(x\d+, (\d{2}:\d{2}):\d{2} a ")
+
+
+def _deploy_antes_do_sintoma(analise: AnaliseIncidente, trajetoria: list[PassoTrajetoria]) -> bool:
+    """True quando todo deploy citado na hipótese principal saiu antes do primeiro erro dos logs.
+
+    O juiz às vezes acusa "deploy posterior ao sintoma" comparando mal os horários; aqui a
+    comparação é por código, com os horários das próprias ferramentas. Sem dado, não decide."""
+    deploys, inicios = {}, []
+    for passo in trajetoria:
+        texto = passo.observacao or ""
+        if passo.ferramenta == "listar_deploys":
+            for horario, tag, versao in _DEPLOY.findall(texto):
+                deploys[tag] = deploys[versao] = horario
+        if passo.ferramenta == "buscar_logs":
+            inicios += _INICIO_LOG.findall(texto)
+    principal = analise.hipoteses[0]
+    citados = {v for v in deploys if v in f"{principal.causa} {principal.evidencia or ''}"}
+    if not citados or not inicios:
+        return False
+    return all(deploys[v] <= min(inicios) for v in citados)
+
+
+def _descarta_falso_positivo(
+    veredito: VereditoCoerencia, analise: AnaliseIncidente, trajetoria: list[PassoTrajetoria]
+) -> VereditoCoerencia:
+    if "deploy_posterior_ao_sintoma" not in veredito.falacias:
+        return veredito
+    if not _deploy_antes_do_sintoma(analise, trajetoria):
+        return veredito
+    restantes = [f for f in veredito.falacias if f != "deploy_posterior_ao_sintoma"]
+    return veredito.model_copy(update={"falacias": restantes or ["nenhuma"]})
 
 
 def _motivos(
@@ -152,7 +203,8 @@ def _observacoes(trajetoria: list[PassoTrajetoria]) -> str:
 
 
 def _texto_analise(analise: AnaliseIncidente) -> str:
-    return analise.model_dump_json(indent=2)
+    """Só o que a análise afirma; ações sugeridas e próximos passos não são fatos a checar."""
+    return analise.model_dump_json(indent=2, exclude={"acoes_sugeridas", "proximos_passos"})
 
 
 def montar_auditor(llm, com_falacias: bool = True) -> Runnable:
@@ -170,7 +222,7 @@ def montar_auditor(llm, com_falacias: bool = True) -> Runnable:
         texto = _texto_analise(analise)
         try:
             afirmacoes = extrai.invoke({"analise": texto}).afirmacoes
-            checagens = checar_fatos(afirmacoes, trajetoria)
+            checagens = checar_fatos(afirmacoes, trajetoria, entrada.get("mensagem", ""))
             veredito = coerencia.invoke(
                 {
                     "mensagem": entrada.get("mensagem", ""),
@@ -180,6 +232,7 @@ def montar_auditor(llm, com_falacias: bool = True) -> Runnable:
             )
         except Exception as erro:  # noqa: BLE001 - erro do modelo nunca derruba o turno
             return Auditoria(aprovada=False, erro=str(erro), motivos=[f"não auditada: {erro}"])
+        veredito = _descarta_falso_positivo(veredito, analise, trajetoria)
         motivos = _motivos(checagens, veredito, com_falacias)
         return Auditoria(
             aprovada=not motivos, checagens=checagens, coerencia=veredito, motivos=motivos

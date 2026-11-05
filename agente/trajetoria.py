@@ -9,7 +9,7 @@ from langchain_core.callbacks import BaseCallbackHandler
 from agente.github import MARCA_RESERVA, PREFIXO_MOTIVO
 from agente.schemas import PassoTrajetoria
 
-LIMITE_OBSERVACAO = 2000
+LIMITE_OBSERVACAO = 6000
 
 
 def _motivo(texto: str) -> str | None:
