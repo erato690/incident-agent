@@ -5,6 +5,7 @@ validado pelo parser da Fase 1 (uma nova tentativa; falha final vira erro legív
 """
 
 import json
+import time
 from typing import Any
 
 from langchain.agents import create_agent
@@ -15,7 +16,7 @@ from langgraph.errors import GraphRecursionError
 from pydantic import ValidationError
 
 from agente.ferramentas import CHAVE_CONTEXTO
-from agente.schemas import AnaliseIncidente, ResultadoInvestigacao
+from agente.schemas import AnaliseIncidente, PassoTrajetoria, ResultadoInvestigacao
 from agente.trajetoria import TrajetoriaCallback
 
 _PARSER = JsonOutputParser(pydantic_object=AnaliseIncidente)
@@ -234,10 +235,12 @@ Documentation rule:
 """
 
 REGRA_ACAO = """
-Action rule:
-- At the end, call sugerir_acao exactly once with the main hypothesis as diagnostico and the
-  service. The actions are suggestions, never executed.
-- In proximos_passos you may mention them; never say an action was executed.
+Action rule (mandatory):
+- Before writing the final JSON, you MUST call sugerir_acao exactly once, with the main
+  hypothesis as diagnostico and the affected service. An answer without this call is
+  incomplete. The system attaches the suggested actions to the analysis; you do not copy them.
+- The actions are suggestions for the engineer to approve, never executed. In proximos_passos
+  you may mention them; never say an action was executed.
 
 """
 
@@ -336,6 +339,38 @@ def _investigar(
     return ResultadoInvestigacao(analise=analise, trajetoria=callback.passos)
 
 
+MOTIVO_ACAO_POR_CODIGO = "o agente não chamou sugerir_acao; o sistema chamou por código"
+
+
+def _garantir_acao(
+    acao: Any, resultado: ResultadoInvestigacao, chamador: dict | None
+) -> ResultadoInvestigacao:
+    """Toda análise sai com ação sugerida: se o modelo esqueceu `sugerir_acao`, o código chama
+    a ferramenta com a hipótese principal (mesmo contexto do turno), como na citação do SC-002."""
+    if acao is None or resultado.analise is None:
+        return resultado
+    if any(passo.ferramenta == acao.name for passo in resultado.trajetoria):
+        return resultado
+    analise = resultado.analise
+    argumentos = {"diagnostico": analise.hipoteses[0].causa, "servico": analise.servico or ""}
+    inicio = time.monotonic()
+    erro = None
+    try:
+        observacao = str(acao.invoke(argumentos, config=chamador or {}))
+    except Exception as excecao:  # noqa: BLE001 - a análise já existe; a ação é complemento
+        observacao, erro = "", str(excecao)
+    passo = PassoTrajetoria(
+        ferramenta=acao.name,
+        argumentos=argumentos,
+        duracao_ms=int((time.monotonic() - inicio) * 1000),
+        tamanho=len(observacao),
+        erro=erro,
+        reserva=True,
+        motivo_reserva=MOTIVO_ACAO_POR_CODIGO,
+    )
+    return resultado.model_copy(update={"trajetoria": [*resultado.trajetoria, passo]})
+
+
 def _erro_legivel(entrada: dict) -> ResultadoInvestigacao:
     excecao = entrada["excecao"]
     return ResultadoInvestigacao(
@@ -347,7 +382,12 @@ def _erro_legivel(entrada: dict) -> ResultadoInvestigacao:
 def montar_investigador(llm, ferramentas: list, max_passos: int = 8) -> Runnable:
     """Estado {mensagem, historico} -> ResultadoInvestigacao; nunca levanta exceção."""
     agente = create_agent(llm, ferramentas, system_prompt=montar_sistema_agente(ferramentas))
-    nucleo = RunnableLambda(lambda estado, config: _investigar(agente, max_passos, estado, config))
+    acao = next((f for f in ferramentas if f.name == "sugerir_acao"), None)
+    nucleo = RunnableLambda(
+        lambda estado, config: _garantir_acao(
+            acao, _investigar(agente, max_passos, estado, config), config
+        )
+    )
     nucleo = nucleo.with_retry(
         retry_if_exception_type=(ErroSaida,), stop_after_attempt=2, wait_exponential_jitter=False
     )

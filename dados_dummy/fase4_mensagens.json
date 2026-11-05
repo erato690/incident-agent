@@ -46,7 +46,9 @@
   "intencao_esperada": "investigar_erro",
   "causa_esperada": "estoque-worker/v1.6.0 tornou ESTOQUE_QUEUE_URL obrigatória e a removeu do .env.example e do config.yaml, confirmado pelo diff contra estoque-worker/v1.5.2.",
   "palavras_causa": [
-   "estoque_queue_url"
+   "estoque_queue_url",
+   "variável de ambiente",
+   "variavel de ambiente"
   ]
  },
  {

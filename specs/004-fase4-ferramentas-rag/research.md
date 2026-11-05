@@ -213,3 +213,23 @@ L2 (menor = mais parecido), k = 3:
   pergunta reescrita em termos técnicos põe o runbook certo em 1º, com 0,555.
 - `LIMIAR_SEM_COBERTURA` fica em 1,15, o valor que a aula usa: fora do domínio, a distância vai de
   1,19 a 1,59.
+
+## Primeira execução com a chave (2026-11-05, script de fumaça, `gpt-4o-mini`)
+
+- Causa certa em 8 de 8 cenários. `banco_lento_com_deploy` nomeia "REINDEX TABLE estoque", com
+  evidência de `consultar_estatisticas_banco`, e `rate_limit` cita o limite de 100/min do
+  PagaFácil vindo de `consultar_wiki`.
+- **Defeito 1, corrigido:** `consultar_wiki("idp.loja.internal", ...)` gravou o trecho da
+  documentação do PagaFácil como fato do idp, porque a busca só filtrava por tipo.
+  - Agora o trecho só vira fato quando o `assunto` do documento é o assunto pedido, sem
+    diferenciar acento nem caixa.
+  - Sem documento do assunto, a resposta é "NÃO ENCONTRADO" e a pergunta vai ao engenheiro.
+  - Dois testes novos.
+- **Defeito 2, corrigido:** o modelo não chamou `sugerir_acao` (0 de 11).
+  - A regra ficou obrigatória ("Before writing the final JSON, you MUST call sugerir_acao").
+    Com ela, o modelo passou a chamar em 4 de 6.
+  - Para cumprir o SC-005 sem depender do modelo, o Investigador chama `sugerir_acao` por
+    código quando o modelo não chamou. A chamada usa a hipótese principal e o mesmo contexto do
+    turno, como a citação do SC-002.
+  - O passo aparece na trajetória com `reserva=true` e o motivo. É decisão de nível 2: não muda
+    a decisão D8, só a torna confiável.
