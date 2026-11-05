@@ -122,6 +122,12 @@ Rules:
 
 Always answer in Brazilian Portuguese."""  # noqa: E501 - texto do prompt
 
+PEDIDO_JSON_INVESTIGACAO = (
+    "Your previous answer was not the JSON object. Answer now with ONLY the AnaliseIncidente JSON "
+    "object, in the requested format, with no text before or after it. "
+    "Always answer in Brazilian Portuguese."
+)
+
 prompt_investigacao = ChatPromptTemplate.from_messages(
     [
         ("system", SISTEMA_INVESTIGACAO),
@@ -198,4 +204,10 @@ prompt_resumo = ChatPromptTemplate.from_messages(
             "Write the updated summary.",
         ),
     ]
+)
+
+# Mesmo prompt com o pedido explícito de JSON no fim: corrige a resposta em prosa que o modelo
+# às vezes dá ao imitar o histórico em texto (as novas tentativas repetiriam a prosa).
+prompt_investigacao_json = ChatPromptTemplate.from_messages(
+    [*prompt_investigacao.messages, ("human", PEDIDO_JSON_INVESTIGACAO)]
 )
