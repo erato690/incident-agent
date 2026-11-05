@@ -233,3 +233,25 @@ L2 (menor = mais parecido), k = 3:
     turno, como a citação do SC-002.
   - O passo aparece na trajetória com `reserva=true` e o motivo. É decisão de nível 2: não muda
     a decisão D8, só a torna confiável.
+
+## Execução do notebook inteiro com a chave (2026-11-05)
+
+- Notebook inteiro em 843 s, sem erros e sem chaves nas saídas.
+- Seção 4 em 85 s (limite de 300 s).
+- Bateria da Fase 4: 11/11 rotas, causa certa 8/8:
+  - `rate_limit`: limite de 100/min com o fato citado com fonte e data, por código;
+  - `banco_lento_com_deploy`: REINDEX TABLE estoque;
+  - pedido de REINDEX: recusado com a resposta fixa.
+- Baterias anteriores sem regressão: 23/23, 12/12 e 10/10, com as conversas das seções 2 e 3
+  completas.
+- **Intermitência na seção 1:**
+  - Na conversa `escopo_externo`, a cadeia da Fase 1 devolveu `null` no lugar do JSON nas duas
+    tentativas: 2 turnos na execução completa e 1 numa execução só da seção 1.
+  - Não se repetiu em 9 execuções isoladas nem em 4 conversas com captura das saídas do modelo.
+    A causa não foi isolada; o mais provável é uma saída ocasional do `gpt-4o-mini`.
+  - Mitigação (nível 2): a cadeia passa a ter até duas novas tentativas (`stop_after_attempt=3`).
+  - As saídas das seções 1 a 3 no notebook continuam as da execução da Fase 3. A execução final
+    da Fase 5 regrava todas.
+- **Notebook:** mescladas só as saídas da seção 4. As células das seções 1 a 3 ficaram como na
+  HEAD, sem mexer nos números de execução. A versão de trabalho anterior, que tinha só números
+  de execução alterados, ficou salva no scratchpad.

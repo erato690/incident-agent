@@ -4,7 +4,7 @@ Agente cognitivo que investiga erros de aplicações em produção, conduzindo u
 
 ## Status
 
-Fases 1 a 3 concluídas: chain executável com entrada e saída estruturadas (seção 1 do `projeto.ipynb`), agente ReAct com ferramentas só leitura sobre a loja e o GitHub (seção 2) e memória de curto prazo (conversa por sessão com `RunnableWithMessageHistory`, filtro de relevância, `trim_messages` e resumo) e de longo prazo (episódios com causa confirmada num `InMemoryVectorStore`, resolução de memória e busca com decaimento; interface da memória semântica) (seção 3); código em `agente/`, testes em `tests/`. As fases seguintes (banco de incidentes e runbooks, auditor, app Streamlit) ainda não existem neste repositório. Para o histórico de decisões, ver o `HANDOFF.md` no repositório [`agentes-cognitivos`](https://github.com/erato690/agentes-cognitivos) (mesma conta GitHub).
+Fases 1 a 4 concluídas: chain executável com entrada e saída estruturadas (seção 1 do `projeto.ipynb`), agente ReAct com ferramentas só leitura sobre a loja e o GitHub (seção 2) e memória de curto prazo (conversa por sessão com `RunnableWithMessageHistory`, filtro de relevância, `trim_messages` e resumo) e de longo prazo (episódios com causa confirmada num `InMemoryVectorStore`, resolução de memória e busca com decaimento; interface da memória semântica) (seção 3), e ferramentas externas (seção 4): consulta SQL só leitura sobre `dados/incidentes.db`, recuperação de documentos (RAG) sobre o índice FAISS `dados/indice_faiss/` com runbooks em `dados/documentos/`, estatísticas do banco do incident-shop (contrato 1.1.0), memória semântica com fonte, data e validade, e ações sugeridas (nunca executadas); código em `agente/`, testes em `tests/`. A Fase 5 (agente integrado, auditor, app Streamlit, avaliação no LangSmith) ainda não existe neste repositório. Para o histórico de decisões, ver o `HANDOFF.md` no repositório [`agentes-cognitivos`](https://github.com/erato690/agentes-cognitivos) (mesma conta GitHub).
 
 ## Como rodar
 
@@ -26,7 +26,7 @@ LOJA_URL=http://localhost:8000   # opcional: incident-shop ao vivo; sem ela, dad
 GITHUB_TOKEN=...          # opcional: sobe o limite da API do GitHub (sem token: 60 por hora)
 ```
 
-Cada provedor exige a sua chave; não há troca automática. Sem chave, o notebook roda até o fim e pula as células que chamam o modelo de linguagem; sem `OPENAI_API_KEY`, a moderação é pulada com aviso. A busca na memória de longo prazo usa embeddings da OpenAI (`text-embedding-3-small`), então a seção 3 com modelo real exige `OPENAI_API_KEY` mesmo com `LLM_PROVEDOR=deepseek`.
+Cada provedor exige a sua chave; não há troca automática. Sem chave, o notebook roda até o fim e pula as células que chamam o modelo de linguagem; sem `OPENAI_API_KEY`, a moderação é pulada com aviso. A busca na memória de longo prazo usa embeddings da OpenAI (`text-embedding-3-small`), então as seções 3 e 4 com modelo real exigem `OPENAI_API_KEY` mesmo com `LLM_PROVEDOR=deepseek`. O índice FAISS já vem no repositório; para reconstruí-lo, `python scripts/construir_indice.py` (com a chave). A base SQLite sai de `python scripts/construir_sqlite.py` (sem chave).
 
 - **Notebook**: abra `projeto.ipynb` no VS Code (extensão Jupyter) ou no Jupyter e rode todas as células. Para executar pela linha de comando: `jupyter nbconvert --to notebook --execute --inplace projeto.ipynb`.
 - **Testes**: `pytest -q` (sem chave e sem rede; o modelo e a moderação são substituídos por versões falsas).
