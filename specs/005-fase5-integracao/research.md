@@ -17,8 +17,8 @@
 
 | # | Decisão | Opções | Escolha | Situação |
 |---|---|---|---|---|
-| F5-D1 | Auditor reprova | A: marca e avisa, sem nova tentativa; B: uma nova tentativa com o motivo; C: bloqueia | A (Jev A 0,91). Fiel à aula: o auditor fica fora do agente | Recomendação aplicada; enviada ao Rafael para validar |
-| F5-D2 | API do LangSmith | A: SDK oficial (`Client.create_dataset` + `evaluate` com avaliadores próprios); B: A + LLM juiz (openevals); C: só tracing | A (Jev A 0,85) | Recomendação aplicada; o envio à conta do Rafael espera a confirmação dele |
+| F5-D1 | Auditor reprova | A: marca e avisa, sem nova tentativa; B: uma nova tentativa com o motivo; C: bloqueia | A (Jev A 0,91). Fiel à aula: o auditor fica fora do agente | Decidida pelo Rafael em 2026-11-05: A. A resposta reprovada sai com aviso, sem nova tentativa |
+| F5-D2 | API do LangSmith | A: SDK oficial (`Client.create_dataset` + `evaluate` com avaliadores próprios); B: A + LLM juiz (openevals); C: só tracing | A (Jev A 0,85) | Decidida pelo Rafael em 2026-11-05: A. SDK oficial com avaliadores próprios |
 | — | Agente final | constitution V | `create_agent` como padrão; o clássico numa célula curta | Já decidido |
 | — | Streamlit e Docker | constitution X | Duas telas, Dockerfile e compose | Já decidido; corte permitido: só a tela de uso |
 | — | Post-mortem | constitution VIII | `.md` por template, só a pedido | Já decidido |
@@ -70,6 +70,10 @@
   `evaluate`, e as métricas ficam no notebook.
 - A execução final usou `LANGSMITH_TRACING=false` só no comando, para as saídas não ficarem
   cheias de avisos 429. O `.env` não foi alterado.
+- **Decisão do Rafael (2026-11-05):** enviar o dataset e o experimento quando a cota renovar,
+  sem ampliar o plano. O comando `scripts/avaliar_langsmith.py --enviar` fica pronto, e o
+  relatório registra o limite (seção 5.5). O push dos repositórios espera a validação das
+  Fases 4 e 5 pelo Rafael.
 - O GitHub sem token também esgotou o limite de 60 requisições por hora. `comparar_versoes` caiu
   na gravação de reserva, que já é rotulada na trajetória.
 
