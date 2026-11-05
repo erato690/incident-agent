@@ -151,6 +151,9 @@ class PassoTrajetoria(BaseModel):
     erro: str | None = None
     reserva: bool = Field(default=False, description="True quando a resposta veio da gravação")
     motivo_reserva: str | None = Field(default=None, description="Por que caiu na gravação")
+    observacao: str | None = Field(
+        default=None, description="Texto da observação já mascarada, até 2000 caracteres"
+    )
 
 
 class ResultadoInvestigacao(BaseModel):
@@ -270,6 +273,48 @@ class Sessao(BaseModel):
     turnos: int = 0
 
 
+ChaveAfirmacao = Literal["versao", "horario", "numero", "tabela", "servico", "outro"]
+Falacia = Literal[
+    "deploy_posterior_ao_sintoma",
+    "sintoma_como_causa",
+    "contradicao_premissa_conclusao",
+    "erro_de_calculo",
+    "violacao_de_escopo",
+    "nenhuma",
+]
+
+
+class Afirmacao(BaseModel):
+    texto: str = Field(description="A afirmação, como a análise a escreveu")
+    chave: ChaveAfirmacao = Field(description="Tipo canônico do fato afirmado")
+    valor: str = Field(description="Valor afirmado (ex.: v3.2.1, 14:05, 100/min, orders)")
+
+
+class ListaAfirmacoes(BaseModel):
+    afirmacoes: list[Afirmacao] = Field(default_factory=list)
+
+
+class ChecagemFato(BaseModel):
+    afirmacao: Afirmacao
+    status: Literal["confirmada", "contraditoria", "nao_verificada"]
+    fonte: str | None = Field(default=None, description="Por que o status foi atribuído")
+
+
+class VereditoCoerencia(BaseModel):
+    veredito: Literal["apoia", "refuta", "neutro"]
+    e_coerente: bool
+    falacias: list[Falacia] = Field(default_factory=lambda: ["nenhuma"])
+    justificativa: str
+
+
+class Auditoria(BaseModel):
+    aprovada: bool
+    checagens: list[ChecagemFato] = Field(default_factory=list)
+    coerencia: VereditoCoerencia | None = None
+    motivos: list[str] = Field(default_factory=list)
+    erro: str | None = None
+
+
 class RespostaTurno(BaseModel):
     rota: Literal["fixa", "investigacao", "erro", "memoria"]
     moderacao: ResultadoModeracao
@@ -282,3 +327,5 @@ class RespostaTurno(BaseModel):
     episodio_anterior: Episodio | None = None
     resolucao: ResolucaoMemoria | None = None
     fato: FatoSemantico | None = None
+    auditoria: Auditoria | None = None
+    aviso: str | None = None

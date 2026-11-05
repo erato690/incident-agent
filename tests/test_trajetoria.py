@@ -49,3 +49,24 @@ def test_erro_da_ferramenta_fica_no_passo():
     with contextlib.suppress(ValueError):
         quebra.invoke({"texto": "1"}, config={"callbacks": [callback]})
     assert len(callback.passos) == 1 and "falhou de propósito" in callback.passos[0].erro
+
+
+def test_observacao_guardada_e_truncada_em_2000_caracteres():
+    from agente.schemas import PassoTrajetoria
+
+    callback = TrajetoriaCallback()
+    eco.invoke({"texto": "a"}, config={"callbacks": [callback]})
+    eco.invoke({"texto": "x" * 5000}, config={"callbacks": [callback]})
+    assert callback.passos[0].observacao == "ok a"
+    assert len(callback.passos[1].observacao) == 2000
+    assert callback.passos[1].tamanho == 5003  # tamanho continua o original
+    assert PassoTrajetoria(ferramenta="f", duracao_ms=0, tamanho=0).observacao is None
+
+
+def test_resposta_turno_tem_auditoria_e_aviso_opcionais():
+    from agente.schemas import Auditoria, RespostaTurno, ResultadoModeracao
+
+    base = {"rota": "fixa", "moderacao": ResultadoModeracao(status="ok")}
+    assert RespostaTurno(**base).auditoria is None and RespostaTurno(**base).aviso is None
+    resposta = RespostaTurno(**base, auditoria=Auditoria(aprovada=True), aviso="x")
+    assert resposta.auditoria.aprovada and resposta.aviso == "x"

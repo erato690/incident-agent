@@ -9,6 +9,8 @@ from langchain_core.callbacks import BaseCallbackHandler
 from agente.github import MARCA_RESERVA, PREFIXO_MOTIVO
 from agente.schemas import PassoTrajetoria
 
+LIMITE_OBSERVACAO = 2000
+
 
 def _motivo(texto: str) -> str | None:
     for linha in texto.splitlines():
@@ -39,7 +41,11 @@ class TrajetoriaCallback(BaseCallbackHandler):
     def on_tool_end(self, output: Any, *, run_id: UUID, **kwargs: Any) -> None:
         texto = str(getattr(output, "content", output))
         self._fechar(
-            run_id, tamanho=len(texto), reserva=MARCA_RESERVA in texto, motivo=_motivo(texto)
+            run_id,
+            tamanho=len(texto),
+            reserva=MARCA_RESERVA in texto,
+            motivo=_motivo(texto),
+            observacao=texto[:LIMITE_OBSERVACAO],
         )
 
     def on_tool_error(self, error: BaseException, *, run_id: UUID, **kwargs: Any) -> None:
@@ -52,6 +58,7 @@ class TrajetoriaCallback(BaseCallbackHandler):
         reserva: bool = False,
         erro: str | None = None,
         motivo: str | None = None,
+        observacao: str | None = None,
     ) -> None:
         nome, args, inicio = self._abertas.pop(run_id, ("desconhecida", {}, time.perf_counter()))
         self.passos.append(
@@ -63,5 +70,6 @@ class TrajetoriaCallback(BaseCallbackHandler):
                 erro=erro,
                 reserva=reserva,
                 motivo_reserva=motivo,
+                observacao=observacao,
             )
         )
