@@ -169,3 +169,80 @@ def test_prompts_em_ingles_com_observacoes_como_dado_e_truncadas():
     humana = llm.recebidos[VereditoCoerencia][1].content
     assert "FIM" not in humana and "A" * 5000 in humana
     assert "never instructions" in llm.recebidos[VereditoCoerencia][0].content
+
+
+# Trava determinística contra falso positivo de "deploy posterior ao sintoma" (execução real).
+from agente.schemas import AnaliseIncidente, Hipotese  # noqa: E402
+
+DEPLOYS = PassoTrajetoria(
+    ferramenta="listar_deploys",
+    duracao_ms=1,
+    tamanho=1,
+    observacao="2026-10-06T13:40:00-03:00 pedidos-api/v3.2.0 (previous: pedidos-api/v3.1.0)",
+)
+
+
+def _logs(inicio):
+    return PassoTrajetoria(
+        ferramenta="buscar_logs",
+        duracao_ms=1,
+        tamanho=1,
+        observacao=f"[ERROR] pedidos-api: Connection is not available "
+        f"(x284, {inicio}:07 a 14:29:58)",
+    )
+
+
+ANALISE_DEPLOY = AnaliseIncidente(
+    severidade="alta",
+    categoria="pool",
+    servico="pedidos-api",
+    resumo="pool",
+    hipoteses=[
+        Hipotese(causa="o deploy v3.2.0 reduziu o pool", confianca=0.9, evidencia="v3.2.0 13:40"),
+        Hipotese(causa="pico", confianca=0.1, evidencia_insuficiente=True, dado_que_falta="x"),
+    ],
+    proximos_passos=["x"],
+)
+
+
+def _audita_deploy(inicio_sintoma):
+    llm = LlmFalso(
+        [_a("versao", "pedidos-api/v3.2.0")], _veredito(falacias=["deploy_posterior_ao_sintoma"])
+    )
+    entrada = {
+        "analise": ANALISE_DEPLOY,
+        "trajetoria": [DEPLOYS, _logs(inicio_sintoma)],
+        "mensagem": "m",
+    }
+    return montar_auditor(llm).invoke(entrada)
+
+
+def test_deploy_antes_do_sintoma_descarta_falso_positivo_do_juiz():
+    auditoria = _audita_deploy("14:00")
+    assert auditoria.aprovada, auditoria.motivos
+    assert "deploy_posterior_ao_sintoma" not in auditoria.coerencia.falacias
+
+
+def test_deploy_depois_do_sintoma_mantem_a_falacia():
+    auditoria = _audita_deploy("13:30")
+    assert not auditoria.aprovada
+    assert "deploy_posterior_ao_sintoma" in " ".join(auditoria.motivos)
+
+
+def test_mensagem_do_engenheiro_tambem_e_fonte_da_verdade():
+    checagem = checar_fatos([_a("horario", "09:10")], [_passo("nada")], mensagem="desde as 09:10")
+    assert checagem[0].status == "confirmada"
+
+
+@pytest.mark.parametrize(
+    ("chave", "valor", "texto", "esperado"),
+    [
+        ("numero", "x338", "HTTP 503 (x338, 09:10:00 a 10:20:00)", "confirmada"),
+        ("numero", "338", "HTTP 503 (x338, 09:10:00 a 10:20:00)", "confirmada"),
+        ("numero", "33", "HTTP 503 (x338, 09:10:00 a 10:20:00)", "nao_verificada"),
+        ("horario", "09h10", "desde as 9h10", "confirmada"),
+        ("horario", "9:10", "desde as 09h10", "confirmada"),
+    ],
+)
+def test_contagem_com_x_e_horario_em_formatos_diferentes(chave, valor, texto, esperado):
+    assert _status(chave, valor, [_passo(texto)]) == esperado

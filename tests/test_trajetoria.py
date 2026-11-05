@@ -5,7 +5,7 @@ import contextlib
 from langchain_core.tools import tool
 
 from agente.github import MARCA_RESERVA, PREFIXO_MOTIVO
-from agente.trajetoria import TrajetoriaCallback
+from agente.trajetoria import LIMITE_OBSERVACAO, TrajetoriaCallback
 
 
 @tool
@@ -51,15 +51,15 @@ def test_erro_da_ferramenta_fica_no_passo():
     assert len(callback.passos) == 1 and "falhou de propósito" in callback.passos[0].erro
 
 
-def test_observacao_guardada_e_truncada_em_2000_caracteres():
+def test_observacao_guardada_e_truncada_no_limite():
     from agente.schemas import PassoTrajetoria
 
     callback = TrajetoriaCallback()
     eco.invoke({"texto": "a"}, config={"callbacks": [callback]})
-    eco.invoke({"texto": "x" * 5000}, config={"callbacks": [callback]})
+    eco.invoke({"texto": "x" * 9000}, config={"callbacks": [callback]})
     assert callback.passos[0].observacao == "ok a"
-    assert len(callback.passos[1].observacao) == 2000
-    assert callback.passos[1].tamanho == 5003  # tamanho continua o original
+    assert len(callback.passos[1].observacao) == LIMITE_OBSERVACAO
+    assert callback.passos[1].tamanho == 9003  # tamanho continua o original
     assert PassoTrajetoria(ferramenta="f", duracao_ms=0, tamanho=0).observacao is None
 
 
