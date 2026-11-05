@@ -72,3 +72,25 @@
   cheias de avisos 429. O `.env` não foi alterado.
 - O GitHub sem token também esgotou o limite de 60 requisições por hora. `comparar_versoes` caiu
   na gravação de reserva, que já é rotulada na trajetória.
+
+## Execução final do notebook inteiro com a chave (2026-11-05)
+
+- Notebook inteiro em 831 s, com `LANGSMITH_TRACING=false` no comando: 0 erros e 0 chaves nas
+  saídas.
+- Baterias e conversas:
+  - Bateria da Fase 1: 23/23, com as conversas 5/5 e 6/6.
+  - Bateria da Fase 2: 12/12, com as conversas 5/5 e 4/4.
+  - Bateria da Fase 3: 10/10, com todas as conversas completas.
+  - Bateria da Fase 4: 11/11 e causa certa 8/8. Seção 4 em 73 s.
+- Seção 5 em 116 s:
+  - auditor aprova a resposta certa e reprova a errada roteirizada;
+  - a conversa integrada de 4 turnos passa por sintoma, SQL, confirmação e post-mortem;
+  - o pedido de REINDEX é recusado;
+  - a avaliação local dos 8 cenários tem média 1,0 em causa certa, trajetória e auditor.
+- Testes: 510 sem chave.
+- Dois defeitos encontrados nas execuções anteriores e corrigidos, com testes:
+  1. O NLU classificou "Gera o post-mortem" como `pedido_de_acao` e uma pergunta de histórico
+     como `fora_do_escopo`. Entraram regras e exemplos no prompt.
+  2. A cadeia da Fase 1 devolvia `None` quando o modelo respondia em prosa imitando o histórico.
+     Com temperatura fixa, as novas tentativas repetiam a mesma prosa. Agora, depois das novas
+     tentativas, um passo final repete o pedido exigindo só o JSON.
