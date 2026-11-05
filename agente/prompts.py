@@ -37,6 +37,11 @@ Rules:
   "confirmado: a cota diária do provedor X é 5 mil chamadas" -> confirmar_fato
   "qual é o limite de requisições do PagaFácil?" -> investigar_erro
   "confirmado: o 429 veio porque passamos do limite, revertemos o retry" -> confirmar_causa
+- A question about the incident history (how many incidents, most common cause or category,
+  past deploys of a service) is comparar_incidente, never fora_do_escopo.
+  Examples:
+  "quantos incidentes o pedidos-api teve em 2026 e qual a categoria mais comum?" -> comparar_incidente
+  "quais deploys do pagamentos-api saíram este mês?" -> checar_deploy
 - In erro_texto, copy the excerpt of the error that was quoted; in dado_faltante, say what is missing to investigate.
 
 Always answer in Brazilian Portuguese."""  # noqa: E501 - texto do prompt
