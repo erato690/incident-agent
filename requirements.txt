@@ -12,3 +12,6 @@ pandas
 matplotlib
 langchain-classic
 httpx
+faiss-cpu
+langchain-community
+langchain-text-splitters
