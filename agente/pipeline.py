@@ -2,6 +2,8 @@
 
 import re
 from collections.abc import Callable
+from functools import reduce
+from operator import or_
 
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.runnables import Runnable, RunnableBranch, RunnableLambda, RunnablePassthrough
@@ -414,6 +416,7 @@ def _passo6_com_memoria(
     investigacao: Runnable,
     registro: Runnable | None,
     registro_fato: Runnable | None = None,
+    auditor: Runnable | None = None,
 ) -> Runnable:
     """Confirmações vão aos Registradores; o resto, à investigação com o contexto do turno."""
     registro = registro or _registrador_padrao(llm, memoria)
@@ -431,6 +434,27 @@ def _passo6_com_memoria(
     )
 
 
+def _auditar_resposta(auditor: Runnable) -> Callable[[dict, dict], dict]:
+    """Audita a resposta de investigação pronta; reprovada sai com aviso, sem nova tentativa."""
+
+    def auditar(estado: dict, config: dict) -> dict:
+        resposta = estado["resposta"]
+        if resposta.rota != "investigacao" or resposta.analise is None:
+            return estado
+        entrada = {
+            "analise": resposta.analise,
+            "trajetoria": resposta.trajetoria,
+            "mensagem": estado["mensagem"],
+        }
+        auditoria = auditor.invoke(entrada, patch_config(config, run_name="auditoria"))
+        atualiza = {"auditoria": auditoria}
+        if not auditoria.aprovada:
+            atualiza["aviso"] = "Resposta reprovada pelo auditor: " + "; ".join(auditoria.motivos)
+        return {**estado, "resposta": resposta.model_copy(update=atualiza)}
+
+    return auditar
+
+
 def montar_etapas(
     llm,
     moderar: Callable[[str], ResultadoModeracao],
@@ -439,6 +463,7 @@ def montar_etapas(
     memoria: MemoriaLongoPrazo | None = None,
     registro: Runnable | None = None,
     registro_fato: Runnable | None = None,
+    auditor: Runnable | None = None,
 ) -> dict[str, Runnable]:
     """Etapas do pipeline na ordem em que a mensagem passa (cada uma é um Runnable)."""
     nlu = nlu or montar_nlu(llm)
@@ -466,6 +491,13 @@ def montar_etapas(
         # entra estado com resposta -> sai só o RespostaTurno
         "passo7_resposta": RunnableLambda(lambda estado: estado["resposta"]),
     }
+    if auditor is not None:
+        # entra estado com resposta -> sai estado; investigação ganha auditoria (e aviso)
+        etapas = {
+            **{n: e for n, e in etapas.items() if n != "passo7_resposta"},
+            "passo6b_auditoria": RunnableLambda(_auditar_resposta(auditor)),
+            "passo7_resposta": etapas["passo7_resposta"],
+        }
     for nome, etapa in etapas.items():
         etapa.name = nome  # nome legível no grafo (get_graph) e no trace
     return etapas
@@ -479,27 +511,14 @@ def montar_pipeline(
     memoria: MemoriaLongoPrazo | None = None,
     registro: Runnable | None = None,
     registro_fato: Runnable | None = None,
+    auditor: Runnable | None = None,
 ) -> Runnable:
     """Entrada {"mensagem", "historico", "incidente_id", "session_id"} -> RespostaTurno.
 
     nlu, investigacao, registro e registro_fato (Registradores) são injetáveis; sem memória o
-    comportamento não muda.
+    comportamento não muda. O auditor (opcional) roda depois da investigação.
     """
-    (
-        passo1_mascara,
-        passo2_vazia,
-        passo3_moderacao,
-        passo4_nlu,
-        passo5_roteador,
-        passo6_investigacao,
-        passo7_resposta,
-    ) = montar_etapas(llm, moderar, nlu, investigacao, memoria, registro, registro_fato).values()
-    return (
-        passo1_mascara
-        | passo2_vazia
-        | passo3_moderacao
-        | passo4_nlu
-        | passo5_roteador
-        | passo6_investigacao
-        | passo7_resposta
+    etapas = montar_etapas(
+        llm, moderar, nlu, investigacao, memoria, registro, registro_fato, auditor
     )
+    return reduce(or_, etapas.values())
