@@ -1,6 +1,7 @@
 """Gera os diagramas (estilo C4 simples) em docs/img/.
 
-Arquivos: contexto.png, componentes.png, componentes_fase2.png e componentes_fase3.png.
+Arquivos: contexto.png, componentes.png, componentes_fase2.png, componentes_fase3.png,
+componentes_fase4.png e arquitetura_final.png.
 """
 
 from pathlib import Path
@@ -1042,16 +1043,374 @@ def componentes_fase3():
     plt.close(fig)
 
 
+def titulo(ax, x, y, texto):
+    ax.text(x, y, texto, ha="center", va="top", fontsize=15, fontweight="bold", color=TXT)
+
+
+def contorno(ax, x, y, w, h, rotulo):
+    """Container pontilhado com rótulo no canto superior esquerdo."""
+    ax.add_patch(
+        FancyBboxPatch(
+            (x, y),
+            w,
+            h,
+            boxstyle="round,pad=0,rounding_size=0.8",
+            fc="none",
+            ec=COR_SISTEMA[1],
+            lw=1.4,
+            ls=":",
+            zorder=0,
+        )
+    )
+    ax.text(x + 1, y + h - 0.8, rotulo, fontsize=10.5, fontweight="bold", color=TXT, va="top")
+
+
+FERRAMENTAS_FASE4 = [
+    (
+        "loja (incident-shop)",
+        "contrato 1.1.0, API interna:\nbuscar_logs\nbuscar_metricas\nlistar_deploys\n"
+        "consultar_estatisticas_banco",
+        COR_SEM_LLM,
+    ),
+    ("GitHub", "comparar_versoes\n(API web)\ncommits, arquivos\ne trechos do diff", COR_SEM_LLM),
+    (
+        "documentação",
+        "buscar_documentacao\nRAG (busca em documentos)\nsobre os runbooks",
+        COR_SEM_LLM,
+    ),
+    (
+        "wiki",
+        "consultar_wiki: memória semântica\ncom fonte, data e validade;\n"
+        "grava fato da documentação;\n"
+        "senão pergunta ao engenheiro",
+        COR_SEM_LLM,
+    ),
+    (
+        "sugerir_acao",
+        "ferramenta semântica:\nmodelo de linguagem\ndentro da ferramenta;\n"
+        "ação sugerida, não executada",
+        COR_LLM,
+    ),
+    (
+        "memória episódica",
+        "consultar_memoria\ncausas já confirmadas\nem incidentes anteriores",
+        COR_SEM_LLM,
+    ),
+]
+
+
+def _agentes_isolados(ax):
+    caixa(
+        ax,
+        2,
+        92,
+        34,
+        14,
+        COR_LLM,
+        "Agente de consulta SQL",
+        "consultar_sql sobre\ndados/incidentes.db\nsó SELECT (isolado)",
+    )
+    caixa(
+        ax,
+        2,
+        74,
+        34,
+        14,
+        COR_LLM,
+        "Agente de recuperação",
+        "pergunta reescrita em\ntermos técnicos\n(isolado)",
+    )
+    seta(ax, (46, 99), (36, 99), "INTERNA:\ndelega", estilo="<|-|>", tam=7.5)
+    seta(ax, (46, 90), (36, 90), "INTERNA:\ndelega", estilo="<|-|>", tam=7.5)
+
+
+def _servicos_fase4(ax):
+    """Faixa de serviços e dados sob cada ferramenta."""
+    destinos = [
+        (COR_EXTERNO, "incident-shop (LOJA_URL)", "serviço externo", True),
+        (COR_EXTERNO, "GitHub API", "serviço externo", True),
+        (COR_FIXA, "índice FAISS", "dados/indice_faiss\nrunbooks em\ndados/documentos", False),
+        (COR_SISTEMA, "memória semântica", "fato, fonte, data\ne validade", False),
+        (COR_EXTERNO, "Modelo de linguagem", "API de chat\n(serviço externo)", True),
+        (COR_SISTEMA, "memória episódica", "causas confirmadas\n(episódios)", False),
+    ]
+    for posicao, (cor, nome, nota, externa) in enumerate(destinos):
+        x0 = 4 + posicao * 22.5
+        caixa(ax, x0, 26, 21, 12, cor, nome, nota)
+        seta(ax, (x0 + 4, 50), (x0 + 4, 38), "", externa=externa, estilo="<|-|>")
+
+
+def _registrador_fase4(ax):
+    caixa(
+        ax,
+        4,
+        4,
+        44,
+        12,
+        COR_PESSOA,
+        "Engenheiro de plantão",
+        "confirma a causa ou o fato;\nresponde quando a wiki pergunta",
+    )
+    caixa(
+        ax,
+        72,
+        2,
+        66,
+        14,
+        COR_LLM,
+        "Registrador (única escrita)",
+        "gravar_episodio (trava: confirmar_causa) e gravar_fato (trava: confirmar_fato)\n"
+        "só roda quando o engenheiro confirma; chama modelo de linguagem (EXTERNA)",
+    )
+    seta(ax, (48, 10), (72, 10), "confirmação", pos="acima", tam=8)
+    seta(ax, (76, 16), (76, 26), "")
+    seta(ax, (130, 16), (130, 26), "")
+
+
+def componentes_fase4():
+    fig, ax = nova_figura(27, 21, 140, 109, -14)
+    titulo(ax, 70, 108.5, "incident-agent: componentes da Fase 4 (ferramentas e agentes isolados)")
+    caixa(
+        ax,
+        46,
+        86,
+        52,
+        16,
+        COR_LLM,
+        "Investigador (agente ReAct, create_agent)",
+        "ciclo: raciocina, chama ferramenta, observa;\n"
+        "observações mascaradas antes do modelo de linguagem\n"
+        "chama modelo de linguagem (API de chat EXTERNA)",
+    )
+    _agentes_isolados(ax)
+    contorno(ax, 2, 48, 136, 23, "ferramentas do Investigador: só leitura (nada é alterado fora)")
+    for posicao, (nome, detalhe, cor) in enumerate(FERRAMENTAS_FASE4):
+        caixa(ax, 4 + posicao * 22.5, 50, 21, 16, cor, nome, detalhe)
+    seta(
+        ax,
+        (72, 86),
+        (72, 71),
+        "INTERNA: chama as ferramentas e recebe\nas observações (só leitura)",
+        pos="meio",
+        ha="left",
+        dx=1,
+        estilo="<|-|>",
+        tam=8,
+    )
+    _servicos_fase4(ax)
+    _registrador_fase4(ax)
+    legenda(
+        ax,
+        [
+            ("pessoa", COR_PESSOA, None),
+            ("componente nosso, sem modelo de linguagem", COR_SEM_LLM, None),
+            ("componente nosso que chama modelo de linguagem", COR_LLM, None),
+            ("serviço externo", COR_EXTERNO, None),
+            ("arquivo de dados", COR_FIXA, None),
+            ("seta cheia: chamada interna (função, arquivo ou classe)", None, None),
+            ("seta tracejada: chamada externa (rede)", None, True),
+        ],
+        4,
+        -2,
+        45,
+        ncol=3,
+    )
+    fig.savefig(SAIDA / "componentes_fase4.png", bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+
+def _barreira(ax):
+    contorno(ax, 6, 59, 128, 19, "Barreira (antes de investigar)")
+    passos = [
+        (COR_SEM_LLM, "máscara de segredos", "regex local\nsem modelo de linguagem"),
+        (COR_SEM_LLM, "moderação", "limiar por categoria;\nchama serviço externo"),
+        (COR_LLM, "compreensão (NLU)", "entende a intenção;\nchama modelo de linguagem"),
+        (COR_SEM_LLM, "roteador", "escolhe o caminho\npela intenção"),
+    ]
+    for posicao, (cor, nome, nota) in enumerate(passos):
+        x0 = 10 + posicao * 31.5
+        caixa(ax, x0, 60.5, 25, 12, cor, nome, nota)
+        if posicao:
+            seta(ax, (x0 - 6.5, 66.5), (x0, 66.5), "")
+
+
+def _ramos(ax):
+    caixa(
+        ax,
+        4,
+        32,
+        66,
+        22,
+        COR_LLM,
+        "Investigador (agente ReAct)",
+        "todas as ferramentas, só leitura: loja (logs, métricas, deploys,\n"
+        "estatísticas do banco), GitHub, SQL (agente isolado, só SELECT),\n"
+        "documentação (RAG: busca em documentos), wiki, memória\n"
+        "e sugerir_acao (ação sugerida, não executada)",
+    )
+    caixa(
+        ax,
+        74,
+        32,
+        30,
+        22,
+        COR_LLM,
+        "Registrador",
+        "pede confirmação do\nengenheiro antes de gravar:\n"
+        "gravar_episodio (causa)\ne gravar_fato (wiki)",
+    )
+    caixa(
+        ax,
+        108,
+        32,
+        30,
+        22,
+        COR_SEM_LLM,
+        "Post-mortem",
+        "template em código gera o .md;\núnico atuador do sistema,\nsó a pedido do engenheiro",
+    )
+    for x, rot in [
+        (37, "demais intenções"),
+        (89, "confirmar causa\nou fato"),
+        (123, "pedido de\npost-mortem"),
+    ]:
+        seta(ax, (x, 59), (x, 54), rot, pos="meio", ha="left", dx=0.8, tam=7.5)
+
+
+def _auditor(ax):
+    contorno(
+        ax,
+        6,
+        7,
+        128,
+        20,
+        "Auditor (confere as análises do Investigador; confirmação e post-mortem vão direto à "
+        "resposta)",
+    )
+    passos = [
+        (
+            COR_LLM,
+            "extração de afirmações",
+            "separa o que a resposta\nafirma (modelo de linguagem)",
+        ),
+        (COR_SEM_LLM, "checagem determinística", "confere cada afirmação\ncontra as observações"),
+        (COR_LLM, "coerência e falácias", "procura contradições e\nraciocínios falhos (modelo)"),
+    ]
+    for posicao, (cor, nome, nota) in enumerate(passos):
+        x0 = 10 + posicao * 41
+        caixa(ax, x0, 8.5, 36, 12, cor, nome, nota)
+        if posicao:
+            seta(ax, (x0 - 5, 14.5), (x0, 14.5), "")
+    seta(ax, (37, 32), (37, 27), "análise", pos="meio", ha="left", dx=0.8, tam=7.5)
+
+
+def arquitetura_final():
+    fig, ax = nova_figura(22, 29, 140, 136, -46)
+    titulo(ax, 70, 135.5, "incident-agent: arquitetura final (fluxo de um turno)")
+    caixa(ax, 50, 118, 40, 8, COR_PESSOA, "Engenheiro de plantão", "uma sessão por incidente")
+    caixa(
+        ax,
+        40,
+        101,
+        60,
+        10,
+        COR_SISTEMA,
+        "Streamlit",
+        "telas Uso (conversa) e Análise (registro dos turnos)",
+    )
+    caixa(
+        ax,
+        40,
+        83,
+        60,
+        12,
+        COR_SISTEMA,
+        "Sessão (RunnableWithMessageHistory)",
+        "um histórico por session_id;\nfiltro de relevância, janela e resumo",
+    )
+    seta(ax, (70, 118), (70, 111), "mensagem", pos="meio", ha="left", dx=1, tam=8)
+    seta(ax, (70, 101), (70, 95), "", pos="meio")
+    seta(ax, (70, 83), (70, 78), "pergunta + histórico", pos="meio", ha="left", dx=1, tam=8)
+    _barreira(ax)
+    _ramos(ax)
+    _auditor(ax)
+    caixa(
+        ax,
+        30,
+        -8,
+        80,
+        10,
+        COR_SISTEMA,
+        "Resposta",
+        "entregue ao engenheiro; com aviso destacado se o Auditor reprovar",
+    )
+    seta(ax, (70, 7), (70, 2), "")
+    caixa(
+        ax,
+        6,
+        -30,
+        62,
+        14,
+        COR_SISTEMA,
+        "Registro de turnos",
+        "guarda cada turno (pergunta, ferramentas, veredito);\n"
+        "alimenta a tela de Análise do Streamlit",
+    )
+    caixa(
+        ax,
+        72,
+        -30,
+        62,
+        14,
+        COR_EXTERNO,
+        "Avaliação no LangSmith",
+        "dataset dos 8 cenários;\ncausa certa, trajetória e auditor",
+    )
+    seta(ax, (40, -8), (40, -16), "INTERNA: grava", pos="meio", ha="left", dx=1, tam=8)
+    seta(
+        ax,
+        (100, -8),
+        (100, -16),
+        "EXTERNA: execuções",
+        externa=True,
+        pos="meio",
+        ha="left",
+        dx=1,
+        tam=8,
+    )
+    legenda(
+        ax,
+        [
+            ("pessoa", COR_PESSOA, None),
+            ("componente nosso, sem modelo de linguagem", COR_SEM_LLM, None),
+            ("componente nosso que chama modelo de linguagem", COR_LLM, None),
+            ("serviço externo", COR_EXTERNO, None),
+            ("seta cheia: chamada interna", None, None),
+            ("seta tracejada: chamada externa (rede)", None, True),
+        ],
+        6,
+        -36,
+        65,
+        ncol=2,
+    )
+    fig.savefig(SAIDA / "arquitetura_final.png", bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     SAIDA.mkdir(parents=True, exist_ok=True)
     contexto()
     componentes()
     componentes_fase2()
     componentes_fase3()
+    componentes_fase4()
+    arquitetura_final()
     print(
         "gerados:",
         SAIDA / "contexto.png",
         SAIDA / "componentes.png",
         SAIDA / "componentes_fase2.png",
         SAIDA / "componentes_fase3.png",
+        SAIDA / "componentes_fase4.png",
+        SAIDA / "arquitetura_final.png",
     )

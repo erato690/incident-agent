@@ -183,5 +183,5 @@ def test_texto_fora_do_escopo_e_fase_futura():
     from agente.pipeline import _texto_fixo
 
     assert "Só ajudo a investigar incidentes de produção." in _texto_fixo("fora_do_escopo")
-    assert "Fase 5" in _texto_fixo("gerar_relatorio")
+    assert "agente integrado" in _texto_fixo("gerar_relatorio")
     assert "Fase 3" in _texto_fixo("confirmar_causa")

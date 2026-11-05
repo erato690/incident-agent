@@ -142,7 +142,8 @@ _FIXAS = {
     "Posso investigar um incidente de produção.",
     "conteudo_proibido": "Não posso responder a esse tipo de conteúdo. "
     "Descreva um incidente de produção.",
-    "gerar_relatorio": "Ainda não gero relatório: o post-mortem chega na Fase 5.",
+    "gerar_relatorio": "O post-mortem só é gerado com o agente integrado, "
+    "a partir de uma investigação da sessão.",
     "pedir_servico": "Para registrar a causa, diga de qual serviço é este incidente.",
     "pedir_incidente": "Para registrar a causa, não recebi o identificador do incidente.",
     "pedir_sessao": "Para registrar a causa, não recebi a sessão da conversa; "

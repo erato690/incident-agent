@@ -244,6 +244,16 @@ Action rule (mandatory):
 
 """
 
+REGRA_SQL = """
+SQL rule:
+- Use consultar_sql for questions about incident history, counts, deploy history or "how many
+  times" / "most common cause". Write a single SELECT using the schema in the tool description.
+- Answer with the number the query returned; never invent counts.
+- You still answer with the AnaliseIncidente JSON: put the SQL result in the evidence of the
+  relevant hypothesis as "consultar_sql: ..." or in resumo.
+
+"""
+
 # Ferramenta -> regra condicional (a ordem define a ordem no prompt).
 REGRAS_POR_FERRAMENTA = {
     "consultar_memoria": REGRA_MEMORIA,
@@ -252,6 +262,7 @@ REGRAS_POR_FERRAMENTA = {
     "consultar_wiki": REGRA_WIKI,
     "buscar_documentacao": REGRA_DOCUMENTACAO,
     "sugerir_acao": REGRA_ACAO,
+    "consultar_sql": REGRA_SQL,
 }
 
 

@@ -183,10 +183,14 @@ def _falta_dado(estado: dict) -> str | None:
     return None if estado.get("session_id") else "pedir_sessao"
 
 
-def _decide_roteador(memoria: MemoriaLongoPrazo | None) -> Callable[[dict], RespostaTurno | None]:
+def _decide_roteador(
+    memoria: MemoriaLongoPrazo | None, com_postmortem: bool = False
+) -> Callable[[dict], RespostaTurno | None]:
     """Com memória, confirmar_causa (se houver serviço e incidente) e confirmar_fato seguem
-    para o passo 6."""
+    para o passo 6; com a função de post-mortem, gerar_relatorio também."""
     fixas = INTENCOES_FIXAS - {"confirmar_causa", "confirmar_fato"} if memoria else INTENCOES_FIXAS
+    if com_postmortem:
+        fixas = fixas - {"gerar_relatorio"}
 
     def decide(estado: dict) -> RespostaTurno | None:
         intencao = estado["nlu"].intencao
@@ -417,6 +421,7 @@ def _passo6_com_memoria(
     registro: Runnable | None,
     registro_fato: Runnable | None = None,
     auditor: Runnable | None = None,
+    gerar_postmortem: Callable[[dict], RespostaTurno] | None = None,
 ) -> Runnable:
     """Confirmações vão aos Registradores; o resto, à investigação com o contexto do turno."""
     registro = registro or _registrador_padrao(llm, memoria)
@@ -464,6 +469,7 @@ def montar_etapas(
     registro: Runnable | None = None,
     registro_fato: Runnable | None = None,
     auditor: Runnable | None = None,
+    gerar_postmortem: Callable[[dict], RespostaTurno] | None = None,
 ) -> dict[str, Runnable]:
     """Etapas do pipeline na ordem em que a mensagem passa (cada uma é um Runnable)."""
     nlu = nlu or montar_nlu(llm)
@@ -472,6 +478,14 @@ def montar_etapas(
         passo6 = _investigar_e_responder(investigacao)
     else:
         passo6 = _passo6_com_memoria(llm, memoria, investigacao, registro, registro_fato)
+    if gerar_postmortem is not None:
+        passo6 = RunnableBranch(
+            (
+                lambda estado: estado["nlu"].intencao == "gerar_relatorio",
+                _marcar(gerar_postmortem),
+            ),
+            passo6,
+        )
     etapas = {
         # entra {mensagem, historico} -> sai {mensagem, historico} com segredos mascarados
         "passo1_mascara": RunnableLambda(_mascarar_entrada),
@@ -485,7 +499,9 @@ def montar_etapas(
         # entra estado sem resposta -> sai estado + nlu (AnaliseNLU)
         "passo4_nlu": _se_pendente(RunnablePassthrough.assign(nlu=nlu)),
         # entra estado + nlu -> sai estado + resposta (fixa se a intenção for de resposta fixa)
-        "passo5_roteador": _se_pendente(_marcar(_decide_roteador(memoria))),
+        "passo5_roteador": _se_pendente(
+            _marcar(_decide_roteador(memoria, gerar_postmortem is not None))
+        ),
         # entra estado sem resposta -> sai estado + resposta (investigação ou erro)
         "passo6_investigacao": _se_pendente(passo6),
         # entra estado com resposta -> sai só o RespostaTurno
@@ -512,13 +528,16 @@ def montar_pipeline(
     registro: Runnable | None = None,
     registro_fato: Runnable | None = None,
     auditor: Runnable | None = None,
+    gerar_postmortem: Callable[[dict], RespostaTurno] | None = None,
 ) -> Runnable:
     """Entrada {"mensagem", "historico", "incidente_id", "session_id"} -> RespostaTurno.
 
     nlu, investigacao, registro e registro_fato (Registradores) são injetáveis; sem memória o
-    comportamento não muda. O auditor (opcional) roda depois da investigação.
+    comportamento não muda. O auditor (opcional) roda depois da investigação. Com
+    `gerar_postmortem`, a intenção gerar_relatorio é entregue a ela (recebe o estado, com
+    incidente_id e session_id) em vez de receber o texto fixo.
     """
     etapas = montar_etapas(
-        llm, moderar, nlu, investigacao, memoria, registro, registro_fato, auditor
+        llm, moderar, nlu, investigacao, memoria, registro, registro_fato, auditor, gerar_postmortem
     )
     return reduce(or_, etapas.values())
