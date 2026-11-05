@@ -1,13 +1,16 @@
-"""Fonte de dados da loja (logs, métricas e deploys) e resumos para o modelo.
+"""Fonte de dados da loja (logs, métricas, deploys e estatísticas do banco) e resumos.
 
-Segue o contrato 1.0.0 do `incident-shop` (`docs/contrato-api.md`). Duas fontes, mesma interface:
+Segue o contrato 1.1.0 do `incident-shop` (`docs/contrato-api.md`; a rota
+`/estatisticas_banco` é o acréscimo da 1.1.0, em `specs/004-*/contracts/`). Duas fontes, mesma
+interface:
 
-- `FonteLoja.ao_vivo(url, cenario)`: `GET /logs`, `/metricas` e `/deploys` com `cenario`,
-  `servico`, `nivel`, `metrica` e `limite` na query.
+- `FonteLoja.ao_vivo(url, cenario)`: `GET /logs`, `/metricas`, `/deploys` e
+  `/estatisticas_banco` com `cenario`, `servico`, `nivel`, `metrica` e `limite` na query.
 - `FonteLoja.gravada(cenario)`: lê `dados_dummy/cenarios/<id>.json`, gravado por
   `scripts/gravar_cenarios.py` no formato
   `{"cenario": <item de GET /cenarios>, "logs": <corpo de GET /logs>,
-    "metricas": <corpo de GET /metricas>, "deploys": <corpo de GET /deploys>}`
+    "metricas": <corpo de GET /metricas>, "deploys": <corpo de GET /deploys>,
+    "estatisticas_banco": [<corpo de GET /estatisticas_banco, um por serviço com banco>]}`
   e filtra localmente por serviço, nível e métrica.
 
 O cenário é configuração da fonte: o modelo nunca o vê nem o informa.
@@ -134,6 +137,21 @@ class FonteLoja:
             if servico is None or deploy["servico"] == servico
         ]
 
+    def estatisticas_banco(self, servico: str) -> dict:
+        """Corpo de `/estatisticas_banco`; serviço sem banco devolve `tabelas: []`."""
+        if self._url:
+            return self._get("/estatisticas_banco", servico=servico)
+        for item in self._dados.get("estatisticas_banco", []):
+            if item["servico"] == servico:
+                return item
+        return {
+            "cenario": self.cenario,
+            "servico": servico,
+            "banco": None,
+            "coletado_em": None,
+            "tabelas": [],
+        }
+
     def tags_do_servico(self) -> list[str]:
         """Todas as tags já lançadas, da mais antiga à mais nova (sem janela de cenário).
 
@@ -244,3 +262,28 @@ def resumir_deploys(deploys: list[dict], tags: list[str] | None = None) -> str:
             f"author {deploy['autor']}): {deploy['mensagem']}"
         )
     return "\n".join(linhas)
+
+
+def _linha_tabela(tabela: dict) -> str:
+    """Uma tabela em uma linha; manutenção em andamento vem destacada."""
+    texto = (
+        f"{tabela['tabela']}: varreduras seq {tabela['varreduras_sequenciais']} x índice "
+        f"{tabela['varreduras_por_indice']}, linhas vivas {tabela['linhas_vivas']}, mortas "
+        f"{tabela['linhas_mortas']}, último analyze {tabela['ultimo_analyze']}, último vacuum "
+        f"{tabela['ultimo_vacuum']}, inchaço de índices {tabela['inchaco_indices_pct']}%, "
+        f"bloqueios aguardando {tabela['bloqueios_aguardando']}"
+    )
+    if tabela.get("manutencao_em_andamento"):
+        texto += f". MANUTENÇÃO EM ANDAMENTO: {tabela['manutencao_em_andamento']}"
+    return texto
+
+
+def resumir_estatisticas(resultado: dict) -> str:
+    """Texto compacto por tabela das estatísticas do banco do serviço."""
+    if not resultado["tabelas"]:
+        return f"Sem estatísticas de banco para {resultado['servico']}."
+    cabecalho = (
+        f"Banco {resultado['banco']} ({resultado['servico']}), coletado em "
+        f"{resultado['coletado_em']}"
+    )
+    return "\n".join([cabecalho, *(_linha_tabela(tabela) for tabela in resultado["tabelas"])])

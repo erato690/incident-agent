@@ -1,4 +1,4 @@
-"""Modelos Pydantic das Fases 1 a 3 (data-model.md)."""
+"""Modelos Pydantic das Fases 1 a 4 (data-model.md)."""
 
 from datetime import datetime
 from typing import Literal
@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from langchain_core.messages import BaseMessage
 from pydantic import BaseModel, Field, computed_field, model_validator
+from pydantic.json_schema import SkipJsonSchema
 
 Intencao = Literal[
     "investigar_erro",
@@ -15,6 +16,7 @@ Intencao = Literal[
     "pedir_runbook",
     "gerar_relatorio",
     "confirmar_causa",
+    "confirmar_fato",
     "saudacao",
     "fora_do_escopo",
     "conteudo_proibido",
@@ -83,6 +85,32 @@ class Hipotese(BaseModel):
         return self
 
 
+class FatoSemantico(BaseModel):
+    """Memória semântica (só interface nesta fase): fato com fonte, data e validade."""
+
+    assunto: str
+    fato: str
+    fonte: Literal["documentacao", "usuario", "incidente"]
+    verificado_em: datetime
+    valido_ate: datetime | None = None
+
+
+class AcaoSugerida(BaseModel):
+    """Ação proposta ao engenheiro; o agente nunca a executa."""
+
+    acao: str = Field(description="Ação no imperativo, curta")
+    motivo: str = Field(description="Por que a ação resolve o diagnóstico")
+    risco: Literal["baixo", "medio", "alto"] = Field(description="Risco de aplicar a ação")
+    runbook: str | None = Field(default=None, description="Título do runbook de origem")
+    status: Literal["sugerida (não executada)"] = "sugerida (não executada)"
+
+
+class ListaAcoes(BaseModel):
+    """Saída estruturada de `sugerir_acao`."""
+
+    acoes: list[AcaoSugerida] = Field(min_length=1, max_length=3, description="De 1 a 3 ações")
+
+
 class AnaliseIncidente(BaseModel):
     severidade: Literal["baixa", "media", "alta", "critica"]
     categoria: str
@@ -92,6 +120,8 @@ class AnaliseIncidente(BaseModel):
         min_length=2, max_length=3, description="2 ou 3 hipóteses, da mais para a menos provável"
     )
     proximos_passos: list[str] = Field(min_length=1)
+    # Preenchido pelo pipeline, não pelo modelo: fora do schema mostrado ao modelo.
+    acoes_sugeridas: SkipJsonSchema[list[AcaoSugerida]] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _ordena(self) -> "AnaliseIncidente":
@@ -182,16 +212,6 @@ class EpisodioEncontrado(BaseModel):
     pontuacao: float = Field(ge=0)
 
 
-class FatoSemantico(BaseModel):
-    """Memória semântica (só interface nesta fase): fato com fonte, data e validade."""
-
-    assunto: str
-    fato: str
-    fonte: Literal["documentacao", "usuario", "incidente"]
-    verificado_em: datetime
-    valido_ate: datetime | None = None
-
-
 class FatoSemanticoEncontrado(BaseModel):
     fato: str
     fonte: Literal["documentacao", "usuario", "incidente"]
@@ -234,6 +254,8 @@ class ContextoTurno(BaseModel):
     trajetoria: list[PassoTrajetoria] = Field(default_factory=list)
     # Episódios que consultar_memoria devolveu acima do limiar neste turno (SC-002).
     episodios_consultados: list[EpisodioEncontrado] = Field(default_factory=list)
+    acoes_sugeridas: list[AcaoSugerida] = Field(default_factory=list)
+    fato_gravado: FatoSemantico | None = None
 
 
 class Sessao(BaseModel):
@@ -257,3 +279,4 @@ class RespostaTurno(BaseModel):
     episodio: Episodio | None = None
     episodio_anterior: Episodio | None = None
     resolucao: ResolucaoMemoria | None = None
+    fato: FatoSemantico | None = None
