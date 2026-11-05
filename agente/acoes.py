@@ -62,9 +62,16 @@ def montar_ferramenta_acao(llm, indice: FAISS) -> BaseTool:
         def sugerir() -> str:
             achados = buscar_com_score(indice, diagnostico, k=2, filtro={"tipo": "runbook"})
             trechos, titulo = _trechos_runbook(achados)
+            recuperados = {d.metadata.get("titulo") for d, _ in achados}
             entrada = {"servico": servico, "diagnostico": diagnostico, "runbook": trechos}
             acoes = [
-                a.model_copy(update={"status": STATUS_ACAO, "runbook": a.runbook or titulo})
+                a.model_copy(
+                    update={
+                        "status": STATUS_ACAO,
+                        # só vale título que a busca trouxe; o resto é ruído do modelo
+                        "runbook": a.runbook if a.runbook in recuperados else titulo,
+                    }
+                )
                 for a in cadeia.invoke(entrada).acoes
             ]
             contexto = _contexto(config)

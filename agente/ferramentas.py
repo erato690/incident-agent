@@ -275,16 +275,25 @@ def _novo_fato(memoria: MemoriaLongoPrazo, assunto: str, texto: str, fonte: str)
     )
 
 
-def _fato_da_wiki(memoria: MemoriaLongoPrazo, assunto: str, pergunta: str) -> str | None:
+def _fato_da_wiki(
+    memoria: MemoriaLongoPrazo, assunto: str, pergunta: str, contexto=None
+) -> str | None:
     """Melhor fato não vencido do assunto, já formatado com fonte e datas."""
-    for fato in memoria.consultar_fatos_semanticos(assunto, pergunta):
-        if not fato.vencido:
-            validade = f"{fato.valido_ate:%Y-%m-%d}" if fato.valido_ate else "sem prazo"
+    for achado in memoria.consultar_fatos_semanticos(assunto, pergunta):
+        if not achado.vencido:
+            if contexto is not None:
+                contexto.fatos_consultados.append(
+                    FatoSemantico(assunto=assunto, **achado.model_dump(include=_CAMPOS_FATO))
+                )
+            validade = f"{achado.valido_ate:%Y-%m-%d}" if achado.valido_ate else "sem prazo"
             return (
-                f"FATO DA WIKI (fonte {fato.fonte}, verificado em {fato.verificado_em:%Y-%m-%d}, "
-                f"válido até {validade}): {fato.fato}"
+                f"FATO DA WIKI (fonte {achado.fonte}, verificado em "
+                f"{achado.verificado_em:%Y-%m-%d}, válido até {validade}): {achado.fato}"
             )
     return None
+
+
+_CAMPOS_FATO = {"fato", "fonte", "verificado_em", "valido_ate"}
 
 
 def _normalizar_assunto(texto: str | None) -> str:
@@ -322,6 +331,7 @@ def _fato_da_documentacao(
     memoria.registrar_fato_semantico(fato)
     if contexto is not None:
         contexto.fato_gravado = fato
+        contexto.fatos_consultados.append(fato)
     return (
         f"FATO NOVO DA DOCUMENTAÇÃO '{documento.metadata.get('titulo')}' (gravado na wiki, "
         f"válido até {fato.valido_ate:%Y-%m-%d}): {fato.fato}"
@@ -345,9 +355,9 @@ def montar_ferramentas_wiki(
 
         def consultar() -> str:
             nome = assunto.strip()
-            achado = _fato_da_wiki(memoria, nome, pergunta) or _fato_da_documentacao(
-                memoria, indice, corte, nome, pergunta, _contexto(config)
-            )
+            achado = _fato_da_wiki(
+                memoria, nome, pergunta, _contexto(config)
+            ) or _fato_da_documentacao(memoria, indice, corte, nome, pergunta, _contexto(config))
             return achado or (
                 f"NÃO ENCONTRADO: nenhuma documentação sobre {nome}. "
                 f"Pergunte ao engenheiro: {pergunta}"

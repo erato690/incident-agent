@@ -185,3 +185,37 @@ def test_sem_sugerir_acao_a_analise_fica_igual():
     )
     resposta = pipe.invoke({"mensagem": "pedidos lentos"})
     assert resposta.analise == ANALISE and resposta.analise.acoes_sugeridas == []
+
+
+def test_citar_fatos_poe_fonte_e_data_na_hipotese_com_mais_palavras_em_comum():
+    from datetime import datetime
+
+    from agente.pipeline import citar_fatos
+    from agente.schemas import AnaliseIncidente, FatoSemantico
+
+    analise = AnaliseIncidente(
+        severidade="alta",
+        categoria="dependencia_externa",
+        servico="pagamentos-api",
+        resumo="r",
+        hipoteses=[
+            {
+                "causa": "tráfego estourou o limite de requisições do PagaFácil",
+                "confianca": 0.8,
+                "evidencia": "buscar_logs: 429",
+            },
+            {"causa": "deploy recente", "confianca": 0.1, "evidencia": "listar_deploys: nenhum"},
+        ],
+        proximos_passos=["x"],
+    )
+    fato = FatoSemantico(
+        assunto="PagaFácil",
+        fato="A API do PagaFácil aceita 100 requisições por minuto por conta.",
+        fonte="documentacao",
+        verificado_em=datetime(2026, 11, 5, 12, 0),
+    )
+    citada = citar_fatos(analise, [fato, fato])
+    evidencia = citada.hipoteses[0].evidencia
+    assert evidencia.count("consultar_wiki: PagaFácil:") == 1
+    assert "(fonte documentacao, verificado em 2026-11-05)" in evidencia
+    assert "consultar_wiki" not in (citada.hipoteses[1].evidencia or "")
