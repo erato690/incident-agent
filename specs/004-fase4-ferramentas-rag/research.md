@@ -193,3 +193,23 @@ falácias; D6 sem gravar o fato. Não cortar LangSmith, relatório nem notebook.
   Fase 5.
 - **Acerto da causa na bateria:** item com `palavras_causa`; a causa é certa quando a hipótese
   principal contém uma das palavras (ex.: "reindex", "100").
+
+## Calibração da recuperação com embeddings reais (2026-11-05)
+
+Índice `dados/indice_faiss/` (10 documentos, 13 pedaços, `text-embedding-3-small`), distância
+L2 (menor = mais parecido), k = 3:
+
+| Consulta | 1º (score) | Runbook de pool |
+|---|---|---|
+| "o site está travando" | gateway externo indisponível (1,136) | 3º (1,321) |
+| "pool de conexões esgotado, timeout ao obter conexão do banco no pico de tráfego" | pool de conexões esgotado (0,555) | 1º |
+| "limite de requisições da API do PagaFácil" | Limites da API do PagaFácil (0,366) | — |
+| "lock wait e statement timeout na tabela estoque" | reindexação e bloqueio de tabela (0,980) | — |
+| "como fazer bolo de cenoura" | (1,585) | sem cobertura |
+| "configurar ingress do kubernetes com TLS" | certificado TLS expirado (1,189) | sem cobertura |
+
+- Falha de recuperação: com k = 2, a pergunta crua "o site está travando" não traz o runbook de
+  pool, e o 1º colocado é o errado, com score abaixo do limiar (falso positivo confiante). A
+  pergunta reescrita em termos técnicos põe o runbook certo em 1º, com 0,555.
+- `LIMIAR_SEM_COBERTURA` fica em 1,15, o valor que a aula usa: fora do domínio, a distância vai de
+  1,19 a 1,59.
