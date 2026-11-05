@@ -131,10 +131,10 @@ def montar_investigacao_json(llm) -> Runnable:
 
 
 def montar_investigacao(llm) -> Runnable:
-    """Estado -> AnaliseIncidente (uma nova tentativa); falha final vira str com o erro."""
+    """Estado -> AnaliseIncidente (até duas novas tentativas); falha final vira str com o erro."""
     nucleo = (
         montar_investigacao_json(llm) | RunnableLambda(AnaliseIncidente.model_validate)
-    ).with_retry(stop_after_attempt=2, wait_exponential_jitter=False)
+    ).with_retry(stop_after_attempt=3, wait_exponential_jitter=False)
     falha = RunnableLambda(
         lambda estado: (
             f"JSON inválido da investigação: {estado['excecao']} | mensagem: {estado['mensagem']}"
