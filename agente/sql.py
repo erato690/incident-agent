@@ -55,6 +55,8 @@ Always answer in Brazilian Portuguese.
 
 DESCRICAO_SQL = f"""Queries the history of incidents, deploys and services (read-only, one SELECT).
 Use it for counts and history: how many times, most common cause, deploy history.
+For "most common cause" or "how many incidents of each kind", GROUP BY categoria (the causa
+column is free text and unique per incident).
 Database schema:
 {ESQUEMA}"""
 

@@ -44,3 +44,16 @@
 3. **Segunda rodada: 7 de 8 aprovados.** O 8º, `gateway_fora`, foi reprovado por "x338", "x372" e
    "09h10". Os três estão corrigidos pela normalização acima; a confirmação fica para a execução
    final.
+4. **Conversa integrada com a chave (`banco_lento_com_deploy`, 4 turnos).** Três defeitos
+   apareceram e foram corrigidos, com testes:
+   - O juiz julgava a hipótese secundária (deploy) e respondia "refuta". Agora recebe a hipótese
+     principal separada e o prompt manda julgar só ela.
+   - A falácia `deploy_posterior_ao_sintoma` era apontada mesmo quando a hipótese principal não
+     culpa deploy. Agora essa falácia é descartada por código nesses casos.
+   - As observações no prompt eram cortadas em bloco e as estatísticas do banco ficavam de fora.
+     Agora o orçamento é dividido por ferramenta.
+   - O post-mortem usava a última análise mesmo quando ela só consultava o SQL. Agora usa a
+     última investigação com ferramentas do incidente.
+   - A descrição de `consultar_sql` passou a orientar `GROUP BY categoria` para "causa mais
+     comum".
+5. **Terceira rodada: auditor aprovou 8 de 8 cenários, com a causa certa em 8 de 8.**

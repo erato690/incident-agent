@@ -42,6 +42,13 @@ PASTA_INDICE = RAIZ / "dados" / "indice_faiss"
 BANCO_PADRAO = RAIZ / "dados" / "incidentes.db"
 PASTA_POSTMORTEM = RAIZ / "saida" / "postmortem"
 CENARIO_PADRAO = "pool_esgotado"
+FERRAMENTAS_DO_INCIDENTE = {
+    "buscar_logs",
+    "buscar_metricas",
+    "listar_deploys",
+    "comparar_versoes",
+    "consultar_estatisticas_banco",
+}
 TEXTO_SEM_ANALISE = "Ainda não há investigação nesta sessão para gerar o post-mortem."
 
 
@@ -147,7 +154,11 @@ class AgenteIntegrado:
         return resposta
 
     def _guardar(self, sessao: Sessao, resposta: RespostaTurno) -> None:
+        """Guarda a investigação do incidente; resposta que só consultou o histórico (SQL) ou a
+        documentação não é investigação e não substitui a anterior no post-mortem."""
         if resposta.analise is None:
+            return
+        if not FERRAMENTAS_DO_INCIDENTE & {passo.ferramenta for passo in resposta.trajetoria}:
             return
         servico = (resposta.nlu.servico if resposta.nlu else None) or sessao.servico
         servico = servico or resposta.analise.servico
