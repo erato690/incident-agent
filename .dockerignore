@@ -1,0 +1,8 @@
+.venv
+.git
+.env
+__pycache__
+*.pyc
+saida/
+.ipynb_checkpoints
+*.ipynb_checkpoints
