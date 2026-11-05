@@ -297,11 +297,11 @@ com `gpt-4o-mini`. Os números abaixo vêm dos registros de execução dos `rese
 | 1 | 23/23 | 11/11 | não se aplica | seção 1 em 72 s numa primeira execução, com bateria menor |
 | 2 | 12/12 | 9/9 | 7/8 cenários | notebook inteiro em 216 s |
 | 3 | 10/10 | 24/24 turnos | não se aplica | seção 3 em 290 s (limite: 300 s) |
-| 4 | 11/11 | com as seções anteriores sem regressão | 8/8 cenários | seção 4 em 85 s; notebook inteiro em 843 s |
-| 5 | [[PREENCHER: bateria e conversas da execução final]] | [[PREENCHER]] | [[PREENCHER]] | seção 5: [[PREENCHER: tempo da seção 5]]; notebook inteiro: [[PREENCHER: tempo total]] |
+| 4 | 11/11 | com as seções anteriores sem regressão | 8/8 cenários | seção 4 em 73 s (execução final) |
+| 5 | avaliação local dos 8 cenários: causa certa 1,0, trajetória 1,0, auditor 1,0 | conversa integrada de 4 turnos e pedido de ação recusado | 8/8 cenários | seção 5 em 116 s; notebook inteiro em 831 s, sem erros |
 
-O projeto tem 423 testes automáticos sem chave ao fim da Fase 4 ([[PREENCHER: total de testes ao fim
-da Fase 5]]). Na Fase 2, os cenários `rate_limit` (o agente respondia "picos de carga") e
+O projeto tem 423 testes automáticos sem chave ao fim da Fase 4 e 510 ao fim da Fase 5. Na execução
+final, todas as baterias e conversas das seções 1 a 4 passaram (23/23, 12/12, 10/10 e 11/11). Na Fase 2, os cenários `rate_limit` (o agente respondia "picos de carga") e
 `banco_lento_com_deploy` (o agente apontava o banco, mas não a reindexação) não chegavam à causa;
 as Fases 3 e 4 resolveram os dois casos com a wiki de documentação e a ferramenta de estatísticas
 do banco, o que levou a causa certa a 8/8.
@@ -366,8 +366,13 @@ O dataset tem os 8 cenários com o gabarito (palavras da causa, ferramentas espe
 esperada). Os avaliadores são `causa_certa`, `trajetoria_ferramentas` e `auditor_aprovou`, e rodam
 localmente sem chave. O envio ao LangSmith só ocorre com a flag explícita `--enviar`.
 
-[[PREENCHER: resultado do experimento no LangSmith (link ou nome do experimento, métricas por
-avaliador e análise)]]
+Na avaliação local da execução final, com o agente integrado, as três métricas tiveram média 1,0
+nos 8 cenários. A causa estava certa em todos, cada trajetória chamou as ferramentas esperadas e o
+auditor aprovou todas as respostas. Os avaliadores e a chamada a `evaluate()` são os mesmos que o
+LangSmith usa. O envio do experimento ao LangSmith ficou pendente: a cota mensal de traces da conta
+esgotou (HTTP 429, "Monthly unique traces usage limit exceeded") durante as execuções com o
+rastreamento ligado. O envio será feito quando a cota renovar, com `python
+scripts/avaliar_langsmith.py --enviar`.
 
 ## 6. Análise comparativa
 
@@ -416,16 +421,17 @@ avaliador e análise)]]
 | Notebook com uma seção por capacidade, executado com a chave | `projeto.ipynb`, seções 0 a 5 |
 | Índice geral da rubrica (item, seção e célula) | seção 0 do notebook; página `docs/projeto.html` (aba Rubrica) |
 | Baterias e conversas por fase | seções 1 a 4 do notebook (tabelas coloridas por grupo, com detalhe recolhido) |
-| Auditor: resposta certa aprovada e errada reprovada | seção 5.2 do notebook |
-| Conversa integrada de 4 ou mais turnos (sintoma, SQL, confirmação, post-mortem) | seção 5.3 do notebook |
-| `create_openai_tools_agent` mais `AgentExecutor` e `RunnableWithMessageHistory` | seções 5.4 e 5.5 do notebook |
-| Avaliação no LangSmith | seção 5.7 do notebook; [[PREENCHER: link do experimento]] |
+| Auditor: resposta certa aprovada e errada reprovada | seção 5.1 do notebook |
+| Conversa integrada de 4 ou mais turnos (sintoma, SQL, confirmação, post-mortem) | seção 5.2 do notebook |
+| `create_openai_tools_agent` mais `AgentExecutor` e `RunnableWithMessageHistory` | seções 5.3 e 5.4 do notebook |
+| Interface Streamlit | seção 5.5 do notebook; `app/app.py`, `Dockerfile`, `docker-compose.yml` |
+| Avaliação (avaliadores do LangSmith) | seção 5.6 do notebook; envio do experimento pendente (cota da conta) |
 | Decisões e calibrações | `specs/00N-*/research.md` |
 | Código e testes | `agente/`, `tests/`, `app/` |
-| Post-mortem gerado | arquivo `.md` produzido na conversa da seção 5.3 |
+| Post-mortem gerado | arquivo `.md` produzido na conversa da seção 5.2 |
 | Diagramas | `docs/img/` (contexto, componentes por fase, arquitetura final) |
 
-[[PREENCHER: prints do Streamlit (tela de uso e tela de análise)]]
+Os prints das telas de uso e de análise do Streamlit entram nesta seção na versão final, junto com o vídeo de demonstração.
 
 ![Componentes da Fase 2](img/componentes_fase2.png)
 
