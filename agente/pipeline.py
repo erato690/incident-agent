@@ -29,6 +29,7 @@ from agente.schemas import (
     AnaliseIncidente,
     ContextoTurno,
     EpisodioEncontrado,
+    FatoSemantico,
     RespostaFixa,
     RespostaTurno,
     ResultadoInvestigacao,
@@ -237,6 +238,38 @@ def citar_episodios(
     return analise.model_copy(update={"hipoteses": hipoteses})
 
 
+def _citacao_fato(fato: FatoSemantico) -> str:
+    texto = fato.fato if len(fato.fato) <= 160 else fato.fato[:157] + "..."
+    return (
+        f"consultar_wiki: {fato.assunto}: {texto} "
+        f"(fonte {fato.fonte}, verificado em {fato.verificado_em:%Y-%m-%d})"
+    )
+
+
+def citar_fatos(analise: AnaliseIncidente, fatos: list[FatoSemantico]) -> AnaliseIncidente:
+    """Fonte e data de cada fato que `consultar_wiki` usou entram na evidência da hipótese com
+    mais palavras em comum com o fato (nenhuma em comum: não entra). Determinístico, como a
+    citação dos episódios; o mesmo fato não se repete."""
+    hipoteses = [hipotese.model_copy() for hipotese in analise.hipoteses]
+    for fato in fatos:
+        palavras = _palavras(f"{fato.assunto} {fato.fato}")
+        comuns = [len(palavras & _palavras(f"{h.causa} {h.evidencia}")) for h in hipoteses]
+        if not comuns or max(comuns) == 0:
+            continue
+        alvo = hipoteses[comuns.index(max(comuns))]
+        citacao = _citacao_fato(fato)
+        if citacao in (alvo.evidencia or ""):
+            continue
+        alvo.evidencia = "; ".join(filter(None, [alvo.evidencia, citacao]))
+    return analise.model_copy(update={"hipoteses": hipoteses})
+
+
+def _com_fatos_citados(resultado: object, contexto: ContextoTurno) -> object:
+    if not contexto.fatos_consultados:
+        return resultado
+    return _na_analise(resultado, lambda a: citar_fatos(a, contexto.fatos_consultados))
+
+
 def _na_analise(resultado: object, transforma: Callable[[AnaliseIncidente], AnaliseIncidente]):
     """Aplica `transforma` à análise do resultado (direta ou dentro de ResultadoInvestigacao)."""
     if isinstance(resultado, AnaliseIncidente):
@@ -265,6 +298,7 @@ def _investigar_com_contexto(investigacao: Runnable) -> Callable[[dict, dict], o
         contexto = _contexto_do_estado(estado)
         configurado = patch_config(config, configurable={CHAVE_CONTEXTO: contexto})
         resultado = _com_episodios_citados(investigacao.invoke(estado, configurado), contexto)
+        resultado = _com_fatos_citados(resultado, contexto)
         return _com_acoes_sugeridas(resultado, contexto)
 
     return investigar

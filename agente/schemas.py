@@ -254,6 +254,8 @@ class ContextoTurno(BaseModel):
     trajetoria: list[PassoTrajetoria] = Field(default_factory=list)
     # Episódios que consultar_memoria devolveu acima do limiar neste turno (SC-002).
     episodios_consultados: list[EpisodioEncontrado] = Field(default_factory=list)
+    # Fatos que consultar_wiki usou neste turno (fonte e data entram na evidência por código).
+    fatos_consultados: list[FatoSemantico] = Field(default_factory=list)
     acoes_sugeridas: list[AcaoSugerida] = Field(default_factory=list)
     fato_gravado: FatoSemantico | None = None
 

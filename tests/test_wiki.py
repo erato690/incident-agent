@@ -156,3 +156,14 @@ def test_assunto_sem_acento_acha_documentacao(memoria, indice):
         {"assunto": "pagafacil", "pergunta": "limite da API"}
     )
     assert "FATO NOVO DA DOCUMENTAÇÃO 'Limites da API do PagaFácil'" in saida
+
+
+def test_fatos_usados_ficam_no_contexto_nos_dois_caminhos(memoria, indice):
+    """O pipeline cita fonte e data por código; a ferramenta guarda o fato usado no contexto."""
+    ferramenta = _wiki(memoria, indice, limiar=1000.0)
+    config, contexto = _config()
+    ferramenta.invoke({"assunto": "PagaFácil", "pergunta": "limite da API"}, config)
+    ferramenta.invoke({"assunto": "PagaFácil", "pergunta": "limite da API"}, config)
+    fontes = [fato.fonte for fato in contexto.fatos_consultados]
+    assert fontes == ["documentacao", "documentacao"]
+    assert contexto.fatos_consultados[0].assunto == "PagaFácil"

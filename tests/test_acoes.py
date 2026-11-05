@@ -67,13 +67,28 @@ def test_sugestao_nao_executada_com_status_forcado_e_contexto(indice):
     assert contexto.acoes_sugeridas[0].runbook  # preenchido com o título do runbook
 
 
-def test_runbook_ja_informado_e_preservado_e_contexto_e_substituido(indice):
-    llm = LlmFalso([AcaoSugerida(acao="A", motivo="m", risco="medio", runbook="Meu runbook")])
+def test_runbook_inventado_vira_o_titulo_recuperado_e_contexto_e_substituido(indice):
+    """Título que não veio da busca (ex.: corrompido pelo modelo) é trocado pelo recuperado."""
+    llm = LlmFalso([AcaoSugerida(acao="A", motivo="m", risco="medio", runbook="db-principal},{")])
     ferramenta = montar_ferramenta_acao(llm, indice)
     config, contexto = _config()
     contexto.acoes_sugeridas = [AcaoSugerida(acao="antiga", motivo="m", risco="alto")]
     ferramenta.invoke({"diagnostico": "d", "servico": "s"}, config)
-    assert [(a.acao, a.runbook) for a in contexto.acoes_sugeridas] == [("A", "Meu runbook")]
+    assert [a.acao for a in contexto.acoes_sugeridas] == ["A"]
+    assert contexto.acoes_sugeridas[0].runbook.startswith(("Runbook", "Limites", "Política"))
+
+
+def test_runbook_recuperado_informado_pelo_modelo_e_preservado(indice):
+    from agente.recuperacao import buscar_com_score
+
+    titulos = [
+        d.metadata["titulo"]
+        for d, _ in buscar_com_score(indice, "d", k=2, filtro={"tipo": "runbook"})
+    ]
+    llm = LlmFalso([AcaoSugerida(acao="A", motivo="m", risco="baixo", runbook=titulos[-1])])
+    config, contexto = _config()
+    montar_ferramenta_acao(llm, indice).invoke({"diagnostico": "d", "servico": "s"}, config)
+    assert contexto.acoes_sugeridas[0].runbook == titulos[-1]
 
 
 def test_runbook_entra_no_prompt_como_dado_e_funciona_sem_contexto(indice):
