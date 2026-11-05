@@ -37,3 +37,7 @@ def test_respostas_fixas_seguem_em_portugues():
 
 def test_nlu_trata_pergunta_de_historico_como_investigacao():
     assert "comparar_incidente, never fora_do_escopo" in SISTEMA_NLU
+
+
+def test_nlu_post_mortem_e_gerar_relatorio_nao_pedido_de_acao():
+    assert 'post-mortem desse incidente" -> gerar_relatorio' in SISTEMA_NLU

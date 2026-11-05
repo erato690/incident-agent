@@ -37,6 +37,11 @@ Rules:
   "confirmado: a cota diária do provedor X é 5 mil chamadas" -> confirmar_fato
   "qual é o limite de requisições do PagaFácil?" -> investigar_erro
   "confirmado: o 429 veio porque passamos do limite, revertemos o retry" -> confirmar_causa
+- Asking to generate or write the post-mortem or the incident report is gerar_relatorio, never
+  pedido_de_acao: the report is produced by the assistant itself and changes nothing in production.
+  Examples:
+  "gera o post-mortem desse incidente" -> gerar_relatorio
+  "escreve o relatório do incidente" -> gerar_relatorio
 - A question about the incident history (how many incidents, most common cause or category,
   past deploys of a service) is comparar_incidente, never fora_do_escopo.
   Examples:
