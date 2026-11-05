@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from langchain_core.runnables import RunnableLambda
+
 from agente.ferramentas import PREFIXO, montar_ferramentas
 from agente.github import ComparacaoVersoes, ErroComparacao
 from agente.loja import FonteLoja
@@ -88,3 +90,47 @@ def test_buscar_metricas_aceita_filtro_e_metrica_invalida_vira_observacao():
         {"servico": "pagamentos-api", "metrica": "Erros5xx"}
     )
     assert "Tool error" in erro and "erros_5xx" in erro
+
+
+class _LlmFalso:
+    def with_structured_output(self, schema):
+        return RunnableLambda(lambda x: x)
+
+
+def test_parametros_novos_acrescentam_as_ferramentas_esperadas(tmp_path):
+    from langchain_core.embeddings import DeterministicFakeEmbedding
+
+    from agente.memoria import MemoriaLongoPrazo
+    from agente.recuperacao import carregar_indice, construir_indice
+
+    embeddings = DeterministicFakeEmbedding(size=64)
+    pasta = Path(__file__).resolve().parent.parent / "dados" / "documentos"
+    construir_indice(embeddings, tmp_path / "i", pasta)
+    indice = carregar_indice(tmp_path / "i", embeddings)
+    fonte = FonteLoja.gravada("cenario_teste", raiz=RAIZ)
+    base = {"buscar_logs", "buscar_metricas", "listar_deploys", "comparar_versoes"}
+
+    def nomes(**kw):
+        return {f.name for f in montar_ferramentas(fonte, _github, **kw)}
+
+    assert nomes() == base
+    assert nomes(estatisticas=True) == base | {"consultar_estatisticas_banco"}
+    assert nomes(indice=indice) == base | {"buscar_documentacao"}
+    memoria = MemoriaLongoPrazo(embeddings)
+    assert nomes(indice=indice, memoria=memoria) == base | {
+        "buscar_documentacao",
+        "consultar_memoria",
+        "consultar_wiki",
+    }
+    assert nomes(indice=indice, llm_acao=_LlmFalso()) == base | {
+        "buscar_documentacao",
+        "sugerir_acao",
+    }
+
+
+def test_consultar_estatisticas_banco_e_somente_leitura_e_prefixada():
+    fonte = FonteLoja.gravada("cenario_teste", raiz=RAIZ)
+    ferramentas = {f.name: f for f in montar_ferramentas(fonte, _github, estatisticas=True)}
+    ferramenta = ferramentas["consultar_estatisticas_banco"]
+    assert set(ferramenta.args) == {"servico"}
+    assert ferramenta.invoke({"servico": "pedidos-api"}).startswith(PREFIXO)
