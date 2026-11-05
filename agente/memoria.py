@@ -268,10 +268,14 @@ class MemoriaLongoPrazo:
     def consultar_fatos_semanticos(
         self, assunto: str, texto: str, k: int = 3
     ) -> list[FatoSemanticoEncontrado]:
+        chave = assunto.strip().casefold()  # o assunto gravado fica como veio
         resultados = self._store.similarity_search_with_score(
             texto,
             k=k,
-            filter=lambda d: d.metadata["tipo"] == "semantica" and d.metadata["assunto"] == assunto,
+            filter=lambda d: (
+                d.metadata["tipo"] == "semantica"
+                and d.metadata["assunto"].strip().casefold() == chave
+            ),
         )
         achados = []
         for documento, score in resultados:

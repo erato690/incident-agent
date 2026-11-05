@@ -7,8 +7,12 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.runnables import Runnable, RunnableBranch, RunnableLambda, RunnablePassthrough
 from langchain_core.runnables.config import patch_config
 
-from agente.agente_react import montar_registrador
-from agente.ferramentas import CHAVE_CONTEXTO, montar_ferramentas_memoria
+from agente.agente_react import SISTEMA_REGISTRO_FATO, montar_registrador
+from agente.ferramentas import (
+    CHAVE_CONTEXTO,
+    montar_ferramentas_fato,
+    montar_ferramentas_memoria,
+)
 from agente.mascara import mascarar
 from agente.memoria import MemoriaLongoPrazo
 from agente.preprocessamento import preprocessar
@@ -19,6 +23,7 @@ from agente.prompts import (
     respostas_fixas,
     texto_causa_registrada,
     texto_causa_trocada,
+    texto_fato_registrado,
 )
 from agente.schemas import (
     AnaliseIncidente,
@@ -39,6 +44,7 @@ INTENCOES_FIXAS = {
     "tentativa_de_injecao",
     "gerar_relatorio",
     "confirmar_causa",
+    "confirmar_fato",
 }
 
 
@@ -175,8 +181,9 @@ def _falta_dado(estado: dict) -> str | None:
 
 
 def _decide_roteador(memoria: MemoriaLongoPrazo | None) -> Callable[[dict], RespostaTurno | None]:
-    """Com memória, confirmar_causa segue para o passo 6, se houver serviço e incidente."""
-    fixas = INTENCOES_FIXAS - {"confirmar_causa"} if memoria else INTENCOES_FIXAS
+    """Com memória, confirmar_causa (se houver serviço e incidente) e confirmar_fato seguem
+    para o passo 6."""
+    fixas = INTENCOES_FIXAS - {"confirmar_causa", "confirmar_fato"} if memoria else INTENCOES_FIXAS
 
     def decide(estado: dict) -> RespostaTurno | None:
         intencao = estado["nlu"].intencao
@@ -230,28 +237,43 @@ def citar_episodios(
     return analise.model_copy(update={"hipoteses": hipoteses})
 
 
+def _na_analise(resultado: object, transforma: Callable[[AnaliseIncidente], AnaliseIncidente]):
+    """Aplica `transforma` à análise do resultado (direta ou dentro de ResultadoInvestigacao)."""
+    if isinstance(resultado, AnaliseIncidente):
+        return transforma(resultado)
+    if isinstance(resultado, ResultadoInvestigacao) and resultado.analise is not None:
+        return resultado.model_copy(update={"analise": transforma(resultado.analise)})
+    return resultado
+
+
 def _com_episodios_citados(resultado: object, contexto: ContextoTurno) -> object:
     if not contexto.episodios_consultados:
         return resultado
-    if isinstance(resultado, AnaliseIncidente):
-        return citar_episodios(resultado, contexto.episodios_consultados)
-    if isinstance(resultado, ResultadoInvestigacao) and resultado.analise is not None:
-        analise = citar_episodios(resultado.analise, contexto.episodios_consultados)
-        return resultado.model_copy(update={"analise": analise})
-    return resultado
+    return _na_analise(resultado, lambda a: citar_episodios(a, contexto.episodios_consultados))
+
+
+def _com_acoes_sugeridas(resultado: object, contexto: ContextoTurno) -> object:
+    """As ações que `sugerir_acao` guardou no contexto entram na análise por código."""
+    if not contexto.acoes_sugeridas:
+        return resultado
+    acoes = list(contexto.acoes_sugeridas)
+    return _na_analise(resultado, lambda a: a.model_copy(update={"acoes_sugeridas": acoes}))
 
 
 def _investigar_com_contexto(investigacao: Runnable) -> Callable[[dict, dict], object]:
     def investigar(estado: dict, config: dict) -> object:
         contexto = _contexto_do_estado(estado)
         configurado = patch_config(config, configurable={CHAVE_CONTEXTO: contexto})
-        return _com_episodios_citados(investigacao.invoke(estado, configurado), contexto)
+        resultado = _com_episodios_citados(investigacao.invoke(estado, configurado), contexto)
+        return _com_acoes_sugeridas(resultado, contexto)
 
     return investigar
 
 
-def _resp_erro_registro(estado: dict, motivo: str, contexto: ContextoTurno) -> RespostaTurno:
-    erro = f"Não consegui registrar a causa, nada foi registrado: {mascarar(motivo)}"
+def _resp_erro_registro(
+    estado: dict, motivo: str, contexto: ContextoTurno, o_que: str = "a causa"
+) -> RespostaTurno:
+    erro = f"Não consegui registrar {o_que}, nada foi registrado: {mascarar(motivo)}"
     return RespostaTurno(
         rota="erro",
         moderacao=estado["moderacao"],
@@ -302,25 +324,76 @@ def _entregar_ao_registro(registro: Runnable) -> Callable[[dict, dict], Resposta
     return entregar
 
 
+def _resp_fato(estado: dict, contexto: ContextoTurno) -> RespostaTurno:
+    fato = contexto.fato_gravado
+    texto = texto_fato_registrado.format(
+        assunto=fato.assunto, fato=fato.fato, validade=f"{fato.valido_ate:%Y-%m-%d}"
+    )
+    return RespostaTurno(
+        rota="memoria",
+        moderacao=estado["moderacao"],
+        nlu=estado["nlu"],
+        fixa=RespostaFixa(texto=texto, camada=2, categoria="confirmar_fato"),
+        fato=fato,
+        trajetoria=contexto.trajetoria,
+    )
+
+
+def _entregar_ao_registro_fato(registro: Runnable) -> Callable[[dict, dict], RespostaTurno]:
+    """Confirmação de fato: o Registrador chama `gravar_fato` (trava no contexto do turno)."""
+
+    def entregar(estado: dict, config: dict) -> RespostaTurno:
+        contexto = _contexto_do_estado(estado)
+        configurado = patch_config(config, configurable={CHAVE_CONTEXTO: contexto})
+        try:
+            registro.invoke(estado, configurado)
+        except Exception as excecao:  # erro legível, nada registrado
+            return _resp_erro_registro(estado, str(excecao), contexto, "o fato")
+        if contexto.fato_gravado is None:
+            motivo = "o agente não gravou o fato (gravar_fato)"
+            return _resp_erro_registro(estado, motivo, contexto, "o fato")
+        return _resp_fato(estado, contexto)
+
+    return entregar
+
+
 def _registrador_padrao(llm, memoria: MemoriaLongoPrazo) -> Runnable:
     ferramentas = montar_ferramentas_memoria(memoria, montar_resolucao_memoria(llm))
     return montar_registrador(llm, ferramentas)
 
 
-def _passo6_com_memoria(
-    llm, memoria: MemoriaLongoPrazo, investigacao: Runnable, registro: Runnable | None
-) -> Runnable:
-    """Confirmação vai ao Registrador; o resto, à investigação com o contexto do turno."""
-    registro = registro or _registrador_padrao(llm, memoria)
-    investigar = RunnablePassthrough.assign(
+def _registrador_fato_padrao(llm, memoria: MemoriaLongoPrazo) -> Runnable:
+    return montar_registrador(
+        llm, montar_ferramentas_fato(memoria), system_prompt=SISTEMA_REGISTRO_FATO
+    )
+
+
+def _investigar_e_responder(investigacao: Runnable) -> Runnable:
+    return RunnablePassthrough.assign(
         resultado=RunnableLambda(_investigar_com_contexto(investigacao))
     ) | _marcar(_resp_investigacao)
+
+
+def _passo6_com_memoria(
+    llm,
+    memoria: MemoriaLongoPrazo,
+    investigacao: Runnable,
+    registro: Runnable | None,
+    registro_fato: Runnable | None = None,
+) -> Runnable:
+    """Confirmações vão aos Registradores; o resto, à investigação com o contexto do turno."""
+    registro = registro or _registrador_padrao(llm, memoria)
+    registro_fato = registro_fato or _registrador_fato_padrao(llm, memoria)
     return RunnableBranch(
         (
             lambda estado: estado["nlu"].intencao == "confirmar_causa",
             _marcar(_entregar_ao_registro(registro)),
         ),
-        investigar,
+        (
+            lambda estado: estado["nlu"].intencao == "confirmar_fato",
+            _marcar(_entregar_ao_registro_fato(registro_fato)),
+        ),
+        _investigar_e_responder(investigacao),
     )
 
 
@@ -331,14 +404,15 @@ def montar_etapas(
     investigacao: Runnable | None = None,
     memoria: MemoriaLongoPrazo | None = None,
     registro: Runnable | None = None,
+    registro_fato: Runnable | None = None,
 ) -> dict[str, Runnable]:
     """Etapas do pipeline na ordem em que a mensagem passa (cada uma é um Runnable)."""
     nlu = nlu or montar_nlu(llm)
     investigacao = investigacao or montar_investigacao(llm)
     if memoria is None:
-        passo6 = RunnablePassthrough.assign(resultado=investigacao) | _marcar(_resp_investigacao)
+        passo6 = _investigar_e_responder(investigacao)
     else:
-        passo6 = _passo6_com_memoria(llm, memoria, investigacao, registro)
+        passo6 = _passo6_com_memoria(llm, memoria, investigacao, registro, registro_fato)
     etapas = {
         # entra {mensagem, historico} -> sai {mensagem, historico} com segredos mascarados
         "passo1_mascara": RunnableLambda(_mascarar_entrada),
@@ -370,10 +444,11 @@ def montar_pipeline(
     investigacao: Runnable | None = None,
     memoria: MemoriaLongoPrazo | None = None,
     registro: Runnable | None = None,
+    registro_fato: Runnable | None = None,
 ) -> Runnable:
     """Entrada {"mensagem", "historico", "incidente_id", "session_id"} -> RespostaTurno.
 
-    nlu, investigacao e registro (Registrador) são injetáveis; sem memória o
+    nlu, investigacao, registro e registro_fato (Registradores) são injetáveis; sem memória o
     comportamento não muda.
     """
     (
@@ -384,7 +459,7 @@ def montar_pipeline(
         passo5_roteador,
         passo6_investigacao,
         passo7_resposta,
-    ) = montar_etapas(llm, moderar, nlu, investigacao, memoria, registro).values()
+    ) = montar_etapas(llm, moderar, nlu, investigacao, memoria, registro, registro_fato).values()
     return (
         passo1_mascara
         | passo2_vazia

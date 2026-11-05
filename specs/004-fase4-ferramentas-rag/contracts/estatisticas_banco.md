@@ -1,46 +1,53 @@
 # Contrato: `GET /estatisticas_banco` (incident-shop 1.1.0)
 
-Proposta do incident-agent (D2 A). Acréscimo compatível: `VERSAO_CONTRATO = "1.1.0"`.
+Fonte da verdade: `incident-shop/docs/contrato-api.md`, seção "GET /estatisticas_banco". O contrato
+real substituiu a proposta inicial do incident-agent (D2 A), que tinha `servico` obrigatório,
+`coletado_em`, linhas vivas/mortas, vacuum e bloqueios. Esses campos não existem mais.
 
 ## Requisição
 
-`GET /estatisticas_banco?cenario=<id>&servico=<servico>`
+`GET /estatisticas_banco?cenario=<id>[&servico=<servico>]`
 
-- `cenario` (obrigatório, como nas outras rotas) e `servico` (obrigatório, um dos 4 serviços).
-- Serviço sem banco ou cenário sem dado de banco: `200` com `tabelas: []`.
-- Cenário inexistente: `404`, igual às outras rotas. Serviço inválido: `422`.
+- `cenario` obrigatório: ausente `422`, desconhecido `404`.
+- `servico` opcional (um dos 4 serviços); outro valor: `422`. Sem `servico`, todas as tabelas.
+- Não há `inicio` nem `fim`: o retrato é de um instante (`sintoma_inicio` do cenário).
 
 ## Resposta 200
 
+Tabelas na ordem fixa `pedidos`, `itens_pedido`, `estoque` (pedidos-api e estoque-worker),
+`reservas_estoque`. `pagamentos-api` e `auth-api` não usam o `db-principal`: `tabelas: []`.
+
+| Campo da tabela | Significado |
+|---|---|
+| `tabela`, `servicos` | Nome e serviços que a usam |
+| `varreduras_sequenciais`, `varreduras_por_indice` | Leituras na última hora (inteiros) |
+| `reindexacao_em_andamento` | `true` enquanto um `REINDEX` roda na tabela |
+| `operacao_em_andamento` | Instrução em execução (ex.: `REINDEX TABLE estoque`) ou `null` |
+| `ultimo_analyze` | Horário do último `ANALYZE` |
+| `inchaco_indice_pct` | Percentual de índice inchado (1 casa decimal) |
+
 ```json
 {
-  "cenario": "banco_lento_com_deploy",
-  "servico": "pedidos-api",
+  "consulta": {"cenario": "banco_lento_com_deploy", "servico": "estoque-worker",
+               "momento": "2026-10-08T15:47:00-03:00"},
   "banco": "db-principal",
-  "coletado_em": "2026-10-08T15:50:00-03:00",
   "tabelas": [
-    {
-      "tabela": "estoque",
-      "varreduras_sequenciais": 1830,
-      "varreduras_por_indice": 12,
-      "linhas_vivas": 48210,
-      "linhas_mortas": 310,
-      "ultimo_analyze": "2026-10-08T03:00:00-03:00",
-      "ultimo_vacuum": "2026-10-08T03:00:00-03:00",
-      "inchaco_indices_pct": 4.5,
-      "bloqueios_aguardando": 37,
-      "manutencao_em_andamento": "REINDEX TABLE estoque (iniciado 15:44)"
-    }
+    {"tabela": "estoque", "servicos": ["pedidos-api", "estoque-worker"],
+     "varreduras_sequenciais": 2248, "varreduras_por_indice": 38,
+     "reindexacao_em_andamento": true, "operacao_em_andamento": "REINDEX TABLE estoque",
+     "ultimo_analyze": "2026-10-08T03:00:00-03:00", "inchaco_indice_pct": 41.0}
   ]
 }
 ```
 
-- Campos espelham `pg_stat_user_tables` + `pg_locks` + `pg_stat_activity`, simplificados.
-- `manutencao_em_andamento`: texto ou `null`. É o sinal da causa no `banco_lento_com_deploy`.
-- Nos outros cenários com banco (ex.: `pool_esgotado`), valores normais e `manutencao_em_andamento: null`.
-- Determinístico por cenário (mesma resposta a cada chamada), como logs e métricas.
+Só `banco_lento_com_deploy` foge do estado saudável (tabela `estoque`, reindexação desde 15:40,
+índice indisponível: varreduras por índice < 100 e sequenciais na casa dos milhares). Nos demais
+cenários, inclusive `pool_esgotado`, o banco aparece saudável. Valores determinísticos.
 
 ## Gravação (`dados_dummy`)
 
-O JSON gravado por cenário ganha a chave `"estatisticas_banco": [<corpo da resposta por serviço>]`
-(lista com um item por serviço que tem banco). O agente filtra por `servico` no modo gravado.
+`dados_dummy/cenarios/*.json` foi regravado com `scripts/gravar_dados_dummy.py` do incident-shop
+(commits `3d424c8` e `89cb6a6`, sem push). A chave `"estatisticas_banco"` é o corpo da resposta
+SEM `servico` (todas as tabelas). No modo gravado, `FonteLoja.estatisticas_banco(servico)` filtra
+as tabelas cujo `servicos` contém o serviço e devolve o mesmo formato do contrato, com
+`consulta.servico` preenchido. Sem a chave: `{"consulta": {...}, "banco": null, "tabelas": []}`.

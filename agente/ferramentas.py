@@ -80,14 +80,12 @@ def montar_ferramentas(
     indice: Any = None,
     llm_acao: Any = None,
     estatisticas: bool = False,
-    agora: Callable[[], Any] | None = None,
 ) -> list[BaseTool]:
     """Ferramentas ligadas à fonte do cenário; com memória, acrescenta a consulta e, havendo
     `resolver` (resolução de memória), a gravação protegida pela trava do turno.
 
     Opcionais da Fase 4: `estatisticas` (banco), `indice` FAISS (documentação e, com memória,
-    wiki) e `llm_acao` (sugestão de ação, exige `indice`). Sem eles a lista é a de antes.
-    `agora` é reservado para o relógio da wiki; por padrão vale o da memória."""
+    wiki) e `llm_acao` (sugestão de ação, exige `indice`). Sem eles a lista é a de antes."""
 
     @tool
     def buscar_logs(servico: str, nivel: str | None = None) -> str:
@@ -125,9 +123,9 @@ def montar_ferramentas(
 def _ferramenta_estatisticas(fonte: FonteLoja) -> BaseTool:
     @tool
     def consultar_estatisticas_banco(servico: str) -> str:
-        """Read-only statistics of the database of a service: sequential vs index scans, dead
-        rows, last analyze/vacuum, index bloat, waiting locks and maintenance in progress such
-        as REINDEX. Use when the logs show database errors (statement timeout, lock wait)."""
+        """Read-only statistics of the database of a service, per table: sequential vs index
+        scans, last ANALYZE, index bloat % and maintenance in progress such as REINDEX.
+        Use when the logs show database errors (statement timeout, lock wait)."""
         return _observacao(lambda: resumir_estatisticas(fonte.estatisticas_banco(servico)))
 
     return consultar_estatisticas_banco

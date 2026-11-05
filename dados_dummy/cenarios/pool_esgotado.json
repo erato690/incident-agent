@@ -8881,114 +8881,63 @@
       }
     ]
   },
-  "estatisticas_banco": [
-    {
+  "estatisticas_banco": {
+    "consulta": {
       "cenario": "pool_esgotado",
-      "servico": "pedidos-api",
-      "banco": "db-principal",
-      "coletado_em": "2026-10-06T14:03:00-03:00",
-      "tabelas": [
-        {
-          "tabela": "pedidos",
-          "varreduras_sequenciais": 42,
-          "varreduras_por_indice": 18450,
-          "linhas_vivas": 126800,
-          "linhas_mortas": 240,
-          "ultimo_analyze": "2026-10-06T03:00:00-03:00",
-          "ultimo_vacuum": "2026-10-06T03:00:00-03:00",
-          "inchaco_indices_pct": 3.8,
-          "bloqueios_aguardando": 0,
-          "manutencao_em_andamento": null
-        },
-        {
-          "tabela": "estoque",
-          "varreduras_sequenciais": 35,
-          "varreduras_por_indice": 9620,
-          "linhas_vivas": 48210,
-          "linhas_mortas": 310,
-          "ultimo_analyze": "2026-10-06T03:00:00-03:00",
-          "ultimo_vacuum": "2026-10-06T03:00:00-03:00",
-          "inchaco_indices_pct": 4.5,
-          "bloqueios_aguardando": 0,
-          "manutencao_em_andamento": null
-        },
-        {
-          "tabela": "itens_pedido",
-          "varreduras_sequenciais": 58,
-          "varreduras_por_indice": 31200,
-          "linhas_vivas": 389400,
-          "linhas_mortas": 910,
-          "ultimo_analyze": "2026-10-06T03:00:00-03:00",
-          "ultimo_vacuum": "2026-10-06T03:00:00-03:00",
-          "inchaco_indices_pct": 5.1,
-          "bloqueios_aguardando": 0,
-          "manutencao_em_andamento": null
-        }
-      ]
+      "servico": null,
+      "momento": "2026-10-06T14:00:00-03:00"
     },
-    {
-      "cenario": "pool_esgotado",
-      "servico": "estoque-worker",
-      "banco": "db-principal",
-      "coletado_em": "2026-10-06T14:03:00-03:00",
-      "tabelas": [
-        {
-          "tabela": "pedidos",
-          "varreduras_sequenciais": 42,
-          "varreduras_por_indice": 18450,
-          "linhas_vivas": 126800,
-          "linhas_mortas": 240,
-          "ultimo_analyze": "2026-10-06T03:00:00-03:00",
-          "ultimo_vacuum": "2026-10-06T03:00:00-03:00",
-          "inchaco_indices_pct": 3.8,
-          "bloqueios_aguardando": 0,
-          "manutencao_em_andamento": null
-        },
-        {
-          "tabela": "estoque",
-          "varreduras_sequenciais": 35,
-          "varreduras_por_indice": 9620,
-          "linhas_vivas": 48210,
-          "linhas_mortas": 310,
-          "ultimo_analyze": "2026-10-06T03:00:00-03:00",
-          "ultimo_vacuum": "2026-10-06T03:00:00-03:00",
-          "inchaco_indices_pct": 4.5,
-          "bloqueios_aguardando": 0,
-          "manutencao_em_andamento": null
-        },
-        {
-          "tabela": "itens_pedido",
-          "varreduras_sequenciais": 58,
-          "varreduras_por_indice": 31200,
-          "linhas_vivas": 389400,
-          "linhas_mortas": 910,
-          "ultimo_analyze": "2026-10-06T03:00:00-03:00",
-          "ultimo_vacuum": "2026-10-06T03:00:00-03:00",
-          "inchaco_indices_pct": 5.1,
-          "bloqueios_aguardando": 0,
-          "manutencao_em_andamento": null
-        }
-      ]
-    },
-    {
-      "cenario": "pool_esgotado",
-      "servico": "pagamentos-api",
-      "banco": "db-pagamentos",
-      "coletado_em": "2026-10-06T14:03:00-03:00",
-      "tabelas": [
-        {
-          "tabela": "cobrancas",
-          "varreduras_sequenciais": 27,
-          "varreduras_por_indice": 22800,
-          "linhas_vivas": 214600,
-          "linhas_mortas": 520,
-          "ultimo_analyze": "2026-10-06T03:00:00-03:00",
-          "ultimo_vacuum": "2026-10-06T03:00:00-03:00",
-          "inchaco_indices_pct": 2.9,
-          "bloqueios_aguardando": 0,
-          "manutencao_em_andamento": null
-        }
-      ]
-    }
-  ]
+    "banco": "db-principal",
+    "tabelas": [
+      {
+        "tabela": "pedidos",
+        "servicos": [
+          "pedidos-api"
+        ],
+        "varreduras_sequenciais": 64,
+        "varreduras_por_indice": 4380,
+        "reindexacao_em_andamento": false,
+        "operacao_em_andamento": null,
+        "ultimo_analyze": "2026-10-06T03:00:00-03:00",
+        "inchaco_indice_pct": 9.4
+      },
+      {
+        "tabela": "itens_pedido",
+        "servicos": [
+          "pedidos-api"
+        ],
+        "varreduras_sequenciais": 54,
+        "varreduras_por_indice": 6407,
+        "reindexacao_em_andamento": false,
+        "operacao_em_andamento": null,
+        "ultimo_analyze": "2026-10-06T03:00:00-03:00",
+        "inchaco_indice_pct": 6.4
+      },
+      {
+        "tabela": "estoque",
+        "servicos": [
+          "pedidos-api",
+          "estoque-worker"
+        ],
+        "varreduras_sequenciais": 10,
+        "varreduras_por_indice": 5547,
+        "reindexacao_em_andamento": false,
+        "operacao_em_andamento": null,
+        "ultimo_analyze": "2026-10-06T03:00:00-03:00",
+        "inchaco_indice_pct": 5.3
+      },
+      {
+        "tabela": "reservas_estoque",
+        "servicos": [
+          "estoque-worker"
+        ],
+        "varreduras_sequenciais": 69,
+        "varreduras_por_indice": 4383,
+        "reindexacao_em_andamento": false,
+        "operacao_em_andamento": null,
+        "ultimo_analyze": "2026-10-06T03:00:00-03:00",
+        "inchaco_indice_pct": 5.9
+      }
+    ]
+  }
 }

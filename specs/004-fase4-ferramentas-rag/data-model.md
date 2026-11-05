@@ -15,9 +15,10 @@
 `acoes: list[AcaoSugerida]` (1 a 3); saída estruturada do LLM dentro de `sugerir_acao`.
 
 ### `EstatisticaTabela` (contrato `contracts/estatisticas_banco.md`)
-tabela, varreduras_sequenciais, varreduras_por_indice, linhas_vivas, linhas_mortas,
-ultimo_analyze, ultimo_vacuum, inchaco_indices_pct, bloqueios_aguardando,
-manutencao_em_andamento (str | None). Usado só no resumo da ferramenta (o JSON vem da loja).
+tabela, servicos (list[str]), varreduras_sequenciais, varreduras_por_indice,
+reindexacao_em_andamento (bool), operacao_em_andamento (str | None), ultimo_analyze,
+inchaco_indice_pct (float). Envelope: `consulta` (cenario, servico, momento), `banco`, `tabelas`.
+Usado só no resumo da ferramenta (o JSON vem da loja).
 
 ## Alterados
 

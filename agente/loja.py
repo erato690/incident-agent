@@ -10,7 +10,7 @@ interface:
   `scripts/gravar_cenarios.py` no formato
   `{"cenario": <item de GET /cenarios>, "logs": <corpo de GET /logs>,
     "metricas": <corpo de GET /metricas>, "deploys": <corpo de GET /deploys>,
-    "estatisticas_banco": [<corpo de GET /estatisticas_banco, um por serviço com banco>]}`
+    "estatisticas_banco": <corpo de GET /estatisticas_banco sem `servico`, todas as tabelas>}`
   e filtra localmente por serviço, nível e métrica.
 
 O cenário é configuração da fonte: o modelo nunca o vê nem o informa.
@@ -138,18 +138,19 @@ class FonteLoja:
         ]
 
     def estatisticas_banco(self, servico: str) -> dict:
-        """Corpo de `/estatisticas_banco`; serviço sem banco devolve `tabelas: []`."""
+        """Corpo de `/estatisticas_banco`; serviço sem banco devolve `tabelas: []`.
+
+        Gravada: a chave `estatisticas_banco` traz todas as tabelas (corpo sem `servico`);
+        aqui ficam só as tabelas cujo `servicos` contém o serviço.
+        """
         if self._url:
             return self._get("/estatisticas_banco", servico=servico)
-        for item in self._dados.get("estatisticas_banco", []):
-            if item["servico"] == servico:
-                return item
+        corpo = self._dados.get("estatisticas_banco") or {}
+        consulta = {"cenario": self.cenario, "momento": None, **corpo.get("consulta", {})}
         return {
-            "cenario": self.cenario,
-            "servico": servico,
-            "banco": None,
-            "coletado_em": None,
-            "tabelas": [],
+            "consulta": {**consulta, "servico": servico},
+            "banco": corpo.get("banco"),
+            "tabelas": [t for t in corpo.get("tabelas", []) if servico in t["servicos"]],
         }
 
     def tags_do_servico(self) -> list[str]:
@@ -264,26 +265,29 @@ def resumir_deploys(deploys: list[dict], tags: list[str] | None = None) -> str:
     return "\n".join(linhas)
 
 
-def _linha_tabela(tabela: dict) -> str:
-    """Uma tabela em uma linha; manutenção em andamento vem destacada."""
-    texto = (
+def _linha_tabela(tabela: dict) -> list[str]:
+    """Uma tabela em uma linha; manutenção em andamento vem destacada em outra."""
+    linhas = [
         f"{tabela['tabela']}: varreduras seq {tabela['varreduras_sequenciais']} x índice "
-        f"{tabela['varreduras_por_indice']}, linhas vivas {tabela['linhas_vivas']}, mortas "
-        f"{tabela['linhas_mortas']}, último analyze {tabela['ultimo_analyze']}, último vacuum "
-        f"{tabela['ultimo_vacuum']}, inchaço de índices {tabela['inchaco_indices_pct']}%, "
-        f"bloqueios aguardando {tabela['bloqueios_aguardando']}"
-    )
-    if tabela.get("manutencao_em_andamento"):
-        texto += f". MANUTENÇÃO EM ANDAMENTO: {tabela['manutencao_em_andamento']}"
-    return texto
+        f"{tabela['varreduras_por_indice']}, último ANALYZE {tabela['ultimo_analyze']}, "
+        f"inchaço de índices {tabela['inchaco_indice_pct']}%, reindexação em andamento: "
+        f"{'sim' if tabela['reindexacao_em_andamento'] else 'não'}"
+    ]
+    operacao = tabela["operacao_em_andamento"]
+    if operacao or tabela["reindexacao_em_andamento"]:
+        linhas.append(
+            f"MANUTENÇÃO EM ANDAMENTO: {operacao or 'REINDEX'} na tabela {tabela['tabela']}"
+        )
+    return linhas
 
 
 def resumir_estatisticas(resultado: dict) -> str:
     """Texto compacto por tabela das estatísticas do banco do serviço."""
+    servico = resultado["consulta"]["servico"]
     if not resultado["tabelas"]:
-        return f"Sem estatísticas de banco para {resultado['servico']}."
+        return f"Sem estatísticas de banco para {servico} (o serviço não usa o db-principal)."
     cabecalho = (
-        f"Banco {resultado['banco']} ({resultado['servico']}), coletado em "
-        f"{resultado['coletado_em']}"
+        f"Banco {resultado['banco']} ({servico}), retrato de {resultado['consulta']['momento']}"
     )
-    return "\n".join([cabecalho, *(_linha_tabela(tabela) for tabela in resultado["tabelas"])])
+    linhas = [linha for tabela in resultado["tabelas"] for linha in _linha_tabela(tabela)]
+    return "\n".join([cabecalho, *linhas])

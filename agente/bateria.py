@@ -48,7 +48,7 @@ def nomes_ferramentas(resposta: RespostaTurno) -> list[str]:
 def memoria_registrada(resposta: RespostaTurno) -> str:
     """Episódio gravado neste turno: "registrado", "atualizado" (arquivou o anterior) ou "-"."""
     if resposta.episodio is None:
-        return "-"
+        return "fato registrado" if resposta.fato is not None else "-"
     return "atualizado" if resposta.episodio_anterior else "registrado"
 
 
@@ -58,23 +58,44 @@ def memoria_consultada(resposta: RespostaTurno) -> bool:
 
 
 def acertou(mensagem: dict, resposta: RespostaTurno) -> bool:
-    """Rota esperada e, quando o item traz `registra_esperado`, se gravou ou não um episódio."""
+    """Rota esperada e, quando o item traz `registra_esperado` ou `grava_fato_esperado`, se
+    gravou ou não um episódio ou um fato."""
     if resposta.rota != mensagem["rota_esperada"]:
         return False
-    esperado = mensagem.get("registra_esperado")
-    return esperado is None or esperado == (resposta.episodio is not None)
+    registra = mensagem.get("registra_esperado")
+    if registra is not None and registra != (resposta.episodio is not None):
+        return False
+    grava_fato = mensagem.get("grava_fato_esperado")
+    return grava_fato is None or grava_fato == (resposta.fato is not None)
+
+
+def causa_certa(mensagem: dict, resposta: RespostaTurno) -> bool | None:
+    """None sem `palavras_causa`; senão, True se a hipótese principal (maior confiança) cita
+    alguma delas (sem diferenciar maiúsculas). Mede o diagnóstico, à parte da rota."""
+    palavras = mensagem.get("palavras_causa")
+    if not palavras:
+        return None
+    if resposta.analise is None or not resposta.analise.hipoteses:
+        return False
+    principal = max(resposta.analise.hipoteses, key=lambda h: h.confianca)
+    texto = principal.causa.casefold()
+    return any(palavra.casefold() in texto for palavra in palavras)
 
 
 def _tem_registra(mensagem: dict) -> bool:
-    return "registra_esperado" in mensagem
+    return "registra_esperado" in mensagem or "grava_fato_esperado" in mensagem
 
 
 def linhas_bateria(mensagens: list[dict], resultados: list[RespostaTurno]) -> list[dict]:
     """Uma linha por teste. As colunas "ferramentas" e "memória registrada"/"memória consultada"
     só aparecem se algum turno usou ferramentas ou mexeu na memória (Fases 1 e 2 não mudam)."""
     com_ferramentas = any(resposta.trajetoria for resposta in resultados)
+    com_causa = any(mensagem.get("palavras_causa") for mensagem in mensagens)
     com_memoria = any(
-        resposta.episodio or memoria_consultada(resposta) or _tem_registra(mensagem)
+        resposta.episodio
+        or resposta.fato
+        or memoria_consultada(resposta)
+        or _tem_registra(mensagem)
         for mensagem, resposta in zip(mensagens, resultados, strict=True)
     )
     linhas = []
@@ -92,6 +113,9 @@ def linhas_bateria(mensagens: list[dict], resultados: list[RespostaTurno]) -> li
         if com_memoria:
             linha["memória registrada"] = memoria_registrada(resposta)
             linha["memória consultada"] = "sim" if memoria_consultada(resposta) else "-"
+        if com_causa:
+            certa = causa_certa(mensagem, resposta)
+            linha["causa certa"] = "-" if certa is None else ("sim" if certa else "não")
         linhas.append({**linha, "ok": acertou(mensagem, resposta)})
     return linhas
 
@@ -128,11 +152,22 @@ def _hipoteses_html(analise: AnaliseIncidente) -> str:
     return f"<b>Hipóteses:</b><ol>{itens}</ol>"
 
 
+def _acoes_html(analise: AnaliseIncidente) -> str:
+    itens = "".join(
+        f"<li>{escape(acao.acao)} — risco {acao.risco} — {escape(acao.motivo)} "
+        f"<i>({escape(acao.status)})</i></li>"
+        for acao in analise.acoes_sugeridas
+    )
+    return f"<b>Ações sugeridas:</b><ul>{itens}</ul>"
+
+
 def _itens_analise(mensagem: dict, analise: AnaliseIncidente) -> list[str]:
     itens = [
         f"<b>Severidade:</b> {analise.severidade} · <b>Resumo:</b> {escape(analise.resumo)}",
         _hipoteses_html(analise),
     ]
+    if analise.acoes_sugeridas:
+        itens.append(_acoes_html(analise))
     if mensagem.get("hipoteses_devem_considerar"):
         deve = "; ".join(mensagem["hipoteses_devem_considerar"])
         itens.append(f"<b>Deve considerar:</b> {escape(deve)}")
