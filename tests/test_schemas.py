@@ -1,10 +1,16 @@
+from datetime import datetime
+
 import pytest
 from pydantic import ValidationError
 
 from agente.schemas import (
+    AcaoSugerida,
     AnaliseIncidente,
     AnaliseNLU,
+    ContextoTurno,
+    FatoSemantico,
     Hipotese,
+    ListaAcoes,
     PassoTrajetoria,
     RespostaTurno,
     ResultadoInvestigacao,
@@ -173,3 +179,42 @@ def test_resultado_exige_exatamente_um_entre_analise_e_erro():
 def test_resposta_turno_trajetoria_default_vazio():
     resposta = RespostaTurno(rota="erro", moderacao=ResultadoModeracao(status="ok"), erro="x")
     assert resposta.trajetoria == []
+
+
+def test_acao_sugerida_status_fixo():
+    acao = AcaoSugerida(acao="reagendar", motivo="m", risco="baixo")
+    assert acao.status == "sugerida (não executada)" and acao.runbook is None
+    with pytest.raises(ValidationError):
+        AcaoSugerida(acao="a", motivo="m", risco="baixo", status="executada")
+    with pytest.raises(ValidationError):
+        AcaoSugerida(acao="a", motivo="m", risco="extremo")
+
+
+def test_lista_acoes_de_um_a_tres():
+    item = {"acao": "a", "motivo": "m", "risco": "alto"}
+    assert len(ListaAcoes(acoes=[item] * 3).acoes) == 3
+    for quantidade in (0, 4):
+        with pytest.raises(ValidationError):
+            ListaAcoes(acoes=[item] * quantidade)
+
+
+def test_acoes_sugeridas_fora_do_schema_do_modelo_mas_no_dump():
+    from langchain_core.output_parsers import JsonOutputParser
+
+    instrucoes = JsonOutputParser(pydantic_object=AnaliseIncidente).get_format_instructions()
+    assert "acoes_sugeridas" not in instrucoes
+    analise = _analise()
+    assert analise.acoes_sugeridas == []
+    assert analise.model_dump()["acoes_sugeridas"] == []
+
+
+def test_intencao_confirmar_fato_e_campos_novos():
+    assert AnaliseNLU(intencao="confirmar_fato").intencao == "confirmar_fato"
+    fato = FatoSemantico(
+        assunto="PagaFácil", fato="100 req/min", fonte="usuario", verificado_em=datetime.now()
+    )
+    contexto = ContextoTurno()
+    assert contexto.acoes_sugeridas == [] and contexto.fato_gravado is None
+    resposta = RespostaTurno(rota="memoria", moderacao={"status": "ok"}, fato=fato)
+    assert resposta.fato == fato
+    assert RespostaTurno(rota="fixa", moderacao={"status": "ok"}).fato is None
