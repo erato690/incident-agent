@@ -57,3 +57,18 @@
    - A descrição de `consultar_sql` passou a orientar `GROUP BY categoria` para "causa mais
      comum".
 5. **Terceira rodada: auditor aprovou 8 de 8 cenários, com a causa certa em 8 de 8.**
+
+## LangSmith: rastreamento ligado e cota esgotada (2026-11-05)
+
+- O `.env` do Rafael liga o rastreamento (`LANGSMITH_TRACING`), e por isso as execuções do
+  notebook com a chave enviaram traces para a conta dele.
+- Na execução final, o LangSmith passou a recusar o envio com HTTP 429, "Monthly unique traces
+  usage limit exceeded": a cota mensal de traces da conta esgotou.
+- **Consequência:** o envio do dataset e do experimento (F5-D2) fica bloqueado até a cota
+  renovar ou até o Rafael ampliar o plano. Isso é decisão dele, porque envolve custo.
+- **Enquanto isso:** a avaliação roda localmente, com os mesmos avaliadores e a mesma API do
+  `evaluate`, e as métricas ficam no notebook.
+- A execução final usou `LANGSMITH_TRACING=false` só no comando, para as saídas não ficarem
+  cheias de avisos 429. O `.env` não foi alterado.
+- O GitHub sem token também esgotou o limite de 60 requisições por hora. `comparar_versoes` caiu
+  na gravação de reserva, que já é rotulada na trajetória.

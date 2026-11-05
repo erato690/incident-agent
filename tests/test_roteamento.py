@@ -185,3 +185,25 @@ def test_texto_fora_do_escopo_e_fase_futura():
     assert "Só ajudo a investigar incidentes de produção." in _texto_fixo("fora_do_escopo")
     assert "agente integrado" in _texto_fixo("gerar_relatorio")
     assert "Fase 3" in _texto_fixo("confirmar_causa")
+
+
+def test_resposta_em_prosa_repetida_e_corrigida_pelo_pedido_de_json():
+    """Com histórico em texto, o modelo às vezes responde em prosa sempre igual (temperatura
+    fixa); as novas tentativas repetem a prosa e só o pedido explícito de JSON corrige."""
+    from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
+    from langchain_core.messages import AIMessage
+
+    from agente.prompts import PEDIDO_JSON_INVESTIGACAO
+
+    class ProsaAtePedirJson(FakeMessagesListChatModel):
+        def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+            from langchain_core.outputs import ChatGeneration, ChatResult
+
+            pediu = PEDIDO_JSON_INVESTIGACAO in str(messages[-1].content)
+            texto = ANALISE.model_dump_json() if pediu else "O pool esgotou, confira as métricas."
+            return ChatResult(generations=[ChatGeneration(message=AIMessage(content=texto))])
+
+    espioes = Espioes()
+    llm = ProsaAtePedirJson(responses=[AIMessage(content="")])
+    pipeline = montar_pipeline(llm, espioes.moderar, nlu=espioes.nlu())
+    assert pipeline.invoke({"mensagem": "erro"}).rota == "investigacao"

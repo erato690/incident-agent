@@ -22,6 +22,7 @@ from agente.prompts import (
     montar_nlu,
     montar_resolucao_memoria,
     prompt_investigacao,
+    prompt_investigacao_json,
     respostas_fixas,
     texto_causa_registrada,
     texto_causa_trocada,
@@ -132,11 +133,25 @@ def montar_investigacao_json(llm) -> Runnable:
     )
 
 
+def _correcao_json(llm) -> Runnable:
+    """Mesmo pedido com a ordem explícita de responder só o JSON (resposta em prosa)."""
+    parser = JsonOutputParser(pydantic_object=AnaliseIncidente)
+    return (
+        RunnableLambda(_preprocessar_estado)
+        | prompt_investigacao_json.partial(format_instructions=parser.get_format_instructions())
+        | llm
+        | parser
+        | RunnableLambda(AnaliseIncidente.model_validate)
+    )
+
+
 def montar_investigacao(llm) -> Runnable:
-    """Estado -> AnaliseIncidente (até duas novas tentativas); falha final vira str com o erro."""
+    """Estado -> AnaliseIncidente (até duas novas tentativas e, se o modelo insistir em prosa,
+    um pedido explícito de JSON); falha final vira str com o erro."""
     nucleo = (
         montar_investigacao_json(llm) | RunnableLambda(AnaliseIncidente.model_validate)
     ).with_retry(stop_after_attempt=3, wait_exponential_jitter=False)
+    nucleo = nucleo.with_fallbacks([_correcao_json(llm)])
     falha = RunnableLambda(
         lambda estado: (
             f"JSON inválido da investigação: {estado['excecao']} | mensagem: {estado['mensagem']}"
