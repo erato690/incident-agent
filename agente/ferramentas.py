@@ -1,5 +1,6 @@
 """Ferramentas só leitura do agente. O cenário vem da fonte (closure), nunca do modelo."""
 
+import unicodedata
 from collections.abc import Callable
 from datetime import timedelta
 from typing import Annotated, Any
@@ -286,6 +287,18 @@ def _fato_da_wiki(memoria: MemoriaLongoPrazo, assunto: str, pergunta: str) -> st
     return None
 
 
+def _normalizar_assunto(texto: str | None) -> str:
+    """Sem acento, sem caixa e sem espaços nas pontas: "PagaFácil" e "pagafacil" são iguais."""
+    decomposto = unicodedata.normalize("NFKD", (texto or "").strip().casefold())
+    return "".join(letra for letra in decomposto if not unicodedata.combining(letra))
+
+
+def _mesmo_assunto(do_documento: str | None, pedido: str) -> bool:
+    """Documento só vira fato do assunto pedido (doc do PagaFácil não responde pelo idp)."""
+    a, b = _normalizar_assunto(do_documento), _normalizar_assunto(pedido)
+    return bool(a and b) and (a in b or b in a)
+
+
 def _fato_da_documentacao(
     memoria: MemoriaLongoPrazo, indice: Any, limiar: float, assunto: str, pergunta: str, contexto
 ) -> str | None:
@@ -293,11 +306,18 @@ def _fato_da_documentacao(
     from agente import recuperacao
 
     achados = recuperacao.buscar_com_score(
-        indice, f"{assunto} {pergunta}", k=1, filtro={"tipo": "documentacao"}
+        indice, f"{assunto} {pergunta}", k=3, filtro={"tipo": "documentacao"}
     )
-    if not achados or achados[0][1] > limiar:
+    documento = next(
+        (
+            doc
+            for doc, score in achados
+            if score <= limiar and _mesmo_assunto(doc.metadata.get("assunto"), assunto)
+        ),
+        None,
+    )
+    if documento is None:
         return None
-    documento = achados[0][0]
     fato = _novo_fato(memoria, assunto, documento.page_content, "documentacao")
     memoria.registrar_fato_semantico(fato)
     if contexto is not None:

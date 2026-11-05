@@ -199,3 +199,40 @@ def test_exemplo_do_banco_so_com_a_ferramenta_de_banco():
     sem = _sistema("buscar_logs", "consultar_wiki")
     com = _sistema("buscar_logs", "consultar_estatisticas_banco")
     assert "Worked example 4" in com and "Worked example 4" not in sem
+
+
+def _ferramenta_acao_espia(chamadas):
+    from langchain_core.tools import tool
+
+    @tool
+    def sugerir_acao(diagnostico: str, servico: str) -> str:
+        """Ferramenta falsa: registra a chamada."""
+        chamadas.append({"diagnostico": diagnostico, "servico": servico})
+        return "SUGESTÃO, NÃO EXECUTADA: reverter o deploy"
+
+    return sugerir_acao
+
+
+def test_sugerir_acao_chamada_por_codigo_quando_o_modelo_esquece():
+    chamadas = []
+    fonte = FonteLoja.gravada("cenario_teste", raiz=RAIZ)
+    ferramentas = montar_ferramentas(fonte) + [_ferramenta_acao_espia(chamadas)]
+    modelo = roteiro(chamada("buscar_logs", {"servico": "pagamentos-api"}, "c1"), JSON_OK)
+    resultado = montar_investigador(modelo, ferramentas).invoke(_estado())
+    assert chamadas == [
+        {"diagnostico": "deploy v2.14.0 quebrou o cupom", "servico": "pagamentos-api"}
+    ]
+    passo = resultado.trajetoria[-1]
+    assert passo.ferramenta == "sugerir_acao" and passo.reserva is True
+    assert "não chamou" in passo.motivo_reserva
+
+
+def test_sugerir_acao_nao_repete_quando_o_modelo_chamou():
+    chamadas = []
+    fonte = FonteLoja.gravada("cenario_teste", raiz=RAIZ)
+    ferramentas = montar_ferramentas(fonte) + [_ferramenta_acao_espia(chamadas)]
+    modelo = roteiro(
+        chamada("sugerir_acao", {"diagnostico": "x", "servico": "pagamentos-api"}, "c1"), JSON_OK
+    )
+    montar_investigador(modelo, ferramentas).invoke(_estado())
+    assert len(chamadas) == 1
