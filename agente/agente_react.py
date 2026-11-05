@@ -192,11 +192,70 @@ Recording rule:
 """
 
 
+REGRA_BANCO = """
+Database rule:
+- When the logs or metrics show database signals (statement timeout, lock wait, slow queries,
+  conexoes_db), call consultar_estatisticas_banco for the service.
+- A maintenance in progress (e.g. REINDEX, VACUUM FULL) locking the failing table is the root
+  cause and must be the main hypothesis, naming the operation and the table; quote it as
+  evidence ("consultar_estatisticas_banco: ...").
+
+Worked example 4 (database)
+Question: "faturas-api com timeout nas consultas desde as 11h05."
+Tools: buscar_logs showed "canceling statement due to statement timeout" (x64);
+listar_deploys showed v1.4.2 at 11:00 but comparar_versoes showed only a text change;
+consultar_estatisticas_banco(servico="faturas-api") showed REINDEX TABLE notas in progress since
+11:02 with 9 waiting locks.
+Reasoning: the deploy diff does not touch what fails; the maintenance locks the table that the
+queries need, so it is the root cause.
+Final answer: main hypothesis = "REINDEX TABLE notas em andamento no banco bloqueia as consultas"
+(confidence 0.85, evidence "consultar_estatisticas_banco: REINDEX TABLE notas em andamento desde
+11:02, 9 locks em espera"); the deploy v1.4.2 stays low (0.05).
+
+"""
+
+REGRA_WIKI = """
+Wiki rule:
+- When the logs show an external provider refusing or failing (429, 503, quota), call
+  consultar_wiki(assunto=<provider name>, pergunta=<what limit/rule you need>) and compare the
+  fact with the numbers of buscar_metricas (e.g. requisicoes per minute versus the limit).
+- Cite the fact with its source and date in the evidence, in the format
+  "consultar_wiki: <fato> (fonte <fonte>, verificado em <data>)".
+- If it returns NÃO ENCONTRADO, put the question for the engineer in dado_que_falta of the
+  hypothesis and in proximos_passos; never invent the fact.
+
+"""
+
+REGRA_DOCUMENTACAO = """
+Documentation rule:
+- Use buscar_documentacao to look up the runbook of the suspected failure. Rewrite the question
+  into technical terms (the error, the component, the mechanism) before searching.
+
+"""
+
+REGRA_ACAO = """
+Action rule:
+- At the end, call sugerir_acao exactly once with the main hypothesis as diagnostico and the
+  service. The actions are suggestions, never executed.
+- In proximos_passos you may mention them; never say an action was executed.
+
+"""
+
+# Ferramenta -> regra condicional (a ordem define a ordem no prompt).
+REGRAS_POR_FERRAMENTA = {
+    "consultar_memoria": REGRA_MEMORIA,
+    "gravar_episodio": REGRA_GRAVACAO,
+    "consultar_estatisticas_banco": REGRA_BANCO,
+    "consultar_wiki": REGRA_WIKI,
+    "buscar_documentacao": REGRA_DOCUMENTACAO,
+    "sugerir_acao": REGRA_ACAO,
+}
+
+
 def montar_sistema_agente(ferramentas: list) -> str:
-    """Prompt do agente; as regras de memória só entram se as ferramentas existem."""
+    """Prompt do agente; as regras condicionais só entram se as ferramentas existem."""
     nomes = {ferramenta.name for ferramenta in ferramentas}
-    regras = REGRA_MEMORIA if "consultar_memoria" in nomes else ""
-    regras += REGRA_GRAVACAO if "gravar_episodio" in nomes else ""
+    regras = "".join(regra for nome, regra in REGRAS_POR_FERRAMENTA.items() if nome in nomes)
     if not regras:
         return SISTEMA_AGENTE
     return SISTEMA_AGENTE.removesuffix(FIM_PROMPT) + regras + FIM_PROMPT
@@ -329,12 +388,32 @@ def _registrar(agente: Any, max_passos: int, estado: dict, chamador: dict | None
             contexto.trajetoria = callback.passos
 
 
-def montar_registrador(llm, ferramentas: list, max_passos: int = 4) -> Runnable:
+SISTEMA_REGISTRO_FATO = """Persona:
+You are the wiki clerk of an on-call incident assistant.
+
+Task:
+The engineer just stated and confirmed a fact about a product or service (a limit, a quota, a
+rule). Call gravar_fato exactly once with: assunto (the product or service name) and fato (the
+fact the engineer confirmed, in one sentence). Then answer in one sentence saying what was
+recorded.
+
+Context:
+- Never invent a subject or a fact that is not in the conversation.
+- If gravar_fato refuses, say that nothing was recorded.
+
+Always answer in Brazilian Portuguese.
+"""
+
+
+def montar_registrador(
+    llm, ferramentas: list, max_passos: int = 4, system_prompt: str = SISTEMA_REGISTRO
+) -> Runnable:
     """Estado {mensagem, historico} -> texto final do Registrador.
 
-    Quem grava é a ferramenta `gravar_episodio`; o resultado fica no contexto do turno.
+    Quem grava é a ferramenta (`gravar_episodio`, ou `gravar_fato` com outro `system_prompt`);
+    o resultado fica no contexto do turno.
     Falhas do agente sobem como exceção (o pipeline as converte em rota de erro)."""
-    agente = create_agent(llm, ferramentas, system_prompt=SISTEMA_REGISTRO)
+    agente = create_agent(llm, ferramentas, system_prompt=system_prompt)
     return RunnableLambda(lambda estado, config: _registrar(agente, max_passos, estado, config))
 
 

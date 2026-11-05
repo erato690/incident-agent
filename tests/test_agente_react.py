@@ -146,3 +146,56 @@ def test_resposta_em_texto_recebe_pedido_de_correcao_antes_da_nova_tentativa():
     ultimas = [mensagem.content for mensagem in modelo.chamadas[-1]]
     assert any("ONLY the AnaliseIncidente JSON object" in str(lote) for lote in ultimas)
     assert [passo.ferramenta for passo in resultado.trajetoria] == ["buscar_logs"]
+
+
+# --- Fase 4: regras condicionais às ferramentas ---------------------------------------------
+
+
+class _Ferramenta:
+    def __init__(self, name):
+        self.name = name
+
+
+def _sistema(*nomes):
+    from agente.agente_react import montar_sistema_agente
+
+    return montar_sistema_agente([_Ferramenta(nome) for nome in nomes])
+
+
+def test_sem_ferramentas_da_fase4_o_prompt_e_identico_ao_atual():
+    base = ["buscar_logs", "buscar_metricas", "listar_deploys", "comparar_versoes"]
+    assert _sistema(*base) == SISTEMA_AGENTE
+    assert _sistema(*base, "consultar_memoria", "gravar_episodio").count("Memory rule") == 1
+
+
+def test_cada_regra_entra_so_com_a_sua_ferramenta():
+    casos = {
+        "consultar_estatisticas_banco": "REINDEX",
+        "consultar_wiki": "NÃO ENCONTRADO",
+        "buscar_documentacao": "runbook",
+        "sugerir_acao": "exactly once",
+    }
+    for nome, marca in casos.items():
+        com = _sistema("buscar_logs", nome)
+        assert nome in com and marca in com
+        assert com != _sistema("buscar_logs") and com != SISTEMA_AGENTE
+
+
+def test_regras_da_fase4_em_ingles_terminam_com_a_regra_de_idioma():
+    todas = _sistema(
+        "consultar_estatisticas_banco", "consultar_wiki", "buscar_documentacao", "sugerir_acao"
+    )
+    assert todas.endswith("Always answer in Brazilian Portuguese.\n")
+    assert todas.count("Always answer in Brazilian Portuguese.") == 1
+    assert "main hypothesis" in todas and "never say an action was executed" in " ".join(
+        todas.split()
+    )
+    assert "Worked example" in todas
+    for gabarito in ("estoque", "pedidos-api", "PagaFácil"):
+        assert gabarito not in todas
+
+
+def test_exemplo_do_banco_so_com_a_ferramenta_de_banco():
+    sem = _sistema("buscar_logs", "consultar_wiki")
+    com = _sistema("buscar_logs", "consultar_estatisticas_banco")
+    assert "Worked example 4" in com and "Worked example 4" not in sem

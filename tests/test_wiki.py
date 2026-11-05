@@ -123,3 +123,20 @@ def test_gravar_fato_grava_na_confirmacao(memoria):
     assert fato.valido_ate == AGORA + timedelta(days=90)
     assert "abc123xyz" not in fato.fato
     assert len(memoria.consultar_fatos_semanticos("PagaFácil", "req")) == 1
+
+
+def test_assunto_sem_diferenciar_caixa_e_espacos(memoria, indice):
+    memoria.registrar_fato_semantico(_fato(AGORA + timedelta(days=5)))
+    achados = memoria.consultar_fatos_semanticos("  pagafácil ", "limite")
+    assert len(achados) == 1
+    saida = _wiki(memoria, indice).invoke({"assunto": "PAGAFÁCIL", "pergunta": "limite"})
+    assert "FATO DA WIKI" in saida
+    assert memoria.consultar_fatos_semanticos("PagaFácil", "limite")[0].fato
+
+
+def test_montar_ferramentas_nao_tem_parametro_agora():
+    import inspect
+
+    from agente.ferramentas import montar_ferramentas
+
+    assert "agora" not in inspect.signature(montar_ferramentas).parameters

@@ -7,7 +7,7 @@ Return the intent and the entities of the last message. Use the history to inher
 when the question does not name it.
 
 Investigation intents: investigar_erro, checar_deploy, checar_metrica, comparar_incidente,
-pedir_runbook, gerar_relatorio, confirmar_causa.
+pedir_runbook, gerar_relatorio, confirmar_causa, confirmar_fato.
 Other intents: saudacao, fora_do_escopo.
 Guardrail categories: conteudo_proibido (offensive or inappropriate content), pedido_de_acao
 (asking to execute something: rollback, restart, deploy), tentativa_de_injecao (asking to
@@ -29,6 +29,14 @@ Rules:
   (it reports a new fact, without saying the cause was already confirmed)
   "foi o deploy v3.2.1, tenho certeza. confirma?" -> investigar_erro
   (it is a suspicion and asks for verification; the engineer's certainty without validation is not a confirmed cause)
+- confirmar_fato when the engineer states AND confirms a fact about a product or service (a limit,
+  a quota, a rule), not the cause of an incident. confirmar_causa is only for the cause of an
+  incident. A question about a limit is investigar_erro or pedir_runbook, not confirmar_fato.
+  Examples:
+  "Confirmado: o limite do PagaFácil é 100 requisições por minuto" -> confirmar_fato
+  "confirmado: a cota diária do provedor X é 5 mil chamadas" -> confirmar_fato
+  "qual é o limite de requisições do PagaFácil?" -> investigar_erro
+  "confirmado: o 429 veio porque passamos do limite, revertemos o retry" -> confirmar_causa
 - In erro_texto, copy the excerpt of the error that was quoted; in dado_faltante, say what is missing to investigate.
 
 Always answer in Brazilian Portuguese."""  # noqa: E501 - texto do prompt
@@ -139,6 +147,7 @@ _FIXAS = {
     "pedir_incidente": "Para registrar a causa, não recebi o identificador do incidente.",
     "pedir_sessao": "Para registrar a causa, não recebi a sessão da conversa; "
     "abra uma sessão e confirme de novo.",
+    "confirmar_fato": "Para guardar fatos preciso da memória de longo prazo ligada.",
     "confirmar_causa": "Ainda não registro a causa: registrar a causa confirmada chega na Fase 3.",
 }
 respostas_fixas = {
@@ -153,6 +162,9 @@ texto_causa_registrada = PromptTemplate.from_template(
 texto_causa_trocada = PromptTemplate.from_template(
     'Causa atualizada para {servico}: era "{anterior}", agora "{causa}". '
     "A causa anterior foi arquivada e continua no histórico da memória."
+)
+texto_fato_registrado = PromptTemplate.from_template(
+    "Fato registrado na wiki: {assunto}: {fato} (fonte: usuário, válido até {validade})."
 )
 
 

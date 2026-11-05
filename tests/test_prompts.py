@@ -32,4 +32,4 @@ def test_respostas_fixas_seguem_em_portugues():
     for chave, modelo in respostas_fixas.items():
         texto = modelo.format()
         assert FECHO not in texto, chave
-        assert any(letra in texto for letra in "ãçõéáíê") or "Olá" in texto or "só" in texto
+        assert any(letra in texto for letra in "ãçõéáíêó") or "Olá" in texto or "só" in texto
