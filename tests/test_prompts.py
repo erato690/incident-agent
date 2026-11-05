@@ -33,3 +33,7 @@ def test_respostas_fixas_seguem_em_portugues():
         texto = modelo.format()
         assert FECHO not in texto, chave
         assert any(letra in texto for letra in "ãçõéáíêó") or "Olá" in texto or "só" in texto
+
+
+def test_nlu_trata_pergunta_de_historico_como_investigacao():
+    assert "comparar_incidente, never fora_do_escopo" in SISTEMA_NLU
