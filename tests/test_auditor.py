@@ -138,7 +138,7 @@ def _veredito(**campos):
 @pytest.mark.parametrize(
     "campos",
     [
-        {"falacias": ["deploy_posterior_ao_sintoma"]},
+        {"falacias": ["sintoma_como_causa"]},
         {"e_coerente": False},
         {"veredito": "refuta"},
     ],
@@ -149,8 +149,8 @@ def test_coerencia_ruim_reprova(campos):
 
 
 def test_falacia_nomeada_no_motivo_e_ignorada_sem_o_verificador_de_falacias():
-    llm = LlmFalso(CERTAS, _veredito(falacias=["deploy_posterior_ao_sintoma"]))
-    assert "deploy_posterior_ao_sintoma" in " ".join(_audita(llm).motivos)
+    llm = LlmFalso(CERTAS, _veredito(falacias=["sintoma_como_causa"]))
+    assert "sintoma_como_causa" in " ".join(_audita(llm).motivos)
     assert _audita(llm, com_falacias=False).aprovada
 
 
@@ -246,3 +246,51 @@ def test_mensagem_do_engenheiro_tambem_e_fonte_da_verdade():
 )
 def test_contagem_com_x_e_horario_em_formatos_diferentes(chave, valor, texto, esperado):
     assert _status(chave, valor, [_passo(texto)]) == esperado
+
+
+def test_observacoes_no_prompt_tem_orcamento_por_ferramenta():
+    """Uma observação longa não empurra as outras para fora do prompt do juiz."""
+    from agente.auditor import _observacoes
+
+    longa = PassoTrajetoria(
+        ferramenta="buscar_logs", duracao_ms=1, tamanho=1, observacao="L" * 9000
+    )
+    curta = PassoTrajetoria(
+        ferramenta="consultar_estatisticas_banco",
+        duracao_ms=1,
+        tamanho=1,
+        observacao="MANUTENÇÃO EM ANDAMENTO: REINDEX TABLE estoque",
+    )
+    texto = _observacoes([longa, curta])
+    assert "REINDEX TABLE estoque" in texto
+
+
+def test_falacia_de_deploy_descartada_quando_a_principal_nao_culpa_deploy():
+    analise = ANALISE_DEPLOY.model_copy(
+        update={
+            "hipoteses": [
+                Hipotese(
+                    causa="REINDEX TABLE estoque bloqueia as consultas",
+                    confianca=0.9,
+                    evidencia="consultar_estatisticas_banco: REINDEX",
+                ),
+                Hipotese(
+                    causa="deploy v3.2.0",
+                    confianca=0.1,
+                    evidencia_insuficiente=True,
+                    dado_que_falta="diff",
+                ),
+            ]
+        }
+    )
+    llm = LlmFalso([_a("tabela", "estoque")], _veredito(falacias=["deploy_posterior_ao_sintoma"]))
+    entrada = {"analise": analise, "trajetoria": [_passo("tabela estoque")], "mensagem": "m"}
+    auditoria = montar_auditor(llm).invoke(entrada)
+    assert "deploy_posterior_ao_sintoma" not in auditoria.coerencia.falacias
+
+
+def test_prompt_do_juiz_traz_a_hipotese_principal_separada():
+    llm = LlmFalso(CERTAS)
+    _audita(llm)
+    humano = llm.recebidos[VereditoCoerencia][-1].content
+    assert "Main hypothesis to judge:" in humano and "cupom nulo" in humano

@@ -138,3 +138,34 @@ def test_agente_classico_constroi_e_invoca(agente):
     saida = executor.invoke({"input": "Quantos incidentes?"})
     assert saida["output"] == "Há incidentes."
     assert saida["intermediate_steps"][0][0].tool == "consultar_sql"
+
+
+def test_postmortem_ignora_resposta_que_so_consultou_o_sql(agente, tmp_path):
+    """Pergunta de histórico (só consultar_sql) não substitui a investigação do incidente."""
+    from agente.schemas import AnaliseIncidente
+
+    sessao = agente.abrir_sessao("pool_esgotado")
+    agente.turno(sessao, "pagamentos-api com NullPointerException")
+    so_sql = ResultadoInvestigacao(
+        analise=AnaliseIncidente.model_validate(
+            {**ANALISE.model_dump(exclude={"acoes_sugeridas"}), "resumo": "contagem do SQL"}
+        ),
+        trajetoria=[PASSO.model_copy(update={"ferramenta": "consultar_sql"})],
+    )
+    agente._guardar(sessao, RespostaTurnoFalsa.de(so_sql))
+    texto = agente.turno(sessao, "gere o post-mortem").fixa.texto
+    assert "contagem do SQL" not in texto and ANALISE.resumo in texto
+
+
+class RespostaTurnoFalsa:
+    @staticmethod
+    def de(resultado):
+        from agente.schemas import AnaliseNLU, RespostaTurno, ResultadoModeracao
+
+        return RespostaTurno(
+            rota="investigacao",
+            moderacao=ResultadoModeracao(status="ok"),
+            nlu=AnaliseNLU(intencao="investigar_erro", servico="pagamentos-api"),
+            analise=resultado.analise,
+            trajetoria=resultado.trajetoria,
+        )

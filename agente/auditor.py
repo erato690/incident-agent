@@ -40,11 +40,13 @@ You are a natural language inference (NLI) auditor for incident analyses.
 
 Task:
 Given the tool observations and the analysis, decide whether the observations support (apoia),
-refute (refuta) or are neutral about (neutro) the main hypothesis. Decide whether the analysis is
-coherent (e_coerente). List the domain fallacies you find:
-- deploy_posterior_ao_sintoma: blames a deploy whose time is LATER than the time the symptom
-  started. Compare the times numerically: a deploy at 13:40 with the first error at 14:00 came
-  BEFORE the symptom and is NOT this fallacy;
+refute (refuta) or are neutral about (neutro) the MAIN hypothesis only (the one given
+separately). Secondary hypotheses with low confidence that the analysis rules out are fine and
+never make the verdict refuta. Decide whether the analysis is coherent (e_coerente). List the
+domain fallacies you find:
+- deploy_posterior_ao_sintoma: the MAIN hypothesis blames a deploy whose time is LATER than the
+  time the symptom started. Compare the times numerically: a deploy at 13:40 with the first
+  error at 14:00 came BEFORE the symptom and is NOT this fallacy;
 - sintoma_como_causa: the main cause is only the symptom (for example "5xx errors", "load
   spikes", "OOMKilled");
 - contradicao_premissa_conclusao: the conclusion contradicts the premises;
@@ -61,7 +63,8 @@ The verdict, e_coerente, the list of fallacies, and a short justification.
 Always answer in Brazilian Portuguese."""
 
 HUMANA_COERENCIA = (
-    "User message:\n{mensagem}\n\nTool observations:\n{observacoes}\n\nAnalysis:\n{analise}"
+    "User message:\n{mensagem}\n\nTool observations:\n{observacoes}\n\n"
+    "Main hypothesis to judge:\n{principal}\n\nFull analysis:\n{analise}"
 )
 
 _VERSAO = re.compile(r"v?\d+(?:\.\d+)+")
@@ -163,12 +166,19 @@ def _deploy_antes_do_sintoma(analise: AnaliseIncidente, trajetoria: list[PassoTr
     return all(deploys[v] <= min(inicios) for v in citados)
 
 
+def _culpa_deploy(analise: AnaliseIncidente) -> bool:
+    """A hipótese principal fala de deploy ou de uma versão? Sem isso não há como culpar deploy."""
+    principal = analise.hipoteses[0]
+    texto = f"{principal.causa} {principal.evidencia or ''}".casefold()
+    return "deploy" in texto or _VERSAO.search(texto) is not None
+
+
 def _descarta_falso_positivo(
     veredito: VereditoCoerencia, analise: AnaliseIncidente, trajetoria: list[PassoTrajetoria]
 ) -> VereditoCoerencia:
     if "deploy_posterior_ao_sintoma" not in veredito.falacias:
         return veredito
-    if not _deploy_antes_do_sintoma(analise, trajetoria):
+    if _culpa_deploy(analise) and not _deploy_antes_do_sintoma(analise, trajetoria):
         return veredito
     restantes = [f for f in veredito.falacias if f != "deploy_posterior_ao_sintoma"]
     return veredito.model_copy(update={"falacias": restantes or ["nenhuma"]})
@@ -198,8 +208,18 @@ def _motivos(
 
 
 def _observacoes(trajetoria: list[PassoTrajetoria]) -> str:
-    blocos = [f"[{p.ferramenta}] {p.observacao}" for p in trajetoria if p.observacao]
-    return "\n---\n".join(blocos)[:LIMITE_OBSERVACOES_PROMPT] or "No observations."
+    """Observações para o juiz, com orçamento igual por ferramenta: uma observação longa (ex.:
+    logs) não empurra as outras (ex.: estatísticas do banco) para fora do prompt."""
+    passos = [p for p in trajetoria if p.observacao]
+    if not passos:
+        return "No observations."
+    cota = max(400, LIMITE_OBSERVACOES_PROMPT // len(passos))
+    return "\n---\n".join(f"[{p.ferramenta}] {p.observacao[:cota]}" for p in passos)
+
+
+def _principal(analise: AnaliseIncidente) -> str:
+    principal = analise.hipoteses[0]
+    return f"{principal.causa} (confiança {principal.confianca}); evidência: {principal.evidencia}"
 
 
 def _texto_analise(analise: AnaliseIncidente) -> str:
@@ -227,6 +247,7 @@ def montar_auditor(llm, com_falacias: bool = True) -> Runnable:
                 {
                     "mensagem": entrada.get("mensagem", ""),
                     "observacoes": _observacoes(trajetoria),
+                    "principal": _principal(analise),
                     "analise": texto,
                 }
             )
