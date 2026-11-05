@@ -10,3 +10,6 @@ ruvector.db
 
 # configuração local do editor
 .vscode/
+
+# saídas geradas (post-mortems)
+saida/

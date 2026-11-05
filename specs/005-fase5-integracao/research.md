@@ -22,3 +22,25 @@
 | — | Agente final | constitution V | `create_agent` como padrão; o clássico numa célula curta | Já decidido |
 | — | Streamlit e Docker | constitution X | Duas telas, Dockerfile e compose | Já decidido; corte permitido: só a tela de uso |
 | — | Post-mortem | constitution VIII | `.md` por template, só a pedido | Já decidido |
+
+## Calibração do auditor com a chave (2026-11-05, 8 cenários, `gpt-4o-mini`)
+
+1. **Primeira rodada: 4 de 8 aprovados, todas as causas certas.** Os falsos positivos vieram de
+   três lugares:
+   - O juiz acusou `deploy_posterior_ao_sintoma` em 3 casos com o deploy ANTES do sintoma, por
+     exemplo 13:40 contra 14:00.
+   - As observações eram cortadas em 2000 caracteres, e contagens como "x338" ficaram de fora.
+   - Os horários escritos pelo engenheiro ("9h10") não entravam na fonte da verdade.
+2. **Correções, todas determinísticas, com testes:**
+   - Uma trava por código descarta `deploy_posterior_ao_sintoma` quando todo deploy citado na
+     hipótese principal saiu antes do primeiro erro dos logs. Os horários vêm das próprias
+     ferramentas; sem dado, vale o juízo do modelo.
+   - A observação guardada vai a 6000 caracteres.
+   - A mensagem do engenheiro entra na fonte da verdade.
+   - Horários são normalizados ("9h10", "09h10" e "9:10" viram "09:10"), e contagens com "x"
+     também ("x338" conta 338).
+   - Ações sugeridas e próximos passos saem da extração, porque não são fatos a checar.
+   - O prompt do juiz manda comparar os horários numericamente.
+3. **Segunda rodada: 7 de 8 aprovados.** O 8º, `gateway_fora`, foi reprovado por "x338", "x372" e
+   "09h10". Os três estão corrigidos pela normalização acima; a confirmação fica para a execução
+   final.

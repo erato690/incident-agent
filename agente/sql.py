@@ -53,6 +53,12 @@ Always answer in Brazilian Portuguese.
 """
 
 
+DESCRICAO_SQL = f"""Queries the history of incidents, deploys and services (read-only, one SELECT).
+Use it for counts and history: how many times, most common cause, deploy history.
+Database schema:
+{ESQUEMA}"""
+
+
 class EntradaSQL(BaseModel):
     """Entrada da ferramenta consultar_sql."""
 
@@ -103,7 +109,7 @@ def _formatar(colunas: list[str], linhas: list[tuple]) -> str:
 def montar_ferramenta_sql(banco: BancoSQL) -> BaseTool:
     """`consultar_sql`: valida (lista negra) e só então consulta o banco."""
 
-    @tool("consultar_sql", args_schema=EntradaSQL)
+    @tool("consultar_sql", args_schema=EntradaSQL, description=DESCRICAO_SQL)
     def consultar_sql(query: str) -> str:
         """Consulta o histórico de incidentes, deploys e serviços (somente leitura, SELECT)."""
 
