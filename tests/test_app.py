@@ -1,4 +1,4 @@
-"""Testes da interface: formatação pura (sem Streamlit nem chave) e compilação do app."""
+"""Testes da interface: formatação pura (sem chave) e compilação do app web."""
 
 import json
 import py_compile
@@ -102,16 +102,16 @@ def test_cenarios_reais():
     assert "banco_lento_com_deploy" in ids
 
 
-def test_app_compila():
-    py_compile.compile(str(RAIZ / "app" / "app.py"), doraise=True)
+def test_app_web_compila():
+    py_compile.compile(str(RAIZ / "app" / "main.py"), doraise=True)
 
 
-def test_app_sem_chave_mostra_aviso(monkeypatch):
-    from streamlit.testing.v1 import AppTest
+def test_app_sem_chave_mostra_aviso():
+    from fastapi.testclient import TestClient
 
-    for var in ("OPENAI_API_KEY", "DEEPSEEK_API_KEY"):
-        monkeypatch.setenv(var, "")
-    monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: False)
-    app = AppTest.from_file(str(RAIZ / "app" / "app.py"), default_timeout=20).run()
-    assert not app.exception
-    assert "OPENAI_API_KEY" in app.warning[0].value
+    from app.main import criar_app
+
+    cliente = TestClient(criar_app(obter_agente=lambda: None, chave_configurada=lambda: False))
+    sessao = cliente.post("/api/sessoes", json={"cenario": "rate_limit"}).json()
+    resposta = cliente.post(f"/api/sessoes/{sessao['id']}/mensagens", json={"texto": "oi"})
+    assert resposta.status_code == 503 and "OPENAI_API_KEY" in resposta.json()["detail"]

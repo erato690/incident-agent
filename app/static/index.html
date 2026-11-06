@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agente de incidentes</title>
+  <meta name="color-scheme" content="light dark">
+  <script>
+    // Aplica o tema salvo antes do primeiro desenho (evita piscar).
+    try {
+      var tema = localStorage.getItem("tema");
+      if (tema === "claro" || tema === "escuro") document.documentElement.dataset.tema = tema;
+    } catch (e) {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <a class="pular" href="#entrada">Pular para a caixa de mensagem</a>
+  <svg width="0" height="0" class="sr-only" aria-hidden="true">
+    <symbol id="i-mais" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-enviar" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="i-fechar" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-copiar" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
+    <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-lua" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+    <symbol id="i-analise" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></symbol>
+    <symbol id="i-documento" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></symbol>
+    <symbol id="i-alerta" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+    <symbol id="i-pergunta" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+    <symbol id="i-ok" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-baixar" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></symbol>
+  </svg>
+
+  <div class="app">
+    <aside id="lateral" class="lateral" aria-label="Conversas">
+      <div class="lateral-topo">
+        <p class="marca"><span class="marca-ponto" aria-hidden="true"></span>Agente de incidentes</p>
+        <button type="button" class="icone so-celular" id="fechar-lateral" aria-label="Fechar lista de conversas">
+          <svg aria-hidden="true"><use href="#i-fechar"/></svg>
+        </button>
+      </div>
+      <label class="rotulo" for="cenario">Cenário da loja</label>
+      <select id="cenario"></select>
+      <button type="button" class="botao primario largo" id="nova">
+        <svg aria-hidden="true"><use href="#i-mais"/></svg>Nova conversa
+      </button>
+      <h2 class="rotulo secao-lateral">Conversas</h2>
+      <nav aria-label="Conversas anteriores">
+        <ul id="sessoes" class="sessoes"></ul>
+      </nav>
+      <p class="rodape-lateral">O agente só lê e sugere; nunca executa ações em produção.</p>
+    </aside>
+    <div class="cortina" id="cortina" hidden></div>
+
+    <main class="principal">
+      <header class="topo">
+        <button type="button" class="icone so-celular" id="abrir-lateral" aria-label="Abrir lista de conversas" aria-controls="lateral" aria-expanded="false">
+          <svg aria-hidden="true"><use href="#i-menu"/></svg>
+        </button>
+        <div class="topo-titulo">
+          <h1 id="titulo">Nova conversa</h1>
+          <p id="subtitulo" class="sutil"></p>
+        </div>
+        <div class="topo-acoes">
+          <button type="button" class="botao" id="postmortem" disabled>
+            <svg aria-hidden="true"><use href="#i-documento"/></svg><span class="esconde-celular">Post-mortem</span>
+          </button>
+          <button type="button" class="botao" id="abrir-analise" aria-controls="analise" aria-expanded="false">
+            <svg aria-hidden="true"><use href="#i-analise"/></svg><span class="esconde-celular">Análise</span>
+          </button>
+          <button type="button" class="icone" id="tema" aria-label="Alternar tema claro e escuro">
+            <svg aria-hidden="true" class="so-escuro"><use href="#i-sol"/></svg>
+            <svg aria-hidden="true" class="so-claro"><use href="#i-lua"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div id="aviso-chave" class="alerta alerta-erro faixa" role="alert" hidden></div>
+
+      <div class="rolagem" id="rolagem">
+        <section id="vazio" class="vazio">
+          <h2>Como posso ajudar?</h2>
+          <p class="sutil">Descreva o incidente ou cole o erro. Eu consulto logs, métricas, deploys e o histórico, e respondo com a causa provável e as evidências.</p>
+          <div class="sugestoes" id="sugestoes"></div>
+        </section>
+        <div id="mensagens" class="mensagens" role="log" aria-label="Mensagens da conversa"></div>
+      </div>
+
+      <form id="formulario" class="compositor" novalidate>
+        <div class="caixa">
+          <label for="entrada" class="sr-only">Mensagem para o agente</label>
+          <textarea id="entrada" rows="1" maxlength="8000" placeholder="Descreva o incidente ou pergunte" autocomplete="off"></textarea>
+          <button type="submit" class="icone enviar" id="enviar" aria-label="Enviar mensagem" disabled>
+            <svg aria-hidden="true"><use href="#i-enviar"/></svg>
+          </button>
+        </div>
+        <p class="dica sutil">Enter envia · Shift+Enter quebra a linha</p>
+      </form>
+    </main>
+
+    <aside id="analise" class="painel" aria-labelledby="analise-titulo" hidden>
+      <div class="painel-topo">
+        <h2 id="analise-titulo">Análise</h2>
+        <button type="button" class="icone" id="fechar-analise" aria-label="Fechar análise">
+          <svg aria-hidden="true"><use href="#i-fechar"/></svg>
+        </button>
+      </div>
+      <div id="analise-conteudo" class="painel-conteudo"></div>
+    </aside>
+  </div>
+  <div id="anuncio" class="sr-only" role="status" aria-live="polite"></div>
+</body>
+</html>

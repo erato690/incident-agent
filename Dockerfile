@@ -8,10 +8,9 @@ RUN pip install --no-cache-dir -r requirements-app.txt
 
 COPY agente/ agente/
 COPY app/ app/
-COPY .streamlit/ .streamlit/
 COPY dados/ dados/
 COPY dados_dummy/ dados_dummy/
 COPY scripts/ scripts/
 
 EXPOSE 8501
-CMD streamlit run app/app.py --server.port ${PORT:-8501} --server.address 0.0.0.0
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8501}

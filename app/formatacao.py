@@ -87,7 +87,7 @@ def cenarios_disponiveis(pasta: Path | str) -> list[dict]:
     return sorted(itens, key=lambda c: c["titulo"])
 
 
-# --- Apoio à tela de chat (funções puras; o app só desenha) ---
+# --- Apoio à API do chat (funções puras) ---
 
 ROTULO_FERRAMENTA = {
     "buscar_logs": "logs da loja",
@@ -104,41 +104,9 @@ ROTULO_FERRAMENTA = {
     "consultar_sql": "histórico de incidentes (SQL)",
 }
 
-# Cores dos selos de markdown do Streamlit (`:cor-badge[texto]`); o texto sempre diz o nível.
-COR_SEVERIDADE = {"baixa": "blue", "media": "orange", "alta": "red", "critica": "red"}
-TEXTO_SEVERIDADE = {"baixa": "baixa", "media": "média", "alta": "alta", "critica": "crítica"}
-COR_RISCO = {"baixo": "green", "medio": "orange", "alto": "red"}
-TEXTO_RISCO = {"baixo": "baixo", "medio": "médio", "alto": "alto"}
-
 
 def rotulo_ferramenta(nome: str) -> str:
     return ROTULO_FERRAMENTA.get(nome, nome)
-
-
-def selo(texto: str, cor: str) -> str:
-    """Selo de markdown do Streamlit; colchetes no texto são escapados."""
-    limpo = texto.replace("[", "(").replace("]", ")")
-    return f":{cor}-badge[{limpo}]"
-
-
-def selo_severidade(severidade: str) -> str:
-    return selo(
-        f"Severidade {TEXTO_SEVERIDADE.get(severidade, severidade)}",
-        COR_SEVERIDADE.get(severidade, "gray"),
-    )
-
-
-def selo_risco(risco: str) -> str:
-    return selo(f"Risco {TEXTO_RISCO.get(risco, risco)}", COR_RISCO.get(risco, "gray"))
-
-
-def selo_auditor(resposta: RespostaTurno) -> str:
-    auditoria = resposta.auditoria
-    if auditoria is None:
-        return selo("Não auditada", "gray")
-    if auditoria.aprovada:
-        return selo("Auditor aprovou", "green")
-    return selo("Auditor reprovou", "red")
 
 
 def dados_faltantes(resposta: RespostaTurno) -> list[str]:
@@ -158,30 +126,6 @@ def fontes_consultadas(resposta: RespostaTurno) -> list[str]:
     """Rótulos das ferramentas chamadas, na ordem da primeira chamada."""
     nomes = dict.fromkeys(p.ferramenta for p in resposta.trajetoria)
     return [rotulo_ferramenta(n) for n in nomes]
-
-
-def linhas_passos(trajetoria) -> list[str]:
-    """Uma linha legível por chamada de ferramenta (usada no estado 'investigando')."""
-    linhas = []
-    for i, p in enumerate(trajetoria, start=1):
-        rotulo = rotulo_ferramenta(p.ferramenta)
-        linha = f"{i}. Consultou {rotulo} (`{p.ferramenta}`, {p.duracao_ms} ms)"
-        if p.erro:
-            linha += " — falhou"
-        elif p.reserva:
-            linha += " — usou dados gravados"
-        linhas.append(linha)
-    return linhas
-
-
-def sugestoes_iniciais(servico: str | None) -> list[str]:
-    alvo = servico or "o serviço"
-    return [
-        f"O {alvo} está com erros desde as 14h. Qual a causa provável?",
-        f"Teve deploy do {alvo} antes do erro começar?",
-        "Isso já aconteceu antes? Qual foi a causa?",
-        f"O que eu confirmo antes de mexer no {alvo}?",
-    ]
 
 
 def mensagem_erro(excecao: BaseException) -> str:
