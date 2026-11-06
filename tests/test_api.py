@@ -148,7 +148,7 @@ def test_enviar_mensagem_devolve_resposta_estruturada(cliente):
     assert resposta["analise"]["hipoteses"][0]["causa"] == "Deploy v3.2.1"
     assert resposta["analise"]["acoes_sugeridas"][0]["status"] == "sugerida (não executada)"
     assert resposta["aviso"] == "Hora divergente"
-    assert corpo["dados_faltantes"] == ["métricas do pool"]
+    assert corpo["dados_faltantes"] == []  # dado da hipótese secundária não vira pergunta
     assert corpo["fontes"] == ["logs da loja"]
     assert "Deploy v3.2.1" in corpo["texto"]
     aberta = cliente.get(f"/api/sessoes/{sessao['id']}").json()

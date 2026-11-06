@@ -110,10 +110,13 @@ def rotulo_ferramenta(nome: str) -> str:
 
 
 def dados_faltantes(resposta: RespostaTurno) -> list[str]:
-    """Dados que o engenheiro precisa trazer: das hipóteses e do NLU, sem repetição."""
+    """Perguntas ao engenheiro: o dado faltante do NLU e o da hipótese principal, quando ela não
+    tem evidência. O dado que falta das hipóteses secundárias fica junto delas."""
     itens: list[str] = []
     if resposta.analise is not None:
-        itens += [h.dado_que_falta for h in resposta.analise.hipoteses if h.dado_que_falta]
+        principal = resposta.analise.hipoteses[0]
+        if principal.evidencia_insuficiente and principal.dado_que_falta:
+            itens.append(principal.dado_que_falta)
     if resposta.nlu is not None and getattr(resposta.nlu, "dado_faltante", None):
         itens.append(resposta.nlu.dado_faltante)
     unicos: dict[str, str] = {}

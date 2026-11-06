@@ -219,9 +219,12 @@ def test_sugerir_acao_chamada_por_codigo_quando_o_modelo_esquece():
     ferramentas = montar_ferramentas(fonte) + [_ferramenta_acao_espia(chamadas)]
     modelo = roteiro(chamada("buscar_logs", {"servico": "pagamentos-api"}, "c1"), JSON_OK)
     resultado = montar_investigador(modelo, ferramentas).invoke(_estado())
-    assert chamadas == [
-        {"diagnostico": "deploy v2.14.0 quebrou o cupom", "servico": "pagamentos-api"}
-    ]
+    # o diagnóstico leva a evidência da hipótese principal, para a ação citar os números
+    diagnostico = (
+        "deploy v2.14.0 quebrou o cupom. "
+        "Evidência: buscar_logs: NullPointerException em CupomService.aplicar (x3)"
+    )
+    assert chamadas == [{"diagnostico": diagnostico, "servico": "pagamentos-api"}]
     passo = resultado.trajetoria[-1]
     assert passo.ferramenta == "sugerir_acao" and passo.reserva is True
     assert "não chamou" in passo.motivo_reserva

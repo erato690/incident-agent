@@ -226,7 +226,8 @@ function blocoCausa(analise, mensagem) {
     const ul = el("ul", {});
     for (const h of outras) {
       ul.append(el("li", {}, el("strong", {}, h.causa), ` · confiança ${Math.round(h.confianca * 100)}%. `,
-        el("span", { classe: "sutil" }, `Evidência: ${h.evidencia || "sem evidência direta"}`)));
+        el("span", { classe: "sutil" }, `Evidência: ${h.evidencia || "sem evidência direta"}`),
+        h.dado_que_falta ? el("span", { classe: "sutil" }, ` Falta: ${h.dado_que_falta}`) : null));
     }
     detalhes.append(ul);
     secao.append(detalhes);
