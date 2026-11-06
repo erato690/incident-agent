@@ -6,7 +6,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import BaseTool, tool
 
 from agente.ferramentas import _contexto, _observacao
-from agente.qualidade import acao_de_consulta
+from agente.qualidade import ordenar_e_filtrar_acoes
 from agente.recuperacao import buscar_com_score
 from agente.schemas import ListaAcoes
 
@@ -28,6 +28,15 @@ Rules:
   logs", "check the metrics" or "consult the documented limit" are forbidden.
 - Use the numbers in the diagnosis and evidence. Each reason cites the number that supports the
   action (e.g. "Retry-After: 30", "limit 100/min", "150 responses 429", "peak 236 req/min").
+- Order: first the action that undoes the confirmed cause (rollback of the guilty deploy, or
+  restore the previous configuration value shown in the diff), then the lowest-risk action that
+  remains, then containment. When the diff shows the previous value, restoring exactly that value
+  comes before inventing a new one (e.g. pool_max went from 20 to 10: restore 20, do not set 15).
+- Each action must attack the observed mechanism: if the logs show requests waiting for a free
+  connection, shortening query timeouts does not fix it.
+- No conditional or hypothetical actions ("if the peak is legitimate", "if needed", "in case it
+  persists") and no action whose reason is not in the evidence. A high-risk action needs direct
+  evidence.
 - Example for a rate limit of an external API: respect Retry-After with exponential backoff;
   throttle the calls below the limit per account; queue the requests; ask the provider for a
   higher quota with the observed volume.
@@ -43,9 +52,11 @@ Always answer in Brazilian Portuguese."""
 
 HUMANA_ACAO = "Service: {servico}\n\nDiagnosis: {diagnostico}\n\nRunbook excerpts:\n{runbook}"
 CORRECAO_ACAO = (
-    "These actions were rejected because they only check data the agent already read: "
-    "{rejeitadas}. Propose concrete remediation actions instead, each one citing the number "
-    "from the diagnosis that supports it. Always answer in Brazilian Portuguese."
+    "These actions were rejected because they only check data the agent already read, are "
+    "conditional, or their reason cites no data from the diagnosis: {rejeitadas}. Propose "
+    "concrete remediation actions instead, the one that undoes the cause first, each one citing "
+    "the value, version or count from the diagnosis that supports it. "
+    "Always answer in Brazilian Portuguese."
 )
 
 
@@ -76,14 +87,17 @@ def montar_ferramenta_acao(llm, indice: FAISS) -> BaseTool:
 
     def _propor(entrada: dict) -> list:
         """Ações concretas: ação que só manda olhar dados é recusada, com uma nova tentativa."""
+        diagnostico = entrada["diagnostico"]
         primeiras = cadeia.invoke(entrada).acoes
-        rejeitadas = [a.acao for a in primeiras if acao_de_consulta(a.acao)]
-        boas = [a for a in primeiras if not acao_de_consulta(a.acao)]
+        boas = ordenar_e_filtrar_acoes(primeiras, diagnostico, "")
+        mantidas = {a.acao for a in boas}
+        rejeitadas = [a.acao for a in primeiras if a.acao not in mantidas]
         if rejeitadas:
             novas = correcao.invoke({**entrada, "rejeitadas": "; ".join(rejeitadas)}).acoes
-            vistas = {a.acao for a in boas}
-            boas += [a for a in novas if not acao_de_consulta(a.acao) and a.acao not in vistas]
-        return boas[:3]
+            boas = ordenar_e_filtrar_acoes(
+                [*boas, *(a for a in novas if a.acao not in mantidas)], diagnostico, ""
+            )
+        return boas
 
     @tool
     def sugerir_acao(diagnostico: str, servico: str, config: RunnableConfig = None) -> str:

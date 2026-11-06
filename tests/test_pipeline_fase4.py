@@ -219,3 +219,9 @@ def test_citar_fatos_poe_fonte_e_data_na_hipotese_com_mais_palavras_em_comum():
     assert evidencia.count("consultar_wiki: PagaFácil:") == 1
     assert "(fonte documentacao, verificado em 2026-11-05)" in evidencia
     assert "consultar_wiki" not in (citada.hipoteses[1].evidencia or "")
+
+
+def test_prompt_nlu_separa_resumo_da_conversa_do_post_mortem():
+    texto = " ".join(SISTEMA_NLU.split())
+    assert '"resume o que sabemos até aqui" -> investigar_erro' in texto
+    assert "dado_faltante is only for information that ONLY the engineer knows" in texto

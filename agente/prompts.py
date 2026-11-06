@@ -42,6 +42,9 @@ Rules:
   Examples:
   "gera o post-mortem desse incidente" -> gerar_relatorio
   "escreve o relatório do incidente" -> gerar_relatorio
+  A summary of the conversation so far is investigar_erro, not gerar_relatorio: gerar_relatorio is
+  only an explicit request for the post-mortem or incident report document.
+  "resume o que sabemos até aqui" -> investigar_erro
 - A question about the incident history (how many incidents, most common cause or category,
   past deploys of a service) is comparar_incidente, never fora_do_escopo.
   Examples:
@@ -72,10 +75,11 @@ prompt_nlu = ChatPromptTemplate.from_messages(
 
 
 def montar_nlu(llm):
-    """NLU: prompt | LLM com saída estruturada AnaliseNLU."""
+    """NLU: prompt | LLM com saída estruturada AnaliseNLU (modelo do NLU: `llm_do_nlu`)."""
+    from agente.config import llm_do_nlu
     from agente.schemas import AnaliseNLU
 
-    return prompt_nlu | llm.with_structured_output(AnaliseNLU)
+    return prompt_nlu | llm_do_nlu(llm).with_structured_output(AnaliseNLU)
 
 
 SISTEMA_RESOLUCAO = """You manage the long-term incident memory of an on-call assistant.
