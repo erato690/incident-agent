@@ -270,3 +270,12 @@ def test_front_chama_so_funcoes_definidas():
     faltando = sorted(n for n in chamadas - definidas - nativas if n not in js.split("=>")[0])
     faltando = [n for n in faltando if not re.search(rf"\b{n}\s*=", js)]
     assert not faltando, faltando
+
+
+def test_cenario_padrao_vem_da_variavel_cenario(agente, monkeypatch):
+    monkeypatch.setenv("CENARIO", "rate_limit")
+    cliente = TestClient(criar_app(obter_agente=lambda: agente, chave_configurada=lambda: True))
+    assert cliente.get("/api/estado").json()["cenario_padrao"] == "rate_limit"
+    monkeypatch.setenv("CENARIO", "nao_existe")
+    cliente = TestClient(criar_app(obter_agente=lambda: agente, chave_configurada=lambda: True))
+    assert cliente.get("/api/estado").json()["cenario_padrao"] is None
