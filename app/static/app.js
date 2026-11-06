@@ -328,6 +328,19 @@ function seloAuditor(resposta) {
   return a.veredito ? el("span", { classe: "chips" }, selo, chipVeredito(a.veredito)) : selo;
 }
 
+const STATUS_TECNICA = { ok: ["ok", "chip-ok"], falha: ["falhou", "chip-erro"], nao_se_aplica: ["não se aplica", ""] };
+
+// As quatro técnicas do auditor, uma linha cada (trajetória, fatos, NLI, extração com Pydantic).
+function blocoTecnicas(tecnicas, recolhido) {
+  const lista = el("ul", { classe: "tecnicas" }, tecnicas.map((t) => {
+    const [rotulo, classe] = STATUS_TECNICA[t.status] || [t.status, ""];
+    return el("li", {}, chip(rotulo, classe), el("strong", {}, t.tecnica), el("span", { classe: "sutil" }, t.detalhe));
+  }));
+  if (!recolhido) return lista;
+  const ok = tecnicas.filter((t) => t.status === "ok").length;
+  return el("details", { classe: "tecnicas-auditor" }, el("summary", {}, `Auditoria em 4 técnicas: ${ok} de ${tecnicas.length} ok`), lista);
+}
+
 function botaoCopiar(texto) {
   const botao = el("button", { type: "button", classe: "botao pequeno", "aria-label": "Copiar resposta" }, icone("copiar"), "Copiar");
   botao.addEventListener("click", async () => {
@@ -413,6 +426,7 @@ function cartaoAgente(mensagem) {
     rodape.append(el("button", { type: "button", classe: "botao pequeno", onclick: () => abrirAnalise(mensagem.id) }, icone("analise"), "Ver análise"));
   }
   rodape.append(botaoCopiar(mensagem.texto || ""));
+  if (mensagem.tecnicas && mensagem.tecnicas.length) cartao.append(blocoTecnicas(mensagem.tecnicas, true));
   cartao.append(rodape);
   return cartao;
 }
@@ -634,6 +648,8 @@ async function desenharAnalise() {
       el("div", { classe: "metrica" }, el("strong", {}, segundos(media)), el("span", {}, "duração média"))),
     el("div", {}, el("label", { classe: "rotulo", for: "turno-analise" }, "Turno"), seletor),
     el("section", { classe: "bloco" }, el("h3", {}, `Trajetória do turno ${indice + 1}`), blocoTrajetoria(escolhida.resposta.trajetoria)),
+    el("section", { classe: "bloco" }, el("h3", {}, "As 4 técnicas do auditor"),
+      escolhida.tecnicas && escolhida.tecnicas.length ? blocoTecnicas(escolhida.tecnicas, false) : el("p", { classe: "sutil" }, "Turno sem auditoria.")),
     el("section", { classe: "bloco" }, el("h3", {}, "Veredito do auditor"), blocoAuditoria(escolhida.resposta.auditoria)));
 }
 

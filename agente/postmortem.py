@@ -221,7 +221,12 @@ def _rodape(dados: DadosPostMortem) -> str:
     situacao = "aprovada" if auditoria.aprovada else "reprovada"
     veredito = f", veredito {auditoria.veredito}" if auditoria.veredito else ""
     quando = f" (auditada em {dados.auditada_em:%Y-%m-%d %H:%M})" if dados.auditada_em else ""
-    return f"Auditoria: {situacao}{veredito}{quando}."
+    from agente.auditor import resumo_tecnicas
+
+    linhas = [f"Auditoria: {situacao}{veredito}{quando}."]
+    for tecnica in resumo_tecnicas(auditoria):
+        linhas.append(f"- {tecnica['tecnica']}: {tecnica['status']} ({tecnica['detalhe']})")
+    return "\n".join(linhas)
 
 
 def gerar_postmortem(dados: DadosPostMortem) -> str:

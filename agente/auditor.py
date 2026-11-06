@@ -1,5 +1,6 @@
 """Auditor de verificação cognitiva (downstream): fact-check determinístico + NLI com LLM."""
 
+import json
 import re
 
 from langchain_core.prompts import ChatPromptTemplate
@@ -10,6 +11,8 @@ from agente.schemas import (
     AnaliseIncidente,
     Auditoria,
     ChecagemFato,
+    ChecagemTrajetoria,
+    ItemTrajetoria,
     ListaAfirmacoes,
     PassoTrajetoria,
     VereditoCoerencia,
@@ -109,10 +112,27 @@ def _numero_presente(numero: str, fonte: str) -> bool:
     return re.search(rf"(?<![\d.]){re.escape(numero)}(?!\d|\.\d)", fonte) is not None
 
 
+TOLERANCIA_NUMERO = 0.05  # contagens, durações e percentuais: 5% de margem (só números >= 10)
+
+
+def _como_numero(texto: str) -> float:
+    return float(texto.replace(",", "."))
+
+
 def _status_numero(valor: str, fonte: str) -> str:
-    achado = _NUMERO.search(valor)
-    presente = achado and _numero_presente(achado.group(), fonte)
-    return "confirmada" if presente else "nao_verificada"
+    achado = re.search(r"\d+(?:[.,]\d+)?", valor)
+    if not achado:
+        return "nao_verificada"
+    if _numero_presente(achado.group(), fonte):
+        return "confirmada"
+    afirmado = _como_numero(achado.group())
+    if afirmado < 10:
+        return "nao_verificada"
+    for numero in re.findall(r"(?<![\d.,])\d+(?:[.,]\d+)?(?![\d])", fonte):
+        observado = _como_numero(numero)
+        if observado and abs(afirmado - observado) / observado <= TOLERANCIA_NUMERO:
+            return "aproximada"
+    return "nao_verificada"
 
 
 def _status(afirmacao: Afirmacao, fonte: str) -> str:
@@ -130,6 +150,7 @@ _FONTES = {
     "confirmada": "valor presente nas observações",
     "contraditoria": "outro valor do mesmo tipo presente nas observações",
     "nao_verificada": "valor não encontrado nas observações",
+    "aproximada": "valor dentro da tolerância de 5% de um valor das observações",
 }
 
 
@@ -141,7 +162,8 @@ def checar_fatos(
     checagens = []
     for afirmacao in afirmacoes:
         status = _status(afirmacao, fonte)
-        checagens.append(ChecagemFato(afirmacao=afirmacao, status=status, fonte=_FONTES[status]))
+        final = "confirmada" if status == "aproximada" else status
+        checagens.append(ChecagemFato(afirmacao=afirmacao, status=final, fonte=_FONTES[status]))
     return checagens
 
 
@@ -198,6 +220,168 @@ def veredito_final(checagens: list[ChecagemFato], coerencia: VereditoCoerencia) 
     if coerencia.veredito == "apoia" and muitas_sem_prova:
         return "neutra"
     return coerencia.veredito
+
+
+# --- Técnica 1: auditoria de trajetória (determinística) ---
+
+FERRAMENTAS_DE_LEITURA = {
+    "buscar_logs",
+    "buscar_metricas",
+    "listar_deploys",
+    "comparar_versoes",
+    "consultar_estatisticas_banco",
+    "consultar_memoria",
+    "buscar_documentacao",
+    "consultar_wiki",
+    "sugerir_acao",
+    "consultar_sql",
+}
+FERRAMENTAS_DE_ESCRITA = {"gravar_episodio", "gravar_fato"}
+_CULPA_MUDANCA = re.compile(r"\b(deploy|vers[aã]o|v\d+(?:\.\d+)+)\b", re.IGNORECASE)
+_VERSAO_CITADA = re.compile(r"\bv\d+(?:\.\d+)+\b")
+
+
+def _item(criterio: str, problemas: list[tuple[str, str]], ok: str) -> ItemTrajetoria:
+    """Status do critério: o pior problema encontrado (grave > falha), ou ok."""
+    graves = [texto for nivel, texto in problemas if nivel == "grave"]
+    falhas = [texto for nivel, texto in problemas if nivel == "falha"]
+    if graves:
+        return ItemTrajetoria(criterio=criterio, status="grave", detalhe="; ".join(graves + falhas))
+    if falhas:
+        return ItemTrajetoria(criterio=criterio, status="falha", detalhe="; ".join(falhas))
+    return ItemTrajetoria(criterio=criterio, status="ok", detalhe=ok)
+
+
+def auditar_trajetoria(
+    analise: AnaliseIncidente, trajetoria: list[PassoTrajetoria], mensagem: str = ""
+) -> ChecagemTrajetoria:
+    """Confere a trajetória contra a hipótese principal, sem modelo:
+    (a) toda ferramenta citada na evidência foi chamada; (b) os argumentos batem com a pergunta e
+    com os deploys listados; (c) as ferramentas mínimas do tipo de incidente foram chamadas, sem
+    repetição à toa; (d) nenhuma ferramenta de escrita foi chamada na investigação."""
+    principal = analise.hipoteses[0]
+    texto_principal = f"{principal.causa} {principal.evidencia or ''}"
+    chamadas = [p.ferramenta for p in trajetoria]
+    conhecidas = set(chamadas) & FERRAMENTAS_DE_LEITURA
+    deploys = " ".join(p.observacao or "" for p in trajetoria if p.ferramenta == "listar_deploys")
+
+    citadas = {f for f in FERRAMENTAS_DE_LEITURA if f in (principal.evidencia or "")}
+    faltando = sorted(citadas - set(chamadas))
+    fontes = _item(
+        "fontes_citadas",
+        [("grave", f"citada na evidência e não chamada: {f}") for f in faltando],
+        f"{len(citadas)} ferramenta(s) citada(s), todas chamadas",
+    )
+
+    problemas: list[tuple[str, str]] = []
+    if "listar_deploys" in chamadas:
+        for versao in sorted(set(_VERSAO_CITADA.findall(texto_principal))):
+            if versao not in deploys:
+                problemas.append(
+                    ("grave", f"versão {versao} citada e ausente dos deploys listados")
+                )
+    contexto = f"{mensagem} {analise.servico or ''} {analise.model_dump_json()}"
+    for passo in trajetoria:
+        servico = passo.argumentos.get("servico")
+        if servico and servico not in contexto:
+            problemas.append(("falha", f"{passo.ferramenta} consultou {servico}, fora da pergunta"))
+        if passo.ferramenta == "comparar_versoes" and deploys:
+            for chave in ("tag_base", "tag_nova"):
+                tag = str(passo.argumentos.get(chave, ""))
+                if tag and tag not in deploys:
+                    problemas.append(("falha", f"comparar_versoes com {tag}, fora dos deploys"))
+    argumentos = _item("argumentos", problemas, "argumentos coerentes com a pergunta e os deploys")
+
+    if not conhecidas:
+        minimas = ItemTrajetoria(
+            criterio="ferramentas_minimas",
+            status="nao_se_aplica",
+            detalhe="trajetória sem ferramentas de investigação",
+        )
+    else:
+        problemas = []
+        if "buscar_logs" not in chamadas:
+            problemas.append(("grave", "investigação sem buscar_logs"))
+        if _CULPA_MUDANCA.search(principal.causa):
+            if "listar_deploys" not in chamadas:
+                problemas.append(("grave", "culpa um deploy sem listar_deploys"))
+            elif "comparar_versoes" not in chamadas:
+                problemas.append(("falha", "culpa um deploy sem ler o diff (comparar_versoes)"))
+        assinaturas = [(p.ferramenta, json.dumps(p.argumentos, sort_keys=True)) for p in trajetoria]
+        for assinatura in sorted(set(assinaturas)):
+            if assinaturas.count(assinatura) >= 3:
+                problemas.append(
+                    ("falha", f"{assinatura[0]} chamada 3 vezes com os mesmos argumentos")
+                )
+        minimas = _item("ferramentas_minimas", problemas, "ferramentas esperadas chamadas")
+
+    escritas = sorted(set(chamadas) & FERRAMENTAS_DE_ESCRITA)
+    escrita = _item(
+        "sem_escrita",
+        [("grave", f"ferramenta de escrita na investigação: {f}") for f in escritas],
+        "só ferramentas de leitura",
+    )
+    itens = [fontes, argumentos, minimas, escrita]
+    return ChecagemTrajetoria(itens=itens, aprovada=all(i.status != "grave" for i in itens))
+
+
+def resumo_tecnicas(auditoria: Auditoria) -> list[dict]:
+    """As quatro técnicas do auditor, separadas: status (ok, falha, nao_se_aplica) e detalhe."""
+    if auditoria.coerencia is None and not auditoria.checagens and auditoria.trajetoria is None:
+        return []
+    tecnicas = []
+    trajetoria = auditoria.trajetoria
+    if trajetoria is None:
+        tecnicas.append(_tecnica("Auditoria de trajetória", "nao_se_aplica", "não executada"))
+    else:
+        contagem = {
+            s: sum(i.status == s for i in trajetoria.itens) for s in ("ok", "falha", "grave")
+        }
+        detalhe = (
+            f"{contagem['ok']} de {len(trajetoria.itens)} critérios ok, {contagem['falha']} "
+            f"com falha leve, {contagem['grave']} grave(s)"
+        )
+        tecnicas.append(
+            _tecnica("Auditoria de trajetória", "ok" if trajetoria.aprovada else "falha", detalhe)
+        )
+    verificaveis = [c for c in auditoria.checagens if c.afirmacao.chave != "outro"]
+    confirmadas = sum(c.status == "confirmada" for c in verificaveis)
+    contraditorias = sum(c.status == "contraditoria" for c in verificaveis)
+    sem_prova = len(verificaveis) - confirmadas - contraditorias
+    fatos_ok = not contraditorias and (
+        not verificaveis or sem_prova / len(verificaveis) <= CORTE_NAO_VERIFICADAS
+    )
+    tecnicas.append(
+        _tecnica(
+            "Checagem de fatos determinística",
+            "ok" if fatos_ok else "falha",
+            f"{confirmadas} de {len(verificaveis)} confirmadas, {contraditorias} contraditória(s)",
+        )
+    )
+    coerencia = auditoria.coerencia
+    falacias = [f for f in (coerencia.falacias if coerencia else []) if f != "nenhuma"]
+    nli_ok = auditoria.veredito == "apoia" and not falacias
+    detalhe = f"veredito {auditoria.veredito or 'sem veredito'}; falácias: "
+    tecnicas.append(
+        _tecnica(
+            "Inferência lógica (NLI)",
+            "ok" if nli_ok else "falha",
+            detalhe + (", ".join(falacias) or "nenhuma"),
+        )
+    )
+    extraidas = len(auditoria.checagens)
+    tecnicas.append(
+        _tecnica(
+            "Extração com Pydantic",
+            "falha" if auditoria.erro else "ok",
+            f"{extraidas} afirmação(ões) extraída(s) em ListaAfirmacoes; relatório em Auditoria",
+        )
+    )
+    return tecnicas
+
+
+def _tecnica(nome: str, status: str, detalhe: str) -> dict:
+    return {"tecnica": nome, "status": status, "detalhe": detalhe}
 
 
 def _motivos(
@@ -261,6 +445,7 @@ def montar_auditor(llm, com_falacias: bool = True) -> Runnable:
 
     def auditar(entrada: dict) -> Auditoria:
         analise, trajetoria = entrada["analise"], entrada["trajetoria"]
+        trajeto = auditar_trajetoria(analise, trajetoria, entrada.get("mensagem", ""))
         texto = _texto_analise(analise)
         try:
             afirmacoes = extrai.invoke({"analise": texto}).afirmacoes
@@ -274,15 +459,24 @@ def montar_auditor(llm, com_falacias: bool = True) -> Runnable:
                 }
             )
         except Exception as erro:  # noqa: BLE001 - erro do modelo nunca derruba o turno
-            return Auditoria(aprovada=False, erro=str(erro), motivos=[f"não auditada: {erro}"])
+            return Auditoria(
+                aprovada=False,
+                erro=str(erro),
+                trajetoria=trajeto,
+                motivos=[f"não auditada: {erro}"],
+            )
         veredito = _descarta_falso_positivo(veredito, analise, trajetoria)
         final = veredito_final(checagens, veredito)
         motivos = _motivos(checagens, veredito, com_falacias, final)
+        graves = [i.detalhe for i in trajeto.itens if i.status == "grave"]
+        if graves:
+            motivos.append(f"auditoria de trajetória: {'; '.join(graves)}")
         return Auditoria(
             aprovada=final == "apoia" and not motivos,
             veredito=final,
             veredito_rebaixado=final != veredito.veredito,
             checagens=checagens,
+            trajetoria=trajeto,
             coerencia=veredito,
             motivos=motivos,
         )

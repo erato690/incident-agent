@@ -127,3 +127,19 @@ def test_causa_a_confirmar_so_no_pedido_de_post_mortem_sem_confirmacao():
     assert causa_a_confirmar(pedido) == "pool_max de 20 para 10"
     outra = _resposta(rota="fixa", fixa=RespostaFixa(texto="Olá", camada=1, categoria="saudacao"))
     assert causa_a_confirmar(outra) is None
+
+
+def test_texto_copiado_e_api_trazem_as_quatro_tecnicas():
+    from agente.schemas import ChecagemTrajetoria, VereditoCoerencia
+    from app.formatacao import markdown_resposta, tecnicas
+
+    auditoria = Auditoria(
+        aprovada=True,
+        veredito="apoia",
+        trajetoria=ChecagemTrajetoria(itens=[], aprovada=True),
+        coerencia=VereditoCoerencia(veredito="apoia", e_coerente=True, justificativa="j"),
+    )
+    resposta = _resposta(analise=_analise(), auditoria=auditoria)
+    assert [t["tecnica"] for t in tecnicas(resposta)][0] == "Auditoria de trajetória"
+    texto = markdown_resposta(resposta)
+    assert "Auditoria de trajetória: ok" in texto and "Inferência lógica (NLI): ok" in texto
