@@ -35,6 +35,7 @@ class RegistroTurno(BaseModel):
     ferramentas: list[str] = Field(default_factory=list)
     trajetoria: list[PassoTrajetoria] = Field(default_factory=list)
     auditoria_aprovada: bool | None = None
+    veredito: str | None = None
     motivos_auditoria: list[str] = Field(default_factory=list)
     aviso: str | None = None
     duracao_ms: int = Field(ge=0)
@@ -63,6 +64,7 @@ class RegistroTurno(BaseModel):
             ferramentas=[p.ferramenta for p in resposta.trajetoria],
             trajetoria=list(resposta.trajetoria),
             auditoria_aprovada=getattr(auditoria, "aprovada", None),
+            veredito=getattr(auditoria, "veredito", None),
             motivos_auditoria=list(getattr(auditoria, "motivos", None) or []),
             aviso=getattr(resposta, "aviso", None),
             duracao_ms=duracao_ms,

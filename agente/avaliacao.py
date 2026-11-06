@@ -56,12 +56,17 @@ def saida_do_turno(resposta: RespostaTurno) -> dict:
     if resposta.analise is not None and resposta.analise.hipoteses:
         principal = max(resposta.analise.hipoteses, key=lambda h: h.confianca)
     auditoria = getattr(resposta, "auditoria", None)
+    checagens = getattr(auditoria, "checagens", None) or []
+    verificaveis = [c for c in checagens if c.afirmacao.chave != "outro"]
     return {
         "rota": resposta.rota,
         "causa_principal": principal.causa if principal else None,
         "confianca": principal.confianca if principal else None,
         "ferramentas": [passo.ferramenta for passo in resposta.trajetoria],
         "auditoria_aprovada": getattr(auditoria, "aprovada", None),
+        "veredito": getattr(auditoria, "veredito", None),
+        "fatos_confirmados": sum(1 for c in verificaveis if c.status == "confirmada"),
+        "fatos_verificaveis": len(verificaveis),
         "aviso": getattr(resposta, "aviso", None),
     }
 
@@ -95,7 +100,41 @@ def auditor_aprovou(inputs: dict, outputs: dict, reference_outputs: dict) -> dic
     return {"key": "auditor_aprovou", "score": score, "comment": outputs.get("aviso") or ""}
 
 
-AVALIADORES: list[Callable[..., dict]] = [causa_certa, trajetoria_ferramentas, auditor_aprovou]
+def fato_deterministico(inputs: dict, outputs: dict, reference_outputs: dict) -> dict:
+    """Fact-checking determinístico: fração das afirmações verificáveis (versão, horário,
+    número, tabela, serviço) confirmadas contra as observações das ferramentas."""
+    total = outputs.get("fatos_verificaveis")
+    if outputs.get("veredito") is None or not total:
+        return {"key": "fato_deterministico", "score": None, "comment": "sem afirmações"}
+    confirmados = outputs.get("fatos_confirmados") or 0
+    return {
+        "key": "fato_deterministico",
+        "score": confirmados / total,
+        "comment": f"{confirmados} de {total} confirmadas",
+    }
+
+
+def veredito_nli(inputs: dict, outputs: dict, reference_outputs: dict) -> dict:
+    """Inferência lógica (NLI): 1 quando o veredito final é o esperado ("apoia" para a resposta
+    certa; o exemplo da resposta errada roteirizada espera "refuta")."""
+    veredito = outputs.get("veredito")
+    esperado = reference_outputs.get("veredito_esperado") or "apoia"
+    if veredito is None:
+        return {"key": "veredito_nli", "score": None, "comment": "sem auditoria"}
+    return {
+        "key": "veredito_nli",
+        "score": int(veredito == esperado),
+        "comment": f"veredito {veredito}, esperado {esperado}",
+    }
+
+
+AVALIADORES: list[Callable[..., dict]] = [
+    causa_certa,
+    trajetoria_ferramentas,
+    fato_deterministico,
+    veredito_nli,
+    auditor_aprovou,
+]
 
 
 def _como_saida(retorno: Any) -> dict:

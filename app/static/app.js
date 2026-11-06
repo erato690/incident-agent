@@ -263,12 +263,24 @@ function blocoDadosFaltantes(itens) {
   });
 }
 
+const VEREDITO = {
+  apoia: ["apoia", "chip-ok", "as evidências sustentam a hipótese principal"],
+  refuta: ["refuta", "chip-erro", "as evidências contradizem a hipótese principal"],
+  neutra: ["neutra", "chip-medio", "as evidências não bastam para a hipótese principal"],
+};
+
+function chipVeredito(veredito) {
+  const [rotulo, classe, explicacao] = VEREDITO[veredito] || [veredito, "", ""];
+  return el("span", { classe: `chip ${classe}`, title: explicacao }, `Veredito: ${rotulo}`);
+}
+
 function seloAuditor(resposta) {
   const a = resposta.auditoria;
   if (!a) return chip("Não auditada");
-  return a.aprovada
+  const selo = a.aprovada
     ? el("span", { classe: "chip chip-ok" }, icone("ok"), "Auditor aprovou")
     : el("span", { classe: "chip chip-erro" }, icone("alerta"), "Auditor reprovou");
+  return a.veredito ? el("span", { classe: "chips" }, selo, chipVeredito(a.veredito)) : selo;
 }
 
 function botaoCopiar(texto) {
@@ -508,14 +520,23 @@ function blocoTrajetoria(passos) {
 
 function blocoAuditoria(auditoria) {
   if (!auditoria) return el("p", { classe: "sutil" }, "Turno sem auditoria (resposta fixa ou sem investigação).");
-  const bloco = el("div", {}, auditoria.aprovada
-    ? el("span", { classe: "chip chip-ok" }, icone("ok"), "Aprovada")
-    : el("span", { classe: "chip chip-erro" }, icone("alerta"), "Reprovada"));
+  const veredito = auditoria.veredito ? VEREDITO[auditoria.veredito] : null;
+  const bloco = el("div", { classe: "veredito-bloco" },
+    veredito ? el("p", { classe: `veredito-destaque ${veredito[1]}` },
+      el("strong", {}, `Veredito: ${veredito[0]}`), el("span", {}, veredito[2])) : null,
+    auditoria.veredito_rebaixado ? el("p", { classe: "fonte" },
+      `O juiz disse "${auditoria.coerencia ? auditoria.coerencia.veredito : "?"}"; a checagem de fatos rebaixou o veredito.`) : null,
+    auditoria.aprovada
+      ? el("span", { classe: "chip chip-ok" }, icone("ok"), "Aprovada")
+      : el("span", { classe: "chip chip-erro" }, icone("alerta"), "Reprovada"));
   if (auditoria.motivos && auditoria.motivos.length) bloco.append(el("ul", {}, auditoria.motivos.map((m) => el("li", {}, m))));
   if (auditoria.coerencia) {
     bloco.append(el("p", { classe: "fonte" }, `Coerência: ${auditoria.coerencia.veredito}. ${auditoria.coerencia.justificativa}`));
   }
   if (auditoria.checagens && auditoria.checagens.length) {
+    const verificaveis = auditoria.checagens.filter((c) => c.afirmacao.chave !== "outro");
+    const confirmadas = verificaveis.filter((c) => c.status === "confirmada").length;
+    bloco.append(el("p", { classe: "fonte" }, `Checagem de fatos: ${confirmadas} de ${verificaveis.length} afirmações verificáveis confirmadas.`));
     bloco.append(el("table", { classe: "checagens" },
       el("thead", {}, el("tr", {}, el("th", { scope: "col" }, "Afirmação"), el("th", { scope: "col" }, "Situação"))),
       el("tbody", {}, auditoria.checagens.map((c) => el("tr", {},

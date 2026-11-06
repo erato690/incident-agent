@@ -3,6 +3,7 @@
 from agente.schemas import (
     AnaliseIncidente,
     AnaliseNLU,
+    Auditoria,
     Hipotese,
     PassoTrajetoria,
     RespostaTurno,
@@ -62,3 +63,10 @@ def test_fontes_e_passos():
 def test_mensagem_erro_so_primeira_linha():
     texto = mensagem_erro(RuntimeError("timeout\nlinha 2"))
     assert "RuntimeError: timeout" in texto and "linha 2" not in texto
+
+
+def test_selo_do_texto_copiado_traz_o_veredito():
+    from app.formatacao import selo_auditoria
+
+    resposta = _resposta(auditoria=Auditoria(aprovada=False, veredito="refuta"))
+    assert selo_auditoria(resposta) == "auditada: reprovada (veredito: refuta)"

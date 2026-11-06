@@ -249,6 +249,10 @@ details[open] > summary { margin-bottom: 6px; }
 .trajetoria li { display: grid; grid-template-columns: 24px 1fr auto; gap: 6px; align-items: baseline; font-size: 14px; }
 .trajetoria li::before { counter-increment: passo; content: counter(passo); color: var(--texto-sutil); font-size: 12px; }
 .trajetoria .nota { grid-column: 2 / 4; font-size: 12px; color: var(--texto-sutil); }
+.veredito-bloco { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.veredito-destaque { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: var(--raio-p);
+  width: 100%; font-size: 14px; }
+.veredito-destaque strong { font-size: 18px; }
 .checagens { width: 100%; border-collapse: collapse; font-size: 13px; }
 .checagens th, .checagens td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--borda); vertical-align: top; }
 .checagens th { color: var(--texto-sutil); font-weight: 600; }
