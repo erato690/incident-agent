@@ -44,7 +44,7 @@ Cada provedor exige a sua chave; não há troca automática. Sem chave, o notebo
 
 - **Barreira de escopo**: o agente só discute o que está no domínio de investigação de incidentes.
 - **Memória**: aprende só com fatos confirmados pelo humano; não grava nada sozinho.
-- **Auditor de verificação cognitiva**: valida se as conclusões do agente são consistentes com as evidências.
+- **Auditor de verificação cognitiva**: valida se as conclusões do agente são consistentes com as evidências, com as técnicas vistas na disciplina: extração das afirmações com Pydantic (`with_structured_output`), checagem de fatos determinística (`checar_fatos`, métrica `fato_deterministico`), inferência lógica (NLI) com veredito explícito `apoia`, `refuta` ou `neutra` e falácias do domínio (métrica `veredito_nli`), e avaliação da trajetória (`trajetoria_ferramentas`). O veredito do juiz é rebaixado por código quando contradiz a checagem de fatos.
 - **Relatório**: gerado em `.md` só quando o engenheiro pede; internamente tudo é JSON (formato de dados em texto).
 - **Sem execução de ações**: o agente não executa correções, apenas as sugere.
 - **Modelo de linguagem (LLM) de chat**: escolha explícita entre DeepSeek (`ChatDeepSeek`) e OpenAI (`ChatOpenAI("gpt-4o-mini")`) por `LLM_PROVEDOR` (padrão `openai`), sem troca automática. Embeddings: OpenAI `text-embedding-3-small`.
@@ -57,3 +57,24 @@ Cada provedor exige a sua chave; não há troca automática. Sem chave, o notebo
 ## Prazo
 
 Entrega: 09/11/2026.
+
+## Laboratório com Docker Compose
+
+O laboratório `incident-lab` (em `../laboratorios/incident-lab/`) sobe a loja `incident-shop`
+(contrato 1.1.0) e este agente já conectados, com um comando:
+
+```bash
+cd ../laboratorios/incident-lab
+docker compose up --build    # chat em http://127.0.0.1:8501, loja em http://127.0.0.1:8000
+docker compose down
+```
+
+- **Variáveis:** `CENARIO` (cenário das conversas novas, padrão `pool_esgotado`), `AGENTE_PORTA`,
+  `SHOP_PORTA`, `SHOP_CONTEXTO` e `AGENTE_CONTEXTO`; portas só em 127.0.0.1.
+- **Chave:** vem do shell ou do `.env` deste projeto, nunca da imagem.
+- **Ao vivo × gravado:** no laboratório, `LOJA_URL=http://shop:8000` faz as ferramentas chamarem a
+  loja (veja as requisições com `docker compose logs -f shop`). Fora dele, sem `LOJA_URL`, o
+  agente usa `dados_dummy/`, e as baterias, o notebook e a avaliação seguem determinísticos.
+- O `docker-compose.yml` deste repositório continua subindo só o app. O deploy no Railway não faz
+  parte do laboratório.
+
