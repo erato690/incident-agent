@@ -8,6 +8,7 @@ RUN pip install --no-cache-dir -r requirements-app.txt
 
 COPY agente/ agente/
 COPY app/ app/
+COPY .streamlit/ .streamlit/
 COPY dados/ dados/
 COPY dados_dummy/ dados_dummy/
 COPY scripts/ scripts/
