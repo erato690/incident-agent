@@ -211,7 +211,8 @@ def _sem_quase_repetidas(acoes: list, dados: set[str]) -> list:
         for i, outra in enumerate(escolhidas):
             comuns = termos & _termos(outra)
             menor = min(len(termos), len(_termos(outra))) or 1
-            if len(comuns) / menor >= 0.6:
+            mesmo_verbo = _primeira(acao) == _primeira(outra)
+            if len(comuns) / menor >= (0.5 if mesmo_verbo else 0.6):
                 repetida = i
                 break
         if repetida is None:
@@ -219,6 +220,25 @@ def _sem_quase_repetidas(acoes: list, dados: set[str]) -> list:
         elif _peso(acao, dados) > _peso(escolhidas[repetida], dados):
             escolhidas[repetida] = acao
     return escolhidas
+
+
+def _primeira(acao) -> str:
+    palavras = _normalizar(acao.acao).split()
+    return palavras[0] if palavras else ""
+
+
+def _inventa_valor(acao, de_para) -> bool:
+    """A ação põe na chave do diff um número que não é o valor anterior (ex.: pool 15 quando o
+    diff mostra pool_max de 20 para 10): restaurar o anterior vem antes de inventar outro."""
+    if not de_para:
+        return False
+    chave, antigo, _ = de_para.groups()
+    raiz = chave.split("_")[0].casefold()
+    texto = _normalizar(acao.acao)
+    if raiz not in texto:
+        return False
+    numeros = set(re.findall(r"(?<![\w.])\d+(?:[.,]\d+)?(?![\w.])", texto))
+    return bool(numeros) and antigo not in numeros
 
 
 def _peso(acao, dados: set[str]) -> int:
@@ -230,7 +250,12 @@ def _peso(acao, dados: set[str]) -> int:
 def ordenar_e_filtrar_acoes(acoes: list, causa: str, evidencia: str) -> list:
     """Filtra e ordena as ações pela evidência da hipótese principal (no máximo 3)."""
     dados = dados_da_evidencia(f"{causa} {evidencia}")
-    candidatas = [a for a in acoes if not (acao_de_consulta(a.acao) or acao_condicional(a))]
+    de_para = re.search(_DE_PARA, f"{causa} {evidencia}")
+    candidatas = [
+        a
+        for a in acoes
+        if not (acao_de_consulta(a.acao) or acao_condicional(a) or _inventa_valor(a, de_para))
+    ]
     boas = [a for a in candidatas if dados and _cita_dado(a, dados)]
     if not boas:
         # nenhuma cita dado: fica a de menor risco que sobra (risco alto exige evidência direta)

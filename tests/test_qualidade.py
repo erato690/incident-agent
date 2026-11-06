@@ -268,3 +268,21 @@ def test_sanear_analise_transforma_dado_indevido_da_hipotese_em_lacuna():
     assert limpa.hipoteses[0].dado_que_falta.startswith(PREFIXO_LACUNA)
     assert "uso do disco" in limpa.hipoteses[0].dado_que_falta
     assert limpa.hipoteses[1].dado_que_falta == "limite contratado com o provedor de SMS"
+
+
+def test_acao_que_inventa_outro_valor_para_a_chave_do_diff_sai():
+    acoes = [
+        _a("Restaurar o pool_max para 20", "o diff cortou de 20 para 10", "baixo"),
+        _a("Aumentar o pool de conexões para 15", "o pool_max caiu para 10", "medio"),
+    ]
+    finais = ordenar_e_filtrar_acoes(acoes, CAUSA_POOL, EVIDENCIA_POOL)
+    assert [a.acao for a in finais] == ["Restaurar o pool_max para 20"]
+
+
+def test_acoes_com_o_mesmo_verbo_e_metade_dos_termos_sao_repetidas():
+    acoes = [
+        _a("Renovar o certificado e recarregar o serviço", "certificado expirou (x55)", "medio"),
+        _a("Renovar o certificado SSL do provedor de JWKS", "certificado expirou (x55)", "medio"),
+    ]
+    finais = ordenar_e_filtrar_acoes(acoes, "certificado expirou", "x509 expirado (x55)")
+    assert len(finais) == 1
