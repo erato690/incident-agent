@@ -225,7 +225,11 @@ def criar_app(
 
     @app.get("/api/estado")
     def estado():
-        return {"chave_configurada": chave_configurada()}
+        padrao = os.getenv("CENARIO")
+        return {
+            "chave_configurada": chave_configurada(),
+            "cenario_padrao": padrao if padrao in cenarios else None,
+        }
 
     @app.get("/api/cenarios")
     def listar_cenarios():

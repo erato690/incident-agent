@@ -6,3 +6,7 @@ __pycache__
 saida/
 .ipynb_checkpoints
 *.ipynb_checkpoints
+.env.*
+!.env.example
+agentdb.rvf*
+projeto_final_tmp.ipynb

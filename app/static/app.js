@@ -723,6 +723,7 @@ async function iniciar() {
     }
     estado.cenarios = cenarios;
     $("cenario").replaceChildren(...cenarios.map((c) => el("option", { value: c.id }, c.titulo)));
+    if (situacao.cenario_padrao) $("cenario").value = situacao.cenario_padrao;
     await atualizarSessoes();
     if (estado.sessoes.length) await abrirSessao(estado.sessoes[0].id);
     else await novaConversa();
