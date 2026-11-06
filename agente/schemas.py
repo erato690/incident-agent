@@ -318,6 +318,21 @@ class VereditoCoerencia(BaseModel):
         return "neutra" if valor == "neutro" else valor
 
 
+class ItemTrajetoria(BaseModel):
+    """Um critério da auditoria de trajetória."""
+
+    criterio: Literal["fontes_citadas", "argumentos", "ferramentas_minimas", "sem_escrita"]
+    status: Literal["ok", "falha", "grave", "nao_se_aplica"]
+    detalhe: str
+
+
+class ChecagemTrajetoria(BaseModel):
+    """Auditoria de trajetória (determinística): reprova só com critério grave."""
+
+    itens: list[ItemTrajetoria] = Field(default_factory=list)
+    aprovada: bool = True
+
+
 class Auditoria(BaseModel):
     aprovada: bool
     veredito: Veredito | None = Field(
@@ -327,6 +342,7 @@ class Auditoria(BaseModel):
         default=False, description="True quando o código rebaixou o veredito do juiz"
     )
     checagens: list[ChecagemFato] = Field(default_factory=list)
+    trajetoria: ChecagemTrajetoria | None = None
     coerencia: VereditoCoerencia | None = None
     motivos: list[str] = Field(default_factory=list)
     erro: str | None = None

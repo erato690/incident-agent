@@ -37,6 +37,7 @@ from app.formatacao import (
     mensagem_erro,
     perguntas,
     rotulo_ferramenta,
+    tecnicas,
 )
 
 RAIZ = Path(__file__).resolve().parent.parent
@@ -146,6 +147,7 @@ def _mensagem_agente(resposta: RespostaTurno | None, duracao_ms: int, erro: str 
         "lacunas": lacunas(resposta),
         "investigado": fontes_consultadas(resposta),
         "causa_a_confirmar": causa_a_confirmar(resposta),
+        "tecnicas": tecnicas(resposta),
     }
 
 

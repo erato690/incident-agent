@@ -202,3 +202,18 @@ def test_licoes_sem_o_motivo_tecnico_do_registro():
     texto = gerar_postmortem(_dados(episodio=episodio))
     licoes = texto.split("## Lições aprendidas")[1].split("##")[0]
     assert "Nenhum episódio ativo" not in licoes and "Pool pequeno demais" in licoes
+
+
+def test_rodape_traz_as_quatro_tecnicas():
+    from agente.schemas import Auditoria, ChecagemTrajetoria, VereditoCoerencia
+
+    auditoria = Auditoria(
+        aprovada=True,
+        veredito="apoia",
+        trajetoria=ChecagemTrajetoria(itens=[], aprovada=True),
+        coerencia=VereditoCoerencia(veredito="apoia", e_coerente=True, justificativa="j"),
+    )
+    texto = gerar_postmortem(_dados(episodio=_episodio(), auditoria=auditoria))
+    rodape = texto.split("---")[-1]
+    for nome in ("Auditoria de trajetória", "Checagem de fatos", "Inferência lógica", "Extração"):
+        assert nome in rodape

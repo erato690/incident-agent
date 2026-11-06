@@ -256,6 +256,10 @@ details[open] > summary { margin-bottom: 6px; }
 .veredito-destaque { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: var(--raio-p);
   width: 100%; font-size: 14px; }
 .veredito-destaque strong { font-size: 18px; }
+.tecnicas { list-style: none; margin: 6px 0 0; padding: 0 !important; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.tecnicas li { display: grid; grid-template-columns: auto auto 1fr; gap: 8px; align-items: baseline; }
+.tecnicas li + li { margin-top: 0; }
+@media (max-width: 760px) { .tecnicas li { grid-template-columns: auto 1fr; } .tecnicas li .sutil { grid-column: 1 / -1; } }
 .checagens { width: 100%; border-collapse: collapse; font-size: 13px; }
 .checagens th, .checagens td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--borda); vertical-align: top; }
 .checagens th { color: var(--texto-sutil); font-weight: 600; }

@@ -4,6 +4,7 @@ import json
 import re
 from pathlib import Path
 
+from agente.auditor import resumo_tecnicas
 from agente.qualidade import PREFIXO_LACUNA, dado_faltante_valido
 from agente.registro import RegistroTurno
 from agente.schemas import RespostaTurno
@@ -53,6 +54,8 @@ def markdown_resposta(resposta: RespostaTurno) -> str:
     else:
         linhas.append(f"**Erro:** {resposta.erro or 'sem detalhes'}")
     linhas += ["", f"*{selo_auditoria(resposta)}*"]
+    for tecnica in tecnicas(resposta):
+        linhas.append(f"- {tecnica['tecnica']}: {tecnica['status']} ({tecnica['detalhe']})")
     return "\n".join(linhas)
 
 
@@ -177,3 +180,8 @@ def causa_a_confirmar(resposta: RespostaTurno) -> str | None:
         return None
     achado = re.search(r"Hipótese principal: (.+?) \(confiança", fixa.texto)
     return achado.group(1) if achado else None
+
+
+def tecnicas(resposta: RespostaTurno) -> list[dict]:
+    """As quatro técnicas do auditor, separadas (vazia sem auditoria)."""
+    return resumo_tecnicas(resposta.auditoria) if resposta.auditoria else []
