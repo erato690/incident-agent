@@ -21,13 +21,14 @@ from agente.pipeline import montar_pipeline
 from agente.postmortem import (
     DadosPostMortem,
     gerar_postmortem,
-    linha_do_tempo_da_trajetoria,
+    linha_do_tempo_do_incidente,
     salvar_postmortem,
 )
 from agente.recuperacao import carregar_indice
 from agente.registro import Registro, RegistroTurno
 from agente.schemas import (
     AnaliseIncidente,
+    Auditoria,
     Episodio,
     PassoTrajetoria,
     RespostaFixa,
@@ -50,13 +51,28 @@ FERRAMENTAS_DO_INCIDENTE = {
     "consultar_estatisticas_banco",
 }
 TEXTO_SEM_ANALISE = "Ainda não há investigação nesta sessão para gerar o post-mortem."
+CATEGORIA_SEM_CONFIRMACAO = "postmortem_sem_confirmacao"
+TEXTO_SEM_CONFIRMACAO = (
+    "Ainda não gero o post-mortem: falta confirmar a causa deste incidente.\n\n"
+    "Hipótese principal: {causa} (confiança {confianca:.0%}).\nEvidência: {evidencia}\n\n"
+    'Você confirma essa causa? Se sim, responda começando com "Confirmado:" (por exemplo: '
+    '"Confirmado: {causa}"). Eu registro a causa e, depois, gero o post-mortem com as lições '
+    "aprendidas."
+)
 
 
 class UltimaInvestigacao:
     """Última análise, trajetória e serviço de uma sessão (insumo do post-mortem)."""
 
-    def __init__(self, analise: AnaliseIncidente, trajetoria: list[PassoTrajetoria], servico: str):
+    def __init__(
+        self,
+        analise: AnaliseIncidente,
+        trajetoria: list[PassoTrajetoria],
+        servico: str,
+        auditoria: Auditoria | None = None,
+    ):
         self.analise, self.trajetoria, self.servico = analise, trajetoria, servico
+        self.auditoria, self.quando = auditoria, datetime.now()
 
 
 class AgenteIntegrado:
@@ -163,7 +179,7 @@ class AgenteIntegrado:
         servico = (resposta.nlu.servico if resposta.nlu else None) or sessao.servico
         servico = servico or resposta.analise.servico
         self._ultimas[sessao.session_id] = UltimaInvestigacao(
-            resposta.analise, list(resposta.trajetoria), servico
+            resposta.analise, list(resposta.trajetoria), servico, resposta.auditoria
         )
 
     def _episodio_confirmado(self, servico: str, session_id: str) -> Episodio | None:
@@ -176,21 +192,33 @@ class AgenteIntegrado:
         base = {"moderacao": estado["moderacao"], "nlu": estado["nlu"]}
         session_id = estado.get("session_id") or ""
         ultima = self._ultimas.get(session_id)
+        categoria = "gerar_relatorio"
+        episodio = self._episodio_confirmado(ultima.servico, session_id) if ultima else None
         if ultima is None:
             texto = TEXTO_SEM_ANALISE
+        elif episodio is None:  # trava: sem causa confirmada não há arquivo
+            principal = ultima.analise.hipoteses[0]
+            categoria = CATEGORIA_SEM_CONFIRMACAO
+            texto = TEXTO_SEM_CONFIRMACAO.format(
+                causa=principal.causa,
+                confianca=principal.confianca,
+                evidencia=principal.evidencia or "sem evidência direta",
+            )
         else:
             dados = DadosPostMortem(
                 incidente_id=session_id,
                 servico=ultima.servico,
                 gerado_em=datetime.now(),
                 analise=ultima.analise,
-                episodio=self._episodio_confirmado(ultima.servico, session_id),
-                linha_do_tempo=linha_do_tempo_da_trajetoria(ultima.trajetoria),
+                episodio=episodio,
+                linha_do_tempo=linha_do_tempo_do_incidente(ultima.trajetoria),
                 trajetoria=ultima.trajetoria,
+                auditoria=ultima.auditoria,
+                auditada_em=ultima.quando,
             )
             caminho = salvar_postmortem(dados, self.pasta_postmortem)
             texto = f"Post-mortem gerado em {caminho}:\n\n{gerar_postmortem(dados)}"
-        fixa = RespostaFixa(texto=texto, camada=2, categoria="gerar_relatorio")
+        fixa = RespostaFixa(texto=texto, camada=2, categoria=categoria)
         return RespostaTurno(rota="fixa", fixa=fixa, **base)
 
 

@@ -196,3 +196,54 @@ def test_acao_condicional_ou_sem_dado_do_diagnostico_tambem_e_recusada(indice):
     }
     assert "Fazer rollback da v3.2.0" in acoes and "Aumentar o pool para 15" not in acoes
     assert all("se o pico" not in a.motivo for a in contexto.acoes_sugeridas)
+
+
+class LlmQueFalha(LlmEmSequencia):
+    """Primeira chamada estoura (ex.: limite de tokens); a segunda devolve as ações."""
+
+    def with_structured_output(self, schema):
+        def responde(valor):
+            self.recebidos.append(valor.to_messages())
+            atual = self.listas.pop(0)
+            if isinstance(atual, Exception):
+                raise atual
+            return ListaAcoes(acoes=atual)
+
+        return RunnableLambda(responde)
+
+
+def test_resposta_invalida_do_modelo_tenta_de_novo(indice):
+    llm = LlmQueFalha(
+        RuntimeError("length limit was reached"),
+        [
+            AcaoSugerida(
+                acao="Fazer rollback da v3.2.0", motivo="v3.2.0 cortou o pool", risco="medio"
+            )
+        ],
+    )
+    ferramenta = montar_ferramenta_acao(llm, indice)
+    config, contexto = _config()
+    ferramenta.invoke({"diagnostico": "a v3.2.0 cortou o pool", "servico": "s"}, config=config)
+    assert [a.acao for a in contexto.acoes_sugeridas] == ["Fazer rollback da v3.2.0"]
+
+
+def test_duas_falhas_com_causa_interna_ficam_com_a_acao_de_desfazer(indice):
+    llm = LlmQueFalha(RuntimeError("length"), RuntimeError("length"))
+    ferramenta = montar_ferramenta_acao(llm, indice)
+    config, contexto = _config()
+    diagnostico = "a v3.2.0 reduziu pool_max de 20 para 10"
+    ferramenta.invoke({"diagnostico": diagnostico, "servico": "s"}, config=config)
+    assert [a.acao for a in contexto.acoes_sugeridas] == [
+        "Restaurar pool_max para 20 (valor anterior à v3.2.0)"
+    ]
+
+
+def test_saida_das_acoes_tem_limite_de_tokens():
+    from langchain_openai import ChatOpenAI
+
+    from agente.acoes import LIMITE_TOKENS_ACAO, _com_limite
+
+    llm = ChatOpenAI(model="gpt-4o-mini", api_key="sk-teste")
+    assert _com_limite(llm).max_tokens == LIMITE_TOKENS_ACAO and llm.max_tokens is None
+    falso = LlmFalso()
+    assert _com_limite(falso) is falso

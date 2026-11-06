@@ -203,8 +203,11 @@ details[open] > summary { margin-bottom: 6px; }
 .alerta-pergunta { background: var(--pergunta-fundo); border-color: var(--pergunta-borda); color: var(--pergunta-texto); flex-direction: column; }
 .alerta-pergunta .alerta-cabeca { display: flex; gap: 10px; }
 .resposta-dado { display: flex; gap: 8px; width: 100%; }
-.resposta-dado input { flex: 1; min-width: 0; min-height: 40px; padding: 8px 10px; border-radius: var(--raio-p);
-  border: 1px solid var(--pergunta-borda); background: var(--superficie); color: var(--texto); }
+.alerta-pergunta.respondida { background: var(--ok-fundo); border-color: var(--ok-texto); color: var(--ok-texto); }
+.alerta-info { background: var(--superficie-2); border-color: var(--borda-forte); color: var(--texto); }
+.erro-envio { color: var(--erro-texto); }
+.resposta-dado textarea, .resposta-dado input { flex: 1; min-width: 0; min-height: 40px; padding: 8px 10px; border-radius: var(--raio-p);
+  border: 1px solid var(--pergunta-borda); background: var(--superficie); color: var(--texto); resize: vertical; font: inherit; }
 .cartao-rodape { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border-top: 1px solid var(--borda);
   padding-top: 10px; font-size: 13px; color: var(--texto-sutil); }
 .cartao-rodape .espaco { flex: 1; }

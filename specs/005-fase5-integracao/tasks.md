@@ -27,7 +27,7 @@ Textos para o leitor em português, sem citar "aula N".
 ## Phase 3: US3 Post-mortem (P3) [P]
 
 - [ ] T104 [P] [US3] `agente/postmortem.py`:
-  - `DadosPostMortem` (Pydantic) e `gerar_postmortem(dados) -> str` (template: resumo; impacto e severidade; linha do tempo; causa raiz e evidência; ações sugeridas (não executadas); próximos passos; "causa não confirmada" sem episódio);
+  - `DadosPostMortem` (Pydantic) e `gerar_postmortem(dados) -> str` (template: resumo; impacto e severidade; linha do tempo; causa raiz e evidência; ações sugeridas (não executadas); próximos passos; sem episódio não gera: decisão de 2026-11-06 no `research.md`);
   - `salvar_postmortem(dados, pasta)`;
   - no pipeline, com memória, `gerar_relatorio` monta o post-mortem a partir da última análise da sessão (histórico ou `estado["ultima_analise"]`) e do episódio confirmado do incidente; o texto fixo antigo sai.
   - Testes `tests/test_postmortem.py`.

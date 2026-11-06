@@ -108,9 +108,11 @@ os motivos.
 
 ### User Story 3 - Post-mortem (Priority: P3)
 
-**Acceptance Scenarios**: sem causa confirmada, o arquivo sai marcado "causa não confirmada". Com
-a causa confirmada, traz a causa, a linha do tempo das ferramentas e as ações sugeridas,
-marcadas como não executadas.
+**Acceptance Scenarios**: sem causa confirmada, nenhum arquivo é gerado; a resposta mostra a
+hipótese principal e pergunta se o engenheiro a confirma (decisão do Rafael, 2026-11-06). Com a
+causa confirmada, traz a causa, a linha do tempo só com eventos do incidente (em ordem e com
+data), as ações sugeridas marcadas como não executadas, ações preventivas distintas da correção,
+as lições aprendidas, a investigação realizada e o veredito do auditor no rodapé.
 
 ### User Story 4 - Interface Streamlit (Priority: P2)
 
@@ -164,8 +166,9 @@ diagrama de contexto, 2 ou 3 células com o agente final e o índice da rubrica.
 - **FR-008**: A trajetória passa a guardar o texto mascarado de cada observação, truncado, para a
   checagem de fatos.
 - **FR-009**: Post-mortem `.md` por template: resumo; impacto e severidade; linha do tempo; causa
-  raiz e evidência; ações sugeridas (não executadas); próximos passos. Sem causa confirmada, sai
-  marcado "causa não confirmada".
+  raiz e evidência; ações sugeridas (não executadas); ações preventivas; lições aprendidas;
+  investigação realizada; rodapé com o veredito do auditor. Sem causa confirmada, não gera o
+  arquivo e pede a confirmação da hipótese principal (trava em código).
 - **FR-010**: `RegistroTurno` (Pydantic) com pergunta, rota, resposta, trajetória, auditoria e
   duração, para a tela de análise.
 - **FR-011**: Streamlit, tela de uso.
