@@ -226,3 +226,45 @@ def test_sem_nenhuma_acao_com_dado_fica_a_de_menor_risco_sem_condicional():
         acoes, "certificado expirou", "x509: certificate has expired (x55)"
     )
     assert [a.acao for a in finais] == ["Renovar o certificado do provedor de JWKS"]
+
+
+# --- dado que falta da hipótese: nunca pedir ao engenheiro o que as ferramentas alcançam ---
+
+
+def test_dado_que_pede_logs_metricas_ou_uso_de_recurso_e_descartado():
+    for dado in (
+        "logs ou métricas que confirmem o uso do disco",
+        "uso de disco do servidor",
+        "confirmar o consumo de memória do container",
+        "verificar a CPU no horário",
+    ):
+        assert not dado_faltante_valido(dado, "o disco encheu"), dado
+
+
+def test_sanear_analise_transforma_dado_indevido_da_hipotese_em_lacuna():
+    from agente.qualidade import PREFIXO_LACUNA
+
+    analise = AnaliseIncidente(
+        severidade="alta",
+        categoria="disco_cheio",
+        resumo="r",
+        hipoteses=[
+            Hipotese(
+                causa="disco cheio",
+                confianca=0.4,
+                evidencia_insuficiente=True,
+                dado_que_falta="logs ou métricas que confirmem o uso do disco",
+            ),
+            Hipotese(
+                causa="limite do provedor",
+                confianca=0.2,
+                evidencia_insuficiente=True,
+                dado_que_falta="limite contratado com o provedor de SMS",
+            ),
+        ],
+        proximos_passos=["Liberar espaço em /tmp"],
+    )
+    limpa = sanear_analise(analise, {"buscar_logs", "buscar_metricas"})
+    assert limpa.hipoteses[0].dado_que_falta.startswith(PREFIXO_LACUNA)
+    assert "uso do disco" in limpa.hipoteses[0].dado_que_falta
+    assert limpa.hipoteses[1].dado_que_falta == "limite contratado com o provedor de SMS"

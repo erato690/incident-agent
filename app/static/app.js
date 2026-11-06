@@ -247,20 +247,65 @@ function blocoAcoes(analise) {
   return el("section", {}, el("h3", {}, "Ações sugeridas"), ul);
 }
 
-function blocoDadosFaltantes(itens) {
-  return itens.map((item) => {
-    const entrada = el("input", { type: "text", "aria-label": `Resposta: ${item}`, placeholder: "Escreva o dado aqui" });
-    const enviar = (evento) => {
+// Pergunta ao engenheiro: a resposta vira mensagem dele na mesma sessão e roda um turno novo.
+// "fato" (a wiki não tinha o fato): a resposta é enviada como confirmação e gravada (com trava).
+function respondida(mensagem, texto) {
+  const mensagens = estado.atual ? estado.atual.mensagens : [];
+  const depois = mensagens.slice(mensagens.indexOf(mensagem) + 1);
+  return depois.find((m) => m.papel === "engenheiro" && m.texto.includes(`${texto}:`)) || null;
+}
+
+function blocoPerguntas(mensagem) {
+  const lista = mensagem.perguntas || (mensagem.dados_faltantes || []).map((t) => ({ texto: t, tipo: "dado" }));
+  return lista.map(({ texto, tipo }) => {
+    const ja = respondida(mensagem, texto);
+    const titulo = tipo === "fato" ? "Não achei este fato na wiki nem na documentação: " : "Preciso deste dado para continuar: ";
+    const cartao = el("div", { classe: `alerta alerta-pergunta${ja ? " respondida" : ""}` },
+      el("div", { classe: "alerta-cabeca" }, icone(ja ? "ok" : "pergunta"), el("p", {}, el("strong", {}, titulo), texto)));
+    if (ja) {
+      cartao.append(el("p", { classe: "fonte" }, `Respondido: ${ja.texto.slice(ja.texto.indexOf(":") + 1).trim()}`));
+      return cartao;
+    }
+    const campo = el("textarea", { rows: "1", "aria-label": `Resposta: ${texto}`, placeholder: tipo === "fato" ? "Escreva o valor confirmado" : "Escreva o dado aqui" });
+    const botao = el("button", { type: "submit", classe: "botao pequeno" }, tipo === "fato" ? "Confirmar e registrar" : "Responder");
+    const erro = el("p", { classe: "fonte erro-envio", role: "alert", hidden: true });
+    const enviar = async (evento) => {
       evento.preventDefault();
-      const valor = entrada.value.trim();
-      if (valor) enviarMensagem(`${item}: ${valor}`);
+      const valor = campo.value.trim();
+      if (!valor) { campo.focus(); return; }
+      botao.disabled = true; campo.disabled = true; erro.hidden = true;
+      botao.replaceChildren(el("span", { classe: "pontos", "aria-hidden": "true" }, el("span"), el("span"), el("span")), " Enviando");
+      const texto_msg = tipo === "fato" ? `Confirmado: ${texto}: ${valor}` : `${texto}: ${valor}`;
+      const falha = await enviarMensagem(texto_msg);
+      if (falha === null) {
+        cartao.classList.add("respondida");
+        cartao.querySelector(".alerta-cabeca").firstChild.replaceWith(icone("ok"));
+        formulario.replaceWith(el("p", { classe: "fonte" }, `Respondido: ${valor}`));
+      } else {
+        botao.disabled = false; campo.disabled = false;
+        botao.replaceChildren(tipo === "fato" ? "Confirmar e registrar" : "Responder");
+        erro.textContent = `Não consegui enviar: ${falha}`; erro.hidden = false;
+      }
     };
-    return el("div", { classe: "alerta alerta-pergunta" },
-      el("div", { classe: "alerta-cabeca" }, icone("pergunta"),
-        el("p", {}, el("strong", {}, "Preciso deste dado para continuar: "), item)),
-      el("form", { classe: "resposta-dado", onsubmit: enviar }, entrada,
-        el("button", { type: "submit", classe: "botao pequeno" }, "Responder")));
+    campo.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); formulario.requestSubmit(); }
+    });
+    const formulario = el("form", { classe: "resposta-dado", onsubmit: enviar }, campo, botao);
+    cartao.append(formulario, erro);
+    return cartao;
   });
+}
+
+function blocoLacunas(mensagem) {
+  const itens = mensagem.lacunas || [];
+  const neutra = mensagem.resposta && mensagem.resposta.auditoria && mensagem.resposta.auditoria.veredito === "neutra";
+  if (!itens.length && !neutra) return null;
+  const investigado = (mensagem.investigado || []).join(", ") || "nenhuma ferramenta";
+  return el("div", { classe: "alerta alerta-info" }, icone("analise"),
+    el("div", {},
+      el("p", {}, el("strong", {}, "O que investiguei: "), investigado, "."),
+      itens.length ? el("p", {}, el("strong", {}, "O que faltou: "), itens.join("; ")) : null,
+      neutra ? el("p", {}, "O auditor deu veredito neutra: as evidências encontradas não bastam para confirmar a hipótese principal.") : null));
 }
 
 const VEREDITO = {
@@ -325,7 +370,9 @@ function cartaoAgente(mensagem) {
       el("div", {}, el("p", {}, el("strong", {}, "O auditor reprovou esta resposta. "), r.aviso),
         motivos.length ? el("ul", {}, motivos.map((m) => el("li", {}, m))) : null)));
   }
-  cartao.append(...blocoDadosFaltantes(mensagem.dados_faltantes || []));
+  cartao.append(...blocoPerguntas(mensagem));
+  const lacunasNo = blocoLacunas(mensagem);
+  if (lacunasNo) cartao.append(lacunasNo);
   let textoPostmortem = null;
   if (r.analise) {
     const a = r.analise;
@@ -341,6 +388,17 @@ function cartaoAgente(mensagem) {
     if (acoes) cartao.append(acoes);
   } else if (r.fixa) {
     cartao.append(markdown(r.fixa.texto));
+    if (mensagem.causa_a_confirmar && !respondida(mensagem, "Confirmado")) {
+      const botao = el("button", { type: "button", classe: "botao primario" }, icone("ok"), "Confirmar esta causa");
+      const erro = el("p", { classe: "fonte erro-envio", role: "alert", hidden: true });
+      botao.addEventListener("click", async () => {
+        botao.disabled = true;
+        const falha = await enviarMensagem(`Confirmado: ${mensagem.causa_a_confirmar}`);
+        if (falha === null) botao.replaceWith(el("p", { classe: "fonte" }, "Causa confirmada. Peça o post-mortem de novo para gerá-lo."));
+        else { botao.disabled = false; erro.textContent = `Não consegui enviar: ${falha}`; erro.hidden = false; }
+      });
+      cartao.append(el("div", { classe: "chips" }, botao), erro);
+    }
     if (r.fixa.categoria === "gerar_relatorio" && r.fixa.texto.includes("\n")) {
       textoPostmortem = r.fixa.texto.replace(/^Post-mortem gerado em [^\n]*\n+/, "");
     }
@@ -451,12 +509,14 @@ function mostrarAvisoChave(texto) {
 
 async function enviarMensagem(texto) {
   texto = texto.trim();
-  if (!texto || estado.enviando) return;
+  if (!texto) return "mensagem vazia";
+  if (estado.enviando) return "aguarde a resposta anterior terminar";
   if (!estado.atual) await novaConversa();
   estado.enviando = true;
   atualizarBotaoEnviar();
   $("vazio").hidden = true;
   const sessaoId = estado.atual.id;
+  let resultado = "sem resposta";
   const local = { id: `local-${Date.now()}`, papel: "engenheiro", texto, criada_em: new Date().toISOString() };
   estado.atual.mensagens.push(local);
   $("mensagens").append(noMensagem(local));
@@ -471,12 +531,14 @@ async function enviarMensagem(texto) {
     const ultima = estado.atual.mensagens[estado.atual.mensagens.length - 1] || resposta;
     digitando.no.replaceWith(noMensagem(ultima));
     anunciar(ultima.erro ? "A investigação falhou." : "Resposta do agente pronta.");
+    resultado = ultima.erro ? ultima.erro : null;
     $("postmortem").disabled = !estado.atual.mensagens.some((m) => m.resposta && m.resposta.analise);
     $("titulo").textContent = estado.atual.titulo;
     await atualizarSessoes();
     if (!$("analise").hidden) desenharAnalise();
   } catch (erro) {
     estado.atual.mensagens.pop();
+    resultado = erro.message;
     if (erro.status === 503) mostrarAvisoChave(erro.message);
     digitando.no.replaceWith(el("div", { classe: "msg msg-agente" },
       el("div", { classe: "cartao" }, el("div", { classe: "alerta alerta-erro", role: "alert" }, icone("alerta"),
@@ -486,6 +548,7 @@ async function enviarMensagem(texto) {
     atualizarBotaoEnviar();
     irParaOFim();
   }
+  return resultado;
 }
 
 async function pedirPostmortem() {

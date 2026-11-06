@@ -23,7 +23,9 @@ OBJETOS = {
         "buscar_logs"
     },
     r"\bmetricas?\b|\b(volume|taxa|carga|pico) de requisic|\btaxa de erros?\b|\bcpu\b|"
-    r"\blatencia\b|\bmemoria\b": {"buscar_metricas"},
+    r"\blatencia\b|\bmemoria\b|\bdisco\b|\b(uso|consumo) (de|do|da)\b|\brecursos?\b": {
+        "buscar_metricas"
+    },
     r"\bdeploys?\b|\bimplantac": {"listar_deploys"},
     r"\bdiff\b|\bversoes\b|\bmudancas? (da|na|entre) vers": {"comparar_versoes"},
     r"\bwiki\b|\blimite documentado\b|\bdocumentac|\brunbooks?\b": {
@@ -98,8 +100,25 @@ def repete_consulta(texto: str, ferramentas_chamadas: set[str]) -> bool:
     return bool(_objetos_citados(texto) & set(ferramentas_chamadas))
 
 
+PREFIXO_LACUNA = "Lacuna: "
+
+
+def _como_lacuna(hipotese):
+    """Dado que falta que as ferramentas alcançam (logs, métricas, uso de recurso...) não é
+    pedido ao engenheiro: vira lacuna, dita como o que a investigação não trouxe."""
+    dado = hipotese.dado_que_falta
+    if not dado or dado.startswith(PREFIXO_LACUNA) or dado_faltante_valido(dado, ""):
+        return hipotese
+    texto = f"{PREFIXO_LACUNA}{dado} (as ferramentas consultadas não trouxeram esse dado)"
+    return hipotese.model_copy(update={"dado_que_falta": texto})
+
+
 def sanear_analise(analise: AnaliseIncidente, ferramentas_chamadas: set[str]) -> AnaliseIncidente:
-    """Tira ações de consulta e próximos passos que repetem consultas já feitas."""
+    """Tira ações de consulta e próximos passos que repetem consultas já feitas; dado que falta
+    ao alcance das ferramentas vira lacuna em vez de pergunta ao engenheiro."""
+    # só a principal vira pergunta ao engenheiro; as secundárias dizem o que as confirmaria
+    principal, *outras = analise.hipoteses
+    analise = analise.model_copy(update={"hipoteses": [_como_lacuna(principal), *outras]})
     principal = analise.hipoteses[0]
     acoes = ordenar_e_filtrar_acoes(
         analise.acoes_sugeridas, principal.causa, principal.evidencia or ""

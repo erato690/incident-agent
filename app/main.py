@@ -28,11 +28,14 @@ from pydantic import BaseModel, Field, field_validator
 from agente.conversa import abrir_sessao as abrir_sessao_local
 from agente.schemas import RespostaTurno, Sessao
 from app.formatacao import (
+    causa_a_confirmar,
     cenarios_disponiveis,
     dados_faltantes,
     fontes_consultadas,
+    lacunas,
     markdown_resposta,
     mensagem_erro,
+    perguntas,
     rotulo_ferramenta,
 )
 
@@ -139,6 +142,10 @@ def _mensagem_agente(resposta: RespostaTurno | None, duracao_ms: int, erro: str 
         "texto": markdown_resposta(resposta),
         "fontes": fontes_consultadas(resposta),
         "dados_faltantes": dados_faltantes(resposta),
+        "perguntas": perguntas(resposta),
+        "lacunas": lacunas(resposta),
+        "investigado": fontes_consultadas(resposta),
+        "causa_a_confirmar": causa_a_confirmar(resposta),
     }
 
 
@@ -173,6 +180,14 @@ def criar_app(
     cenarios = {c["id"]: c for c in cenarios_disponiveis(PASTA_CENARIOS)}
     conversas: dict[str, Conversa] = {}
     app = FastAPI(title="Agente de incidentes", docs_url="/api/docs", redoc_url=None)
+
+    @app.middleware("http")
+    async def sem_cache_no_front(pedido, chamar):
+        """O front muda junto com o agente: sem cache, o navegador nunca roda um app.js antigo."""
+        resposta = await chamar(pedido)
+        if not pedido.url.path.startswith("/api/"):
+            resposta.headers["Cache-Control"] = "no-cache"
+        return resposta
 
     def _conversa(session_id: str) -> Conversa:
         if session_id not in conversas:

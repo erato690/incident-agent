@@ -8,6 +8,7 @@ from langchain_core.embeddings import DeterministicFakeEmbedding
 from langchain_core.runnables import RunnableLambda
 
 from agente.integrado import (
+    CATEGORIA_SEM_CONFIRMACAO,
     TEXTO_SEM_ANALISE,
     AgenteIntegrado,
     montar_agente_classico,
@@ -76,20 +77,18 @@ def test_turno_investiga_e_grava_registro(agente):
     assert turno.duracao_ms >= 0 and sessao.turnos == 1
 
 
-def test_postmortem_apos_investigacao_gera_arquivo(agente, tmp_path):
+def test_postmortem_sem_causa_confirmada_nao_gera_e_pede_confirmacao(agente, tmp_path):
     sessao = agente.abrir_sessao("pool_esgotado")
     agente.turno(sessao, "pagamentos-api com NullPointerException")
     resposta = agente.turno(sessao, "gere o post-mortem")
-    assert resposta.rota == "fixa" and resposta.fixa.categoria == "gerar_relatorio"
-    arquivo = tmp_path / "saida" / f"postmortem_{sessao.session_id}.md"
-    assert arquivo.exists()
-    assert "# Post-mortem" in resposta.fixa.texto and str(arquivo) in resposta.fixa.texto
-    assert "causa não confirmada" in arquivo.read_text(encoding="utf-8")
+    assert resposta.rota == "fixa" and resposta.fixa.categoria == CATEGORIA_SEM_CONFIRMACAO
+    assert not (tmp_path / "saida").exists()
+    texto = resposta.fixa.texto
+    assert "falta confirmar a causa" in texto and ANALISE.hipoteses[0].causa in texto
+    assert "Confirmado:" in texto and "?" in texto
 
 
-def test_postmortem_usa_episodio_confirmado(agente, tmp_path):
-    sessao = agente.abrir_sessao("pool_esgotado")
-    agente.turno(sessao, "pagamentos-api com NullPointerException")
+def _confirmar(agente, sessao):
     agente.memoria.registrar_episodio(
         Episodio(
             incidente_id=sessao.session_id,
@@ -102,6 +101,24 @@ def test_postmortem_usa_episodio_confirmado(agente, tmp_path):
         ),
         RunnableLambda(lambda _: ResolucaoMemoria(acao="inserir_novo", motivo="novo")),
     )
+
+
+def test_postmortem_com_causa_confirmada_gera_arquivo(agente, tmp_path):
+    sessao = agente.abrir_sessao("pool_esgotado")
+    agente.turno(sessao, "pagamentos-api com NullPointerException")
+    _confirmar(agente, sessao)
+    resposta = agente.turno(sessao, "gere o post-mortem")
+    assert resposta.fixa.categoria == "gerar_relatorio"
+    arquivo = tmp_path / "saida" / f"postmortem_{sessao.session_id}.md"
+    assert arquivo.exists() and str(arquivo) in resposta.fixa.texto
+    conteudo = arquivo.read_text(encoding="utf-8")
+    assert "causa não confirmada" not in conteudo and "## Lições aprendidas" in conteudo
+
+
+def test_postmortem_usa_episodio_confirmado(agente, tmp_path):
+    sessao = agente.abrir_sessao("pool_esgotado")
+    agente.turno(sessao, "pagamentos-api com NullPointerException")
+    _confirmar(agente, sessao)
     resposta = agente.turno(sessao, "gere o post-mortem")
     assert "Causa confirmada: cupom nulo no checkout" in resposta.fixa.texto
 
@@ -153,6 +170,7 @@ def test_postmortem_ignora_resposta_que_so_consultou_o_sql(agente, tmp_path):
         trajetoria=[PASSO.model_copy(update={"ferramenta": "consultar_sql"})],
     )
     agente._guardar(sessao, RespostaTurnoFalsa.de(so_sql))
+    _confirmar(agente, sessao)
     texto = agente.turno(sessao, "gere o post-mortem").fixa.texto
     assert "contagem do SQL" not in texto and ANALISE.resumo in texto
 

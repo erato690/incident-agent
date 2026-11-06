@@ -217,3 +217,56 @@ def test_sem_chave_recusa_mensagem_com_aviso_legivel(agente):
     assert resposta.status_code == 503
     assert "OPENAI_API_KEY" in resposta.json()["detail"]
     assert agente.mensagens == []
+
+
+def test_front_sem_cache_para_nao_rodar_js_antigo(cliente):
+    for caminho in ("/", "/static/app.js"):
+        assert cliente.get(caminho).headers["cache-control"] == "no-cache"
+
+
+def test_mensagem_traz_perguntas_e_lacunas(cliente):
+    sessao = _nova(cliente)
+    corpo = cliente.post(f"/api/sessoes/{sessao['id']}/mensagens", json={"texto": "p"}).json()
+    assert corpo["perguntas"] == [] and corpo["lacunas"] == []
+    assert "investigado" in corpo and corpo["investigado"] == ["logs da loja"]
+
+
+def test_front_chama_so_funcoes_definidas():
+    """Regressão: uma edição apagou `chipVeredito` e o cartão quebrava ao desenhar."""
+    import re
+    from pathlib import Path
+
+    js = (Path(__file__).resolve().parent.parent / "app" / "static" / "app.js").read_text()
+    definidas = set(re.findall(r"function\s+(\w+)\s*\(", js))
+    definidas |= set(re.findall(r"(?:const|let)\s+(\w+)\s*=\s*(?:async\s*)?\(", js))
+    chamadas = set(re.findall(r"(?<![\w.$])([a-z]\w*)\(", js))
+    for parametros in re.findall(r"function\s+\w+\s*\(([^)]*)\)", js):  # parâmetros (callbacks)
+        definidas |= {p.split("=")[0].strip() for p in parametros.split(",") if p.strip()}
+    nativas = {
+        "fetch",
+        "setTimeout",
+        "matchMedia",
+        "requestAnimationFrame",
+        "el",
+        "icone",
+        "chip",
+        "if",
+        "for",
+        "while",
+        "switch",
+        "catch",
+        "function",
+        "return",
+        "typeof",
+        "async",
+        "await",
+        "new",
+        "parseInt",
+        "encodeURIComponent",
+        "String",
+        "Number",
+        "Boolean",
+    }
+    faltando = sorted(n for n in chamadas - definidas - nativas if n not in js.split("=>")[0])
+    faltando = [n for n in faltando if not re.search(rf"\b{n}\s*=", js)]
+    assert not faltando, faltando

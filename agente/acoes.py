@@ -76,10 +76,20 @@ def _formatar(acoes) -> str:
     return "\n".join([CABECALHO_SUGESTAO, *linhas])
 
 
+LIMITE_TOKENS_ACAO = 1200  # 3 ações cabem com folga; corta saída degenerada (vista: 16 mil tokens)
+
+
+def _com_limite(llm):
+    """Cópia do modelo com limite de tokens de saída (só modelos com `max_tokens`)."""
+    if hasattr(llm, "max_tokens") and hasattr(llm, "model_copy"):
+        return llm.model_copy(update={"max_tokens": LIMITE_TOKENS_ACAO})
+    return llm
+
+
 def montar_ferramenta_acao(llm, indice: FAISS) -> BaseTool:
     """`sugerir_acao`: runbook (FAISS, tipo=runbook) + `with_structured_output(ListaAcoes)`."""
     prompt = ChatPromptTemplate.from_messages([("system", SISTEMA_ACAO), ("human", HUMANA_ACAO)])
-    estruturado = llm.with_structured_output(ListaAcoes)
+    estruturado = _com_limite(llm).with_structured_output(ListaAcoes)
     cadeia = prompt | estruturado
     correcao = (
         ChatPromptTemplate.from_messages([*prompt.messages, ("human", CORRECAO_ACAO)]) | estruturado
@@ -88,12 +98,25 @@ def montar_ferramenta_acao(llm, indice: FAISS) -> BaseTool:
     def _propor(entrada: dict) -> list:
         """Ações concretas: ação que só manda olhar dados é recusada, com uma nova tentativa."""
         diagnostico = entrada["diagnostico"]
-        primeiras = cadeia.invoke(entrada).acoes
-        boas = ordenar_e_filtrar_acoes(primeiras, diagnostico, "")
+        try:
+            primeiras = cadeia.invoke(entrada).acoes
+        except Exception:  # noqa: BLE001 - saída inválida (ex.: limite de tokens): nova tentativa
+            primeiras = None
+        boas = ordenar_e_filtrar_acoes(primeiras or [], diagnostico, "")
         mantidas = {a.acao for a in boas}
-        rejeitadas = [a.acao for a in primeiras if a.acao not in mantidas]
-        if rejeitadas:
-            novas = correcao.invoke({**entrada, "rejeitadas": "; ".join(rejeitadas)}).acoes
+        rejeitadas = [a.acao for a in primeiras or [] if a.acao not in mantidas]
+        if primeiras is None or rejeitadas:
+            motivo = "; ".join(rejeitadas) or "a resposta anterior veio inválida"
+            try:
+                novas = correcao.invoke({**entrada, "rejeitadas": motivo}).acoes
+            except Exception:
+                if primeiras is not None:
+                    novas = []
+                else:  # as duas falharam: sem ação determinística, o erro aparece legível
+                    sobra = ordenar_e_filtrar_acoes([], diagnostico, "")
+                    if not sobra:
+                        raise
+                    return sobra
             boas = ordenar_e_filtrar_acoes(
                 [*boas, *(a for a in novas if a.acao not in mantidas)], diagnostico, ""
             )
