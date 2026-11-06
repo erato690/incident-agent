@@ -47,7 +47,18 @@ Rules:
   Examples:
   "quantos incidentes o pedidos-api teve em 2026 e qual a categoria mais comum?" -> comparar_incidente
   "quais deploys do pagamentos-api saíram este mês?" -> checar_deploy
-- In erro_texto, copy the excerpt of the error that was quoted; in dado_faltante, say what is missing to investigate.
+- In erro_texto, copy the excerpt of the error that was quoted.
+- dado_faltante is only for information that ONLY the engineer knows and the assistant's tools
+  (logs, metrics, deploys, version diff, database statistics, wiki, documentation, incident
+  history) cannot reach: the affected service when no service is named or inherited, the time
+  when nothing says when it started, a limit of an external provider with no documentation.
+  Never the cause, never the question itself, never something the tools answer. When nothing is
+  missing, leave dado_faltante null.
+  Examples:
+  "O pagamentos-api está com erros desde as 14h. Qual a causa provável?" -> dado_faltante null
+  (the cause is what the assistant investigates; the service and the time are given)
+  "está tudo dando erro, me ajuda" -> dado_faltante "qual serviço está com erro e desde quando"
+  "o pedidos-api está lento, foi deploy?" -> dado_faltante null (the tools list the deploys)
 
 Always answer in Brazilian Portuguese."""  # noqa: E501 - texto do prompt
 

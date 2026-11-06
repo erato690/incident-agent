@@ -40,12 +40,13 @@ def _analise(falta: str | None = None) -> AnaliseIncidente:
     )
 
 
-def test_dados_faltantes_sem_repeticao():
+def test_dados_faltantes_so_do_nlu_e_da_principal():
     nlu = AnaliseNLU.model_construct(dado_faltante="Métricas do pool")
     resposta = _resposta(analise=_analise("métricas do pool"))
     resposta.nlu = nlu
-    assert dados_faltantes(resposta) == ["métricas do pool"]
-    assert dados_faltantes(_resposta(analise=_analise())) == []
+    # o dado da hipótese secundária não vira pergunta; o do NLU sim
+    assert dados_faltantes(resposta) == ["Métricas do pool"]
+    assert dados_faltantes(_resposta(analise=_analise("métricas do pool"))) == []
 
 
 def test_fontes_e_passos():

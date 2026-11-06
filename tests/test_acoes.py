@@ -108,3 +108,56 @@ def test_erro_do_modelo_vira_texto_legivel(indice):
 
     saida = montar_ferramenta_acao(Quebrado(), indice).invoke({"diagnostico": "d", "servico": "s"})
     assert "Tool error" in saida and "falhou" in saida
+
+
+class LlmEmSequencia(LlmFalso):
+    """Devolve uma lista de ações por chamada, na ordem."""
+
+    def __init__(self, *listas):
+        super().__init__()
+        self.listas = list(listas)
+
+    def with_structured_output(self, schema):
+        def responde(valor):
+            self.recebidos.append(valor.to_messages())
+            return ListaAcoes(acoes=self.listas.pop(0))
+
+        return RunnableLambda(responde)
+
+
+def _acao(texto):
+    return AcaoSugerida(acao=texto, motivo="m", risco="baixo")
+
+
+def test_acao_de_consulta_e_recusada_e_o_modelo_tenta_de_novo(indice):
+    llm = LlmEmSequencia(
+        [_acao("Verifique os logs para identificar o volume"), _acao("Consulte a wiki")],
+        [_acao("Respeitar o Retry-After de 30 s com backoff exponencial")],
+    )
+    ferramenta = montar_ferramenta_acao(llm, indice)
+    config, contexto = _config()
+    saida = ferramenta.invoke(
+        {"diagnostico": "limite de 100/min excedido", "servico": "pagamentos-api"}, config=config
+    )
+    assert [a.acao for a in contexto.acoes_sugeridas] == [
+        "Respeitar o Retry-After de 30 s com backoff exponencial"
+    ]
+    assert "Verifique os logs" not in saida and len(llm.recebidos) == 2
+    correcao = llm.recebidos[1][-1].content
+    assert "Verifique os logs para identificar o volume" in correcao
+
+
+def test_sem_acao_concreta_apos_nova_tentativa_fica_so_o_que_presta(indice):
+    llm = LlmEmSequencia(
+        [_acao("Verifique os logs"), _acao("Limitar as chamadas a 90 por minuto")],
+        [_acao("Checar as métricas")],
+    )
+    ferramenta = montar_ferramenta_acao(llm, indice)
+    config, contexto = _config()
+    ferramenta.invoke({"diagnostico": "d", "servico": "s"}, config=config)
+    assert [a.acao for a in contexto.acoes_sugeridas] == ["Limitar as chamadas a 90 por minuto"]
+
+
+def test_sistema_de_acao_proibe_acao_de_consulta_e_pede_o_numero():
+    texto = " ".join(SISTEMA_ACAO.split())
+    assert "never an action that only checks" in texto and "number" in texto

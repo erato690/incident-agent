@@ -28,6 +28,7 @@ from agente.prompts import (
     texto_causa_trocada,
     texto_fato_registrado,
 )
+from agente.qualidade import sanear_analise, sanear_nlu
 from agente.schemas import (
     AnaliseIncidente,
     ContextoTurno,
@@ -320,9 +321,23 @@ def _investigar_com_contexto(investigacao: Runnable) -> Callable[[dict, dict], o
         configurado = patch_config(config, configurable={CHAVE_CONTEXTO: contexto})
         resultado = _com_episodios_citados(investigacao.invoke(estado, configurado), contexto)
         resultado = _com_fatos_citados(resultado, contexto)
-        return _com_acoes_sugeridas(resultado, contexto)
+        return _sem_consulta_repetida(_com_acoes_sugeridas(resultado, contexto))
 
     return investigar
+
+
+def _sem_consulta_repetida(resultado: object) -> object:
+    """Trava de qualidade: tira ação que só manda olhar dados e passo que repete uma consulta
+    que as ferramentas do turno já fizeram (o agente usa o dado, não devolve a tarefa)."""
+    trajetoria = getattr(resultado, "trajetoria", None) or []
+    ferramentas = {passo.ferramenta for passo in trajetoria}
+    return _na_analise(resultado, lambda analise: sanear_analise(analise, ferramentas))
+
+
+def _nlu_saneado(estado: dict) -> dict:
+    """Trava de qualidade: dado faltante que é a causa, a própria pergunta ou algo que as
+    ferramentas alcançam não é pedido ao engenheiro."""
+    return {**estado, "nlu": sanear_nlu(estado.get("nlu"), estado.get("mensagem", ""))}
 
 
 def _resp_erro_registro(
@@ -512,7 +527,9 @@ def montar_etapas(
             | _marcar(_decide_moderacao)
         ),
         # entra estado sem resposta -> sai estado + nlu (AnaliseNLU)
-        "passo4_nlu": _se_pendente(RunnablePassthrough.assign(nlu=nlu)),
+        "passo4_nlu": _se_pendente(
+            RunnablePassthrough.assign(nlu=nlu) | RunnableLambda(_nlu_saneado)
+        ),
         # entra estado + nlu -> sai estado + resposta (fixa se a intenção for de resposta fixa)
         "passo5_roteador": _se_pendente(
             _marcar(_decide_roteador(memoria, gerar_postmortem is not None))
