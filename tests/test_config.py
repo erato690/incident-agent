@@ -54,3 +54,29 @@ def test_imprime_provedor_e_modelo(monkeypatch, capsys):
     monkeypatch.setenv("OPENAI_API_KEY", "fake")
     config.escolher_llm()
     assert "LLM: openai · gpt-4o-mini" in capsys.readouterr().out
+
+
+def test_nlu_usa_modelo_maior_e_o_resto_fica_no_padrao(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-teste")
+    monkeypatch.delenv("MODELO_NLU", raising=False)
+    llm = config.escolher_llm("openai")
+    nlu = config.llm_do_nlu(llm)
+    assert llm.model_name == "gpt-4o-mini" and nlu.model_name == config.MODELO_NLU_PADRAO
+    assert config.MODELO_NLU_PADRAO == "gpt-4.1" and nlu.temperature == 0
+
+
+def test_modelo_nlu_configuravel_e_igual_ao_padrao_reaproveita(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-teste")
+    llm = config.escolher_llm("openai")
+    monkeypatch.setenv("MODELO_NLU", "gpt-4o")
+    assert config.llm_do_nlu(llm).model_name == "gpt-4o"
+    monkeypatch.setenv("MODELO_NLU", "gpt-4o-mini")
+    assert config.llm_do_nlu(llm) is llm
+
+
+def test_nlu_com_outro_provedor_ou_falso_nao_troca(monkeypatch):
+    falso = object()
+    assert config.llm_do_nlu(falso) is falso
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-teste")
+    deepseek = config.escolher_llm("deepseek")
+    assert config.llm_do_nlu(deepseek) is deepseek

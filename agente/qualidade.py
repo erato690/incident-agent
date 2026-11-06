@@ -19,10 +19,11 @@ def _normalizar(texto: str) -> str:
 
 # Objeto da consulta -> ferramentas que já trazem esse dado.
 OBJETOS = {
-    r"\blogs?\b|\berros? nos logs\b": {"buscar_logs"},
-    r"\bmetricas?\b|\bvolume de requisic|\btaxa de requisic|\bcpu\b|\blatencia\b": {
-        "buscar_metricas"
+    r"\blogs?\b|\berros? nos logs\b|\bdependencias? externas?\b|\binfraestrutura\b": {
+        "buscar_logs"
     },
+    r"\bmetricas?\b|\b(volume|taxa|carga|pico) de requisic|\btaxa de erros?\b|\bcpu\b|"
+    r"\blatencia\b|\bmemoria\b": {"buscar_metricas"},
     r"\bdeploys?\b|\bimplantac": {"listar_deploys"},
     r"\bdiff\b|\bversoes\b|\bmudancas? (da|na|entre) vers": {"comparar_versoes"},
     r"\bwiki\b|\blimite documentado\b|\bdocumentac|\brunbooks?\b": {
@@ -30,7 +31,9 @@ OBJETOS = {
         "buscar_documentacao",
         "sugerir_acao",
     },
-    r"\bestatisticas? do banco\b|\bvarreduras?\b|\breindexac": {"consultar_estatisticas_banco"},
+    r"\bestatisticas? do banco\b|\bestado (atual )?do banco\b|\bvarreduras?\b|\breindexac": {
+        "consultar_estatisticas_banco"
+    },
     r"\bhistorico de incidentes\b|\bincidentes anteriores\b": {
         "consultar_memoria",
         "consultar_sql",
@@ -38,7 +41,7 @@ OBJETOS = {
 }
 VERBOS_CONSULTA = (
     r"^(verifi|consult|chec|cheq|confer|confir|analis|investig|revis|examin|olh|busc|identific|"
-    r"levant|avali|observ|acompanh|inspecion)\w*"
+    r"levant|avali|observ|acompanh|inspecion|monitor)\w*"
 )
 CAUSA = r"\b(causa|causas|motivo|razao|origem|raiz|por que|porque|diagnostico)\b"
 PALAVRAS_VAZIAS = {
@@ -97,10 +100,132 @@ def repete_consulta(texto: str, ferramentas_chamadas: set[str]) -> bool:
 
 def sanear_analise(analise: AnaliseIncidente, ferramentas_chamadas: set[str]) -> AnaliseIncidente:
     """Tira ações de consulta e próximos passos que repetem consultas já feitas."""
-    acoes = [a for a in analise.acoes_sugeridas if not acao_de_consulta(a.acao)]
+    principal = analise.hipoteses[0]
+    acoes = ordenar_e_filtrar_acoes(
+        analise.acoes_sugeridas, principal.causa, principal.evidencia or ""
+    )
     passos = [p for p in analise.proximos_passos if not repete_consulta(p, ferramentas_chamadas)]
     if not passos:
         passos = [f"Avaliar e aprovar a ação sugerida: {a.acao}" for a in acoes[:2]]
     if not passos:
         passos = [f"Corrigir a causa principal: {analise.hipoteses[0].causa}"]
     return analise.model_copy(update={"acoes_sugeridas": acoes, "proximos_passos": passos})
+
+
+# --- Qualidade das ações sugeridas ---
+# Ordem: primeiro a que desfaz a causa (rollback do deploy culpado, restaurar o valor anterior),
+# depois a de menor risco, depois contenção. Ação condicional ("se o pico for legítimo") ou sem
+# nenhum dado da evidência da hipótese principal sai. Risco alto só com evidência direta.
+
+_VERSAO = r"\bv\d+(?:\.\d+)+\b"
+_DE_PARA = r"([a-z_][\w.-]*)\s+de\s+(\d+(?:[.,]\d+)?)\s*(?:[a-z]+\s+)?para\s+(\d+(?:[.,]\d+)?)"
+_CONDICIONAL = (
+    r"(^|[\s,;(])(se|caso)\s+(o|a|os|as|for|forem|houver|necessari\w*|persist\w*|ainda|"
+    r"continuar|o problema|nao)\b"
+)
+_DESFAZ = r"\b(rollback|revert\w*|restaur\w*|desfaz\w*|voltar)\b"
+_MUDANCA_INTERNA = r"\b(deploy|versao|v\d+(?:\.\d+)+|diff|configurac\w*|reduziu|alterou|trocou)\b"
+_ORDEM_RISCO = {"baixo": 0, "medio": 1, "alto": 2}
+
+
+def dados_da_evidencia(texto: str) -> set[str]:
+    """Dados citáveis da evidência: versões, números (2+ dígitos), chaves de configuração,
+    cabeçalhos e termos em maiúsculas (ex.: REINDEX)."""
+    texto = texto or ""
+    dados = {v.casefold() for v in re.findall(_VERSAO, texto)}
+    dados |= set(re.findall(r"(?<![\d.])\d{2,}(?![\d])", texto))
+    dados |= {t.casefold() for t in re.findall(r"\b[a-z]+(?:_[a-z0-9]+)+\b", texto)}
+    dados |= {t.casefold() for t in re.findall(r"\b[A-Z][\w]*(?:-[A-Z][\w]*)+\b", texto)}
+    dados |= {t.casefold() for t in re.findall(r"\b[A-Z]{3,}\b", texto)}
+    return dados
+
+
+def _cita_dado(acao, dados: set[str]) -> bool:
+    alvo = f"{acao.acao} {acao.motivo}".casefold()
+    return any(re.search(rf"(?<![\w.]){re.escape(d)}(?![\w])", alvo) for d in dados)
+
+
+def acao_condicional(acao) -> bool:
+    """True para ação hipotética ("se necessário", "caso persista", "se o pico for legítimo")."""
+    return bool(re.search(_CONDICIONAL, _normalizar(f"{acao.acao}. {acao.motivo}")))
+
+
+def _acao_de_desfazer(causa: str, evidencia: str):
+    """Ação determinística que desfaz a causa interna (valor anterior do diff ou rollback)."""
+    from agente.schemas import AcaoSugerida
+
+    texto = f"{causa} {evidencia}"
+    versoes = re.findall(_VERSAO, texto)
+    versao = versoes[0] if versoes else None
+    de_para = re.search(_DE_PARA, texto)
+    if de_para:
+        chave, antigo, novo = de_para.groups()
+        sufixo = f" (valor anterior à {versao})" if versao else ""
+        onde = f" na {versao}" if versao else ""
+        return AcaoSugerida(
+            acao=f"Restaurar {chave} para {antigo}{sufixo}",
+            motivo=f"A evidência mostra {chave} de {antigo} para {novo}{onde}; voltar ao valor "
+            "anterior desfaz a causa.",
+            risco="baixo",
+        )
+    if versao:
+        return AcaoSugerida(
+            acao=f"Fazer rollback da {versao}",
+            motivo=f"A {versao} é a mudança apontada como causa na evidência; o rollback a desfaz.",
+            risco="medio",
+        )
+    return None
+
+
+def _termos(acao) -> set[str]:
+    palavras = re.findall(r"[a-z0-9.]+", _normalizar(acao.acao))
+    return {p.removeprefix("v") for p in palavras if p not in PALAVRAS_VAZIAS and len(p) > 1}
+
+
+def _sem_quase_repetidas(acoes: list, dados: set[str]) -> list:
+    """Duas ações quase iguais (uma contém a outra ou 60% dos termos em comum): fica a que cita
+    mais dados da evidência (a mais específica)."""
+    escolhidas: list = []
+    for acao in acoes:
+        termos = _termos(acao)
+        repetida = None
+        for i, outra in enumerate(escolhidas):
+            comuns = termos & _termos(outra)
+            menor = min(len(termos), len(_termos(outra))) or 1
+            if len(comuns) / menor >= 0.6:
+                repetida = i
+                break
+        if repetida is None:
+            escolhidas.append(acao)
+        elif _peso(acao, dados) > _peso(escolhidas[repetida], dados):
+            escolhidas[repetida] = acao
+    return escolhidas
+
+
+def _peso(acao, dados: set[str]) -> int:
+    alvo = f"{acao.acao} {acao.motivo}".casefold()
+    citados = sum(1 for d in dados if re.search(rf"(?<![\w.]){re.escape(d)}(?![\w])", alvo))
+    return citados * 10 + len(re.findall(_VERSAO + r"|\d+", acao.acao))
+
+
+def ordenar_e_filtrar_acoes(acoes: list, causa: str, evidencia: str) -> list:
+    """Filtra e ordena as ações pela evidência da hipótese principal (no máximo 3)."""
+    dados = dados_da_evidencia(f"{causa} {evidencia}")
+    candidatas = [a for a in acoes if not (acao_de_consulta(a.acao) or acao_condicional(a))]
+    boas = [a for a in candidatas if dados and _cita_dado(a, dados)]
+    if not boas:
+        # nenhuma cita dado: fica a de menor risco que sobra (risco alto exige evidência direta)
+        boas = sorted(
+            (a for a in candidatas if a.risco != "alto"), key=lambda a: _ORDEM_RISCO[a.risco]
+        )[:1]
+    boas = _sem_quase_repetidas(boas, dados)
+    interna = re.search(_MUDANCA_INTERNA, _normalizar(causa))
+    desfaz = [a for a in boas if re.search(_DESFAZ, _normalizar(a.acao))]
+    if interna and not desfaz:
+        nova = _acao_de_desfazer(causa, evidencia)
+        if nova is not None:
+            boas.insert(0, nova)
+    boas.sort(
+        key=lambda a: (0 if re.search(_DESFAZ, _normalizar(a.acao)) else 1, _ORDEM_RISCO[a.risco])
+    )
+    return boas[:3]

@@ -132,7 +132,13 @@ def _acao(texto):
 def test_acao_de_consulta_e_recusada_e_o_modelo_tenta_de_novo(indice):
     llm = LlmEmSequencia(
         [_acao("Verifique os logs para identificar o volume"), _acao("Consulte a wiki")],
-        [_acao("Respeitar o Retry-After de 30 s com backoff exponencial")],
+        [
+            AcaoSugerida(
+                acao="Respeitar o Retry-After de 30 s com backoff exponencial",
+                motivo="mantém as chamadas abaixo de 100/min",
+                risco="baixo",
+            )
+        ],
     )
     ferramenta = montar_ferramenta_acao(llm, indice)
     config, contexto = _config()
@@ -161,3 +167,32 @@ def test_sem_acao_concreta_apos_nova_tentativa_fica_so_o_que_presta(indice):
 def test_sistema_de_acao_proibe_acao_de_consulta_e_pede_o_numero():
     texto = " ".join(SISTEMA_ACAO.split())
     assert "never an action that only checks" in texto and "number" in texto
+
+
+def test_acao_condicional_ou_sem_dado_do_diagnostico_tambem_e_recusada(indice):
+    llm = LlmEmSequencia(
+        [
+            AcaoSugerida(
+                acao="Escalar horizontalmente", motivo="se o pico for legítimo", risco="alto"
+            ),
+            AcaoSugerida(
+                acao="Aumentar o pool para 15", motivo="sem exceder o limite", risco="baixo"
+            ),
+        ],
+        [
+            AcaoSugerida(
+                acao="Fazer rollback da v3.2.0", motivo="a v3.2.0 cortou o pool", risco="medio"
+            )
+        ],
+    )
+    ferramenta = montar_ferramenta_acao(llm, indice)
+    config, contexto = _config()
+    diagnostico = "a v3.2.0 reduziu pool_max de 20 para 10. Evidência: timeout de conexão (x284)"
+    ferramenta.invoke({"diagnostico": diagnostico, "servico": "pedidos-api"}, config=config)
+    acoes = [a.acao for a in contexto.acoes_sugeridas]
+    assert acoes[0] in {
+        "Restaurar pool_max para 20 (valor anterior à v3.2.0)",
+        "Fazer rollback da v3.2.0",
+    }
+    assert "Fazer rollback da v3.2.0" in acoes and "Aumentar o pool para 15" not in acoes
+    assert all("se o pico" not in a.motivo for a in contexto.acoes_sugeridas)

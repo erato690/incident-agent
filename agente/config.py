@@ -26,3 +26,21 @@ def escolher_llm(provedor: str | None = None) -> BaseChatModel:
     llm = getattr(importlib.import_module(modulo), classe)(model=modelo, temperature=0)
     print(f"LLM: {nome} · {modelo}")
     return llm
+
+
+# Só o NLU usa um modelo maior (decisão do Rafael, research.md da Fase 5): o gpt-4o-mini confundia
+# "dado faltante" com a causa a investigar. Investigador, Registrador, auditor e sugerir_acao
+# continuam no modelo padrão. MODELO_NLU troca o modelo; igual ao padrão, reaproveita o mesmo LLM.
+MODELO_NLU_PADRAO = "gpt-4.1"
+
+
+def llm_do_nlu(llm):
+    """LLM do NLU: com OpenAI, o modelo de MODELO_NLU (padrão gpt-4.1); senão, o próprio `llm`."""
+    from langchain_openai import ChatOpenAI
+
+    if not isinstance(llm, ChatOpenAI):
+        return llm
+    modelo = (os.getenv("MODELO_NLU") or MODELO_NLU_PADRAO).strip()
+    if modelo == llm.model_name:
+        return llm
+    return ChatOpenAI(model=modelo, temperature=0)
