@@ -125,3 +125,175 @@
   - testes da API com agente falso e sem chave em `tests/test_api.py`;
   - a constitution passou a 2.1.0 (princípio X).
 
+## Respostas "burras": dado faltante indevido e ações de só verificar (2026-11-05)
+
+- **Contexto:** o Rafael testou na tela "O pagamentos-api está com erros desde as 14h. Qual a
+  causa provável?" (cenário `rate_limit`). Três defeitos apareceram:
+  - o NLU marcou "causa provável dos erros" como dado faltante, e a tela pediu ao engenheiro o que
+    o próprio agente tinha de descobrir;
+  - os próximos passos e as ações mandavam "verificar os logs" e "consultar o limite
+    documentado", embora o agente já tivesse lido os logs (150 respostas 429, X-RateLimit-Limit
+    100/min, Retry-After 30) e a wiki (100 requisições por minuto);
+  - o mesmo padrão de devolver a tarefa podia aparecer nos outros cenários.
+- **Correção (autorizada pelo pedido, sem mudar schema):**
+  - prompt do NLU: `dado_faltante` só para o que só o engenheiro sabe (serviço ou horário
+    ausentes, limite de provedor sem documentação), nunca a causa, a pergunta ou o que as
+    ferramentas alcançam; resumo da conversa é `investigar_erro`, não `gerar_relatorio`;
+  - trava em código (`agente/qualidade.py`, ligada ao pipeline depois do NLU): descarta o dado
+    faltante que é a causa, repete a pergunta ou cita logs, métricas, deploys, diff, banco, wiki,
+    documentação ou histórico;
+  - `sugerir_acao`: o prompt exige remediação concreta que cita o número da evidência; ação que só
+    manda olhar dados é recusada e o modelo tenta de novo uma vez, com as recusadas no pedido;
+  - o diagnóstico enviado a `sugerir_acao` leva a evidência da hipótese principal;
+  - prompt do Investigador: próximos passos usam os números lidos e nunca repetem uma consulta já
+    feita; trava em código tira da análise o passo que repete consulta feita no turno;
+  - na tela, só o dado faltante do NLU e o da hipótese principal sem evidência viram pergunta.
+- **Testes sem chave:** `tests/test_qualidade.py`, `tests/test_pipeline_qualidade.py` e casos novos
+  em `tests/test_acoes.py`.
+
+## Modelo maior só no NLU (2026-11-05)
+
+- **Contexto:** o gpt-4o-mini interpretava mal o "dado faltante" (no `rate_limit`, marcou a causa
+  como dado faltante). A trava em código cobre o caso, mas o Rafael pediu também um modelo maior
+  só na compreensão da intenção.
+- **Decisão do Rafael:** trocar o modelo SÓ do NLU; Investigador, Registrador, auditor,
+  `sugerir_acao` e filtros de memória continuam em gpt-4o-mini. Só OpenAI, com a chave existente.
+- **Opções de modelo (lista da chave):** gpt-4.1 e gpt-4o, os maiores sem raciocínio; a família
+  gpt-5 e o o3 são modelos de raciocínio, mais lentos, e ficaram de fora. Escolhido o **gpt-4.1**
+  (segue melhor as instruções e custa menos que o gpt-4o).
+- **Como ficou:** `agente/config.py` tem `MODELO_NLU` (padrão `gpt-4.1`) e `llm_do_nlu`, usado por
+  `montar_nlu`; com outro provedor, ou com `MODELO_NLU=gpt-4o-mini`, o NLU usa o mesmo modelo dos
+  demais.
+- **Medição** (notebook inteiro com a chave, as duas execuções em paralelo; tempos com ruído):
+
+| | NLU gpt-4o-mini | NLU gpt-4.1 |
+|---|---|---|
+| Bateria da Fase 1 | 23/23 | 23/23 |
+| Bateria da Fase 2 | 12/12 | 12/12 |
+| Bateria da Fase 3 | 10/10 | 10/10 |
+| Conversa longa (12 turnos) | 12/12 | 11/12 ("Resume o que sabemos" virou `gerar_relatorio`; corrigido no prompt) |
+| Bateria da Fase 4 | 11/11, causa certa 8/8 | 11/11, causa certa 8/8 |
+| Avaliação dos 8 cenários (causa certa) | 0,875 | 1,0 |
+| Seção 4 / seção 5 | 72 s / 287 s | 71 s / 107 s |
+| Notebook inteiro | 988 s | 728 s |
+| Custo de um turno `rate_limit` | US$ 0,0052 (21 s) | US$ 0,0062 (17,7 s) |
+
+  Execução final com `gpt-4.1` no NLU (sozinha, depois de todas as correções): notebook inteiro em
+  845 s sem erros; seções 1 a 5 em 103, 163, 297, 103 e 128 s; baterias 23/23, 12/12, 10/10 e
+  11/11, conversa longa 12/12 (com a regra do resumo da conversa), causa certa 8/8. Nenhum
+  acerto piorou e nenhuma seção passou de 300 s, então o `gpt-4.1` ficou como padrão do NLU.
+
+  Custo pelo preço de lista da OpenAI (gpt-4o-mini US$ 0,15 e 0,60 por milhão de tokens de
+  entrada e saída; gpt-4.1 US$ 2 e 8). O NLU gasta cerca de 1,4 mil tokens por turno.
+
+## Qualidade das ações sugeridas (2026-11-05)
+
+- **Contexto:** no `pool_esgotado` (pedidos-api, v3.2.0), causa e evidência saíram certas
+  (`pool_max` de 20 para 10, 284 timeouts), mas as ações saíram fracas: "aumentar o pool para 15"
+  (o diff mostra que antes era 20), "reduzir o tempo máximo das consultas" (os logs mostram espera
+  por conexão, não consulta lenta) e "escalar horizontalmente, se o pico for legítimo" (nada na
+  evidência fala de pico).
+- **Decisão do Rafael:** ajustar o prompt de `sugerir_acao` e travar em código, sem mudar schema.
+- **Como ficou:**
+  - prompt: primeiro a ação que desfaz a causa (rollback do deploy culpado, valor anterior do
+    diff), depois a de menor risco, depois contenção; cada ação ataca o mecanismo observado e cita o
+    dado que a sustenta; nada condicional;
+  - trava (`ordenar_e_filtrar_acoes` em `agente/qualidade.py`, na ferramenta e na análise): tira ação
+    condicional ("se necessário", "se o pico for legítimo"), ação sem nenhum dado da evidência da
+    hipótese principal e risco alto sem evidência direta; com causa interna e sem ação de desfazer,
+    o código inclui "Restaurar <chave> para <valor anterior>" ou "Fazer rollback da <versão>";
+    ações quase iguais ficam na mais específica; se nenhuma cita dado, fica a de menor risco;
+  - a ferramenta tenta de novo uma vez quando recusa alguma ação, com as recusadas no pedido.
+- **Resultado com a chave (8 cenários, 2026-11-05):** causa certa 8/8, auditor aprovando 8/8,
+  nenhum dado faltante indevido, nenhuma ação de consulta ou condicional. Rollback ou valor anterior
+  em primeiro nos cenários com deploy culpado; contenção da dependência nos externos. No
+  `pool_esgotado`: "Restaurar o pool_max para 20" em primeiro.
+
+## Veredito explícito do auditor (NLI) e avaliadores por técnica (2026-11-05)
+
+- **Contexto:** o Rafael pediu o veredito explícito, no estilo da auditoria de inferência lógica
+  (NLI) vista em aula, e uma métrica por técnica de verificação. É mudança de schema e de saída,
+  autorizada por ele.
+- **Schema:** `VereditoCoerencia.veredito` passa a `apoia`, `refuta` ou `neutra` (o antigo
+  `neutro` é aceito e convertido). `Auditoria` ganha `veredito` (final, depois das travas) e
+  `veredito_rebaixado`; `RegistroTurno` ganha `veredito`.
+- **Regra:** aprovada só com veredito final `apoia`, sem afirmação contraditória e sem falácia
+  confirmada. Trava: afirmação contraditória rebaixa para `refuta`; `apoia` com mais da metade das
+  afirmações verificáveis sem prova vira `neutra`.
+- **Avaliação:** `fato_deterministico` (fração das afirmações verificáveis confirmadas) e
+  `veredito_nli` (1 quando o veredito é o esperado; padrão `apoia`, a resposta errada roteirizada
+  espera `refuta`) entram ao lado de `causa_certa`, `trajetoria_ferramentas` e `auditor_aprovou`,
+  com a assinatura `(inputs, outputs, reference_outputs)` do `evaluate()` do LangSmith.
+- **Exibição:** texto copiado ("auditada: aprovada (veredito: apoia)"), cartão do chat, painel de
+  análise e seção 5.1 do notebook.
+
+## Post-mortem só com causa confirmada (2026-11-06)
+
+- **Contexto:** o arquivo gerado sem confirmação saía como rascunho "causa não confirmada", e o
+  arquivo tinha defeitos: linha do tempo com horários das consultas (00:00, 03:00, 00:25) em vez
+  dos eventos do incidente, entradas "sem horário" das ferramentas, aviso técnico em inglês do
+  GitHub como evento, rodapé "não auditada" com a análise auditada e ações repetidas entre a
+  correção e as preventivas.
+- **Decisão do Rafael (muda o atuador, a spec e o princípio VIII da constitution, agora 2.2.0):**
+  sem causa confirmada na sessão, não há arquivo. A resposta diz que falta confirmar a causa,
+  mostra a hipótese principal e pergunta se o engenheiro a confirma; a confirmação grava o
+  episódio pelo Registrador (com a trava), e só então o post-mortem sai, com as lições aprendidas.
+  Trava em código (`agente/integrado.py`; `gerar_postmortem` recusa dados sem episódio).
+- **Correções do arquivo:** linha do tempo só com eventos do incidente, em ordem e com data
+  (deploys, primeiro e último erro dos logs, reindexação em andamento); seção "Investigação
+  realizada" com as consultas e nota em português quando usou dados gravados; rodapé com o
+  veredito e a hora da auditoria; ações preventivas sem repetir a correção.
+- **Tela:** o pedido sem confirmação mostra o botão "Confirmar esta causa".
+
+## Tela: resposta à pergunta de dado e pedido de logs ao engenheiro (2026-11-06)
+
+- **Bug 1 (front):** responder no cartão "Preciso deste dado" não dava retorno claro. Agora a
+  resposta vira mensagem do engenheiro na mesma sessão e roda um turno novo com os passos ao
+  vivo; o cartão fica verde só quando a resposta chega ao agente; enquanto envia, o botão fica
+  desabilitado com indicador; erro aparece legível e o cartão continua amarelo. Pergunta de fato
+  da wiki (D7) usa "Confirmar e registrar" e envia como confirmação. O front passou a ser servido
+  sem cache, para o navegador não rodar um `app.js` antigo.
+- **Bug 2 (agente):** o agente pedia ao engenheiro "logs ou métricas que confirmem o uso do
+  disco". A trava passou a valer para o dado que falta da hipótese principal: pedido de logs,
+  métricas, deploys, uso de recurso ou "confirmar" algo ao alcance das ferramentas vira lacuna,
+  mostrada como "O que investiguei / O que faltou", nunca como pergunta. O prompt manda dizer
+  que nenhuma ferramenta cobre a métrica e investigar com o que há.
+- **Robustez:** `sugerir_acao` degenerou uma vez (16 mil tokens de saída, 178 s, sem ações).
+  A saída das ações tem limite de 1.200 tokens e uma nova tentativa; se as duas falharem, fica a
+  ação determinística de desfazer a causa.
+
+## Quatro técnicas do auditor separadas e auditoria de trajetória (2026-11-06)
+
+- **Contexto:** o Rafael apontou que a validação mostrava um único resultado agregado. O auditor
+  já combinava a extração com Pydantic (`ListaAfirmacoes`), a checagem de fatos (`checar_fatos`)
+  e o NLI (`VereditoCoerencia` com falácias), mas a trajetória só entrava como fonte das
+  observações e na avaliação (`trajetoria_ferramentas`), não como critério do auditor.
+- **Decisão do Rafael (muda o schema de `Auditoria`):**
+  - quarta checagem em código, `auditar_trajetoria` → `ChecagemTrajetoria` (itens com critério,
+    status e detalhe): ferramentas citadas chamadas; argumentos coerentes (serviço, versões e tags
+    contra os deploys listados); ferramentas mínimas (logs sempre; deploys e diff quando a causa
+    culpa uma mudança; sem chamada repetida à toa); nenhuma ferramenta de escrita. Reprova só
+    com critério grave;
+  - checagem de fatos com tolerância de 5% em contagens, durações e percentuais (números a partir
+    de 10), além do casamento exato; versões e horários continuam exatos;
+  - as quatro técnicas separadas no notebook (uma célula por técnica na seção 5.1, sobre a
+    resposta certa e a errada roteirizada), na resposta, no cartão e na análise da tela, no
+    post-mortem e no relatório;
+  - avaliadores: `trajetoria_ferramentas`, `fato_deterministico`, `veredito_nli` e o agregado
+    `auditor_aprovou`, todos com `(inputs, outputs, reference_outputs)`.
+- **Resultado com a chave (8 cenários):** as quatro técnicas passaram nos 8, com causa certa 8/8
+  e veredito `apoia` 8/8.
+- **Post-mortem na seção 5.2:** fluxo em três passos visíveis: pedido sem confirmação (recusa e
+  pergunta), confirmação (grava o episódio) e post-mortem gerado, renderizado como Markdown.
+
+## Laboratório com Docker Compose (2026-11-06)
+
+- **Decisão do Rafael:** pasta `laboratorios/` no workspace, um laboratório por subpasta; o
+  primeiro, `laboratorios/incident-lab/`, sobe a loja (`incident-shop`, contrato 1.1.0) e o
+  agente já conectados (`LOJA_URL=http://shop:8000`, healthcheck em `/saude`, portas só em
+  127.0.0.1, `CENARIO` como cenário padrão do chat). A chave vem do shell ou do `.env` do
+  incident-agent, nunca da imagem. O deploy no Railway ficou fora.
+- **Validação:** `docker compose up --build`, `/saude` com o contrato 1.1.0, uma pergunta do
+  `rate_limit` no chat com as requisições `GET /logs`, `/metricas` e `/deploys` nos logs da loja,
+  e `docker compose down`. Fora do compose, o padrão continua gravado (`dados_dummy/`).
+

@@ -101,8 +101,11 @@ Cada turno da conversa atravessa as camadas abaixo, nesta ordem.
 5. **Auditor de verificação cognitiva.** Fica fora do agente e examina a resposta já pronta antes
    da entrega (detalhes na seção 5).
 6. **Post-mortem.** É o único atuador do agente: um arquivo `.md` gerado por template a partir de
-   dados Pydantic, só quando o engenheiro pede. Sem causa confirmada, sai marcado como "causa não
-   confirmada".
+   dados Pydantic, só quando o engenheiro pede e só com a causa confirmada por ele. Sem
+   confirmação, nenhum arquivo é gerado: a resposta mostra a hipótese principal e pergunta se o
+   engenheiro a confirma. A linha do tempo traz só eventos do incidente (deploy, primeiro e
+   último erro), em ordem e com data; as consultas do agente vão para "Investigação realizada", e
+   o rodapé traz o veredito do auditor.
 7. **Interface.** Interface web própria: uma API FastAPI sobre o mesmo agente integrado e um
    front em HTML, CSS e JavaScript sem build. Na visão de *uso*, a conversa por incidente, com
    barra lateral de sessões, resposta em cartão estruturado e os passos do turno ao vivo; na de
@@ -142,6 +145,13 @@ Pydantic e `with_retry`.
   padrão) e `deepseek` (`deepseek-v4-flash`), temperatura 0. Rejeitada a troca automática entre
   provedores, para não esconder qual modelo produziu a saída. Embeddings: `text-embedding-3-small`
   da OpenAI, porque o DeepSeek não tem API de embeddings.
+- *Modelo do NLU diferente dos demais (decisão da Fase 5):* só a compreensão da intenção usa o
+  `gpt-4.1` (variável `MODELO_NLU`); Investigador, Registrador, auditor e `sugerir_acao` continuam
+  no `gpt-4o-mini`. O modelo pequeno confundia o "dado faltante" com a própria causa a investigar
+  (no `rate_limit`, pedia ao engenheiro a "causa provável dos erros"). O NLU recebe só a mensagem
+  e o histórico curto, cerca de 1,4 mil tokens por turno, então o modelo maior custa pouco: um
+  turno do `rate_limit` passou de US$ 0,0052 para US$ 0,0062. Rejeitados os modelos de
+  raciocínio (família gpt-5 e o3), mais lentos para uma classificação.
 - *Saída da investigação (R3):* `JsonOutputParser`, que faz streaming de JSON parcial. Rejeitados
   `with_structured_output` (não mostra o JSON sendo montado no `stream`) e `PydanticOutputParser`
   (não faz streaming parcial).
@@ -289,6 +299,11 @@ seção 8).
   experiência de chat esperada: barra lateral de conversas, caixa de mensagem fixa e passos do
   turno ao vivo. Os passos vêm de um `BaseCallbackHandler` do LangChain ligado ao turno, sem mudar
   o agente.
+- *Qualidade da resposta:* testes na interface mostraram respostas que devolviam a tarefa ao
+  engenheiro ("verifique os logs", "consulte o limite documentado") e um dado faltante que era a
+  própria causa. A correção juntou regras nos prompts e travas em código (`agente/qualidade.py`): o
+  dado faltante indevido é descartado, a ação que só manda olhar dados é recusada com uma nova
+  tentativa, e o próximo passo que repete uma consulta já feita sai da análise.
 - *Ordem de corte se faltasse tempo:* Streamlit só com a tela de uso; verificador sem falácias;
   fato da documentação sem gravação. LangSmith, relatório e notebook não seriam cortados.
 
@@ -297,7 +312,7 @@ seção 8).
 ### 5.1 Baterias e conversas por fase
 
 Cada fase tem uma bateria de mensagens com a rota esperada e conversas de vários turnos, executadas
-com `gpt-4o-mini`. Os números abaixo vêm dos registros de execução dos `research.md`.
+com `gpt-4o-mini` (e, a partir da Fase 5, `gpt-4.1` só no NLU). Os números abaixo vêm dos registros de execução dos `research.md`.
 
 | Fase | Bateria (rotas) | Conversas | Causa certa | Tempo |
 |---|---|---|---|---|
@@ -305,9 +320,9 @@ com `gpt-4o-mini`. Os números abaixo vêm dos registros de execução dos `rese
 | 2 | 12/12 | 9/9 | 7/8 cenários | notebook inteiro em 216 s |
 | 3 | 10/10 | 24/24 turnos | não se aplica | seção 3 em 290 s (limite: 300 s) |
 | 4 | 11/11 | com as seções anteriores sem regressão | 8/8 cenários | seção 4 em 73 s (execução final) |
-| 5 | avaliação local dos 8 cenários: causa certa 1,0, trajetória 1,0, auditor 1,0 | conversa integrada de 4 turnos e pedido de ação recusado | 8/8 cenários | seção 5 em 116 s; notebook inteiro em 831 s, sem erros |
+| 5 | avaliação local dos 8 cenários: causa certa 1,0, trajetória 1,0, checagem de fatos 0,95, veredito NLI 1,0, auditor 1,0 | conversa integrada de 5 turnos (com o post-mortem em três passos) e pedido de ação recusado | 8/8 cenários | seção 5 em 128 s; notebook inteiro em 845 s (seção 3 em 297 s), sem erros |
 
-O projeto tem 423 testes automáticos sem chave ao fim da Fase 4 e 510 ao fim da Fase 5. Na execução
+O projeto tem 423 testes automáticos sem chave ao fim da Fase 4 e 599 ao fim da Fase 5. Na execução
 final, todas as baterias e conversas das seções 1 a 4 passaram (23/23, 12/12, 10/10 e 11/11). Na Fase 2, os cenários `rate_limit` (o agente respondia "picos de carga") e
 `banco_lento_com_deploy` (o agente apontava o banco, mas não a reindexação) não chegavam à causa;
 as Fases 3 e 4 resolveram os dois casos com a wiki de documentação e a ferramenta de estatísticas
@@ -367,15 +382,34 @@ corte em bloco deixava as estatísticas do banco de fora (agora o orçamento é 
 ferramenta); e o post-mortem usava a última análise mesmo quando ela só consultava o SQL (agora usa
 a última investigação com ferramentas).
 
+**As quatro técnicas de verificação.** O auditor segue as quatro técnicas de auditoria cognitiva
+vistas na disciplina, cada uma numa peça própria, executada em todo turno de investigação e
+mostrada separada no notebook (seção 5.1), na tela (cartão e painel de análise) e no rodapé do
+post-mortem:
+
+| Técnica | Onde roda | Exemplo | Resultado (8 cenários com a chave) |
+|---|---|---|---|
+| 1. Auditoria de trajetória | `auditar_trajetoria`, em código, sem modelo: ferramentas citadas na evidência foram chamadas; argumentos coerentes com a pergunta e com os deploys listados; ferramentas mínimas do tipo de incidente; nenhuma ferramenta de escrita | a resposta errada cita `v9.9.9`, ausente dos deploys listados: critério grave, reprova | 8/8 ok; avaliador `trajetoria_ferramentas` com média 1,0 |
+| 2. Checagem de fatos determinística | `checar_fatos`, sem modelo, contra as observações e a mensagem; versões e horários exatos, contagens e percentuais com tolerância de 5% (números a partir de 10) | "37% de erros" e "16:30" não aparecem nas observações; `v9.9.9` contradiz `v3.2.1` | 8/8 ok; avaliador `fato_deterministico` |
+| 3. Inferência lógica (NLI) com veredito e falácias | modelo juiz (`VereditoCoerencia`): `apoia`, `refuta` ou `neutra` sobre a hipótese principal, mais falácias (contradição entre premissa e conclusão, erro de cálculo, violação de escopo, deploy posterior ao sintoma, sintoma como causa); o código rebaixa o veredito que contradiz a checagem de fatos | a resposta errada recebe `refuta` | 8/8 `apoia`; avaliador `veredito_nli` |
+| 4. Extração e estruturação com Pydantic | um modelo com saída estruturada extrai as afirmações (`ListaAfirmacoes`); o relatório de validação é `Auditoria` (com `ChecagemFato`, `ChecagemTrajetoria` e `VereditoCoerencia`) | 5 a 6 afirmações por resposta, cada uma com chave e valor | 8/8 ok; agregado `auditor_aprovou` |
+
+A resposta só é aprovada quando as quatro técnicas passam: trajetória sem critério grave, nenhuma
+afirmação contraditória, veredito final `apoia` sem falácia confirmada e extração sem erro.
+
 ### 5.5 Avaliação no LangSmith
 
 O dataset tem os 8 cenários com o gabarito (palavras da causa, ferramentas esperadas e causa
-esperada). Os avaliadores são `causa_certa`, `trajetoria_ferramentas` e `auditor_aprovou`, e rodam
-localmente sem chave. O envio ao LangSmith só ocorre com a flag explícita `--enviar`.
+esperada). Os avaliadores são `causa_certa`, `trajetoria_ferramentas`, `fato_deterministico`,
+`veredito_nli` e `auditor_aprovou` (um por técnica, mais o agregado), e rodam localmente sem chave. O envio ao LangSmith só ocorre com a flag explícita `--enviar`.
 
-Na avaliação local da execução final, com o agente integrado, as três métricas tiveram média 1,0
-nos 8 cenários. A causa estava certa em todos, cada trajetória chamou as ferramentas esperadas e o
-auditor aprovou todas as respostas. Os avaliadores e a chamada a `evaluate()` são os mesmos que o
+Na avaliação local da execução final, com o agente integrado, os cinco avaliadores tiveram estas
+médias nos 8 cenários: `causa_certa` 1,0, `trajetoria_ferramentas` 1,0, `fato_deterministico` 0,95,
+`veredito_nli` 1,0 e `auditor_aprovou` 1,0. A causa estava certa em todos, cada trajetória chamou
+as ferramentas esperadas, e o auditor aprovou todas as respostas com veredito `apoia`; a resposta
+errada roteirizada da seção 5.1 recebeu `refuta` e foi reprovada pela trajetória, pela checagem de
+fatos e pelo NLI. Em execuções anteriores, um cenário recebeu `neutra` do juiz com todos os fatos
+confirmados (variação do modelo). Os avaliadores e a chamada a `evaluate()` são os mesmos que o
 LangSmith usa. O envio do experimento ao LangSmith ficou pendente: a cota mensal de traces da conta
 esgotou (HTTP 429, "Monthly unique traces usage limit exceeded") durante as execuções com o
 rastreamento ligado. O envio será feito quando a cota renovar, com `python
@@ -403,11 +437,18 @@ scripts/avaliar_langsmith.py --enviar`.
   execução só da seção 1. Não se repetiu em 9 execuções isoladas nem em 4 conversas com captura das
   saídas, e a causa não foi isolada (o mais provável é uma saída ocasional do `gpt-4o-mini`). A
   mitigação foi aumentar para até três tentativas.
+- **Variação do Investigador e do juiz.** Com o mesmo cenário, o Investigador às vezes não busca os
+  logs de nível WARN e erra a causa do `rate_limit` (visto uma vez, num teste da interface), e o
+  juiz às vezes dá `neutra` com todos os fatos confirmados. As travas em código reduzem, mas não
+  eliminam, a variação de um modelo pequeno com temperatura 0.
+- **Seção 3 perto do teto de tempo.** Na execução final, a seção 3 levou 297 s (limite: 300 s).
 - **Juiz do auditor com `gpt-4o-mini`.** O mesmo modelo pequeno do agente julga a coerência. A
   checagem de fatos é determinística, mas o juízo de coerência herda os limites do modelo, e a
   calibração (8 cenários) é pequena. Melhoria: um modelo maior como juiz e mais cenários.
-- **Loja ao vivo não publicada.** A API do `incident-shop` não está no ar; o agente roda com os
-  dados gravados. A rota `GET /estatisticas_banco` (contrato 1.1.0) foi usada com dados gravados.
+- **Loja ao vivo só no laboratório local.** A API do `incident-shop` não está publicada; o notebook
+  e as baterias usam os dados gravados. O laboratório `laboratorios/incident-lab` (Docker Compose)
+  sobe a loja (contrato 1.1.0, com `GET /estatisticas_banco`) e o agente conectados, e lá as
+  ferramentas consultam a loja ao vivo.
 - **Interface sem autenticação.** Qualquer pessoa com acesso à porta usa o agente e gasta a chave
   da OpenAI. As sessões ficam só na memória do servidor. Melhoria: autenticação e limite de uso antes de qualquer publicação.
 - **SQL com defesa mínima.** A lista negra e o início `SELECT` são a defesa escolhida; uma conexão
@@ -435,22 +476,54 @@ scripts/avaliar_langsmith.py --enviar`.
 | Avaliação (avaliadores do LangSmith) | seção 5.6 do notebook; envio do experimento pendente (cota da conta) |
 | Decisões e calibrações | `specs/00N-*/research.md` |
 | Código e testes | `agente/`, `tests/`, `app/` |
-| Post-mortem gerado | arquivo `.md` produzido na conversa da seção 5.2 |
+| Post-mortem gerado | `saida/postmortem/postmortem_<sessão>.md`, produzido na conversa da seção 5.2 (trecho abaixo) |
 | Diagramas | `docs/img/` (contexto, componentes por fase, arquitetura final) |
 
-Os prints das telas de uso e de análise do Streamlit entram nesta seção na versão final, junto com o vídeo de demonstração.
+Trecho do post-mortem gerado na seção 5.2 (cenário `banco_lento_com_deploy`, depois da
+confirmação da causa pelo engenheiro):
+
+    ## Linha do tempo
+    - 2026-10-08 15:45 - Deploy pedidos-api/v3.2.1 (anterior v3.2.0): corrige texto de e-mail
+    - 2026-10-08 15:47 - Primeiro erro registrado (144 ocorrências até 16:11): statement timeout
+    - 2026-10-08 15:47 - Banco com reindexação em andamento na tabela estoque
+    - 2026-10-08 16:11 - Último erro registrado
+    ## Causa raiz e evidências
+    Causa confirmada: a reindexação da tabela estoque no db-principal causou os timeouts.
+    ---
+    Auditoria: aprovada, veredito apoia.
+    - Auditoria de trajetória: ok (4 de 4 critérios ok)
+    - Checagem de fatos determinística: ok
+    - Inferência lógica (NLI): ok (veredito apoia; falácias: nenhuma)
+    - Extração com Pydantic: ok
+
+As telas da interface web (estado vazio, resposta do cenário `rate_limit` e análise do turno) estão
+abaixo. O vídeo de demonstração entra na versão final.
+
+![Interface: estado vazio](img/interface_vazia.png)
+
+*Figura 3. Interface web: nova conversa, com as sugestões de pergunta.*
+
+![Interface: resposta](img/interface_uso.png)
+
+*Figura 4. Interface web: resposta do cenário `rate_limit` em cartão, com ações sugeridas marcadas
+como não executadas e o selo do auditor.*
+
+![Interface: análise](img/interface_analise.png)
+
+*Figura 5. Interface web: painel de análise com a trajetória das ferramentas e o veredito do
+auditor.*
 
 ![Componentes da Fase 2](img/componentes_fase2.png)
 
-*Figura 3. Componentes ao fim da Fase 2.*
+*Figura 6. Componentes ao fim da Fase 2.*
 
 ![Componentes da Fase 3](img/componentes_fase3.png)
 
-*Figura 4. Componentes ao fim da Fase 3 (memórias).*
+*Figura 7. Componentes ao fim da Fase 3 (memórias).*
 
 ![Componentes da Fase 4](img/componentes_fase4.png)
 
-*Figura 5. Componentes ao fim da Fase 4 (SQL, RAG e estatísticas do banco).*
+*Figura 8. Componentes ao fim da Fase 4 (SQL, RAG e estatísticas do banco).*
 
 ## 9. Processo de desenvolvimento
 
@@ -506,6 +579,7 @@ como parte do próprio produto.
   registro mostra casos em que o autor decidiu diferente do fluxo anterior.
 - **OpenAI `gpt-4o-mini`**: modelo de chat do próprio agente (padrão; o DeepSeek `deepseek-v4-flash`
   é a alternativa configurável). Também é o juiz do auditor.
+- **OpenAI `gpt-4.1`**: só o NLU (compreensão da intenção e das entidades).
 - **OpenAI `text-embedding-3-small`**: embeddings da memória de longo prazo e do índice FAISS.
 - **OpenAI `omni-moderation-latest`**: moderação da entrada.
 
