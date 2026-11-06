@@ -142,8 +142,11 @@ Razão: o prazo é curto; foco no que é avaliado; specs pequenas cabem numa ses
 ### X. Entrega e segredos
 
 - Um único notebook (`projeto.ipynb`) com uma seção por fase da rubrica.
-- Agente e app Streamlit (duas telas: uso e análise) MUST ter Dockerfile e rodar com
-  `docker compose`; no Railway, a porta vem de `PORT` e as chaves de variáveis de ambiente.
+- Agente e interface web própria (FastAPI servindo um front HTML, CSS e JavaScript sem build,
+  com duas visões: uso, a conversa por incidente, e análise, a trajetória e o veredito do
+  auditor) MUST ter Dockerfile e rodar com `docker compose`; no Railway, a porta vem de `PORT` e
+  as chaves de variáveis de ambiente. A interface chama o mesmo agente integrado e não muda o
+  comportamento dele.
 - Chaves e segredos MUST NOT ir para o git (`.env` no `.gitignore`).
 - Ações públicas (push, publicar, tornar repositório público, deploy) MUST ter confirmação
   explícita do Rafael.
@@ -226,5 +229,7 @@ Seis camadas, na ordem em que atuam. Cada camada entra no notebook na fase indic
   (Fluxo de trabalho). 2.0.0 (2026-11-02) só peças do LangChain/LangGraph ensinadas no curso
   (princípio V); memória de curto prazo com `RunnableWithMessageHistory`, `trim_messages` e
   resumo híbrido, e de longo prazo com `InMemoryVectorStore` (princípio IV redefinido, D9).
+  2.1.0 (2026-11-05) interface web própria com FastAPI e front HTML/CSS/JS no lugar do
+  Streamlit (princípio X), decisão do Rafael registrada no `research.md` da Fase 5.
 
-**Version**: 2.0.0 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-02
+**Version**: 2.1.0 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-05

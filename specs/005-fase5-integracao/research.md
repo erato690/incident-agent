@@ -98,3 +98,30 @@
   2. A cadeia da Fase 1 devolvia `None` quando o modelo respondia em prosa imitando o histórico.
      Com temperatura fixa, as novas tentativas repetiam a mesma prosa. Agora, depois das novas
      tentativas, um passo final repete o pedido exigindo só o JSON.
+
+## Interface: front próprio no lugar do Streamlit (2026-11-05)
+
+- **Contexto:** o Rafael testou o app Streamlit (`app/app.py`) e achou a tela ruim para uso real:
+  sem cara de app de chat, com a caixa de mensagem dentro da aba e a resposta em texto corrido.
+  Um redesenho dentro do Streamlit (tema, `st.chat_message`, CSS mínimo) melhorou pouco, porque o
+  Streamlit limita o layout (barra lateral de conversas, compositor fixo, passos ao vivo).
+- **Opções:**
+  - A: manter o Streamlit com tema e CSS (feito no commit `f55b949`, depois substituído);
+  - B: interface web própria, FastAPI servindo HTML, CSS e JavaScript sem build;
+  - C: front com framework (React ou parecido), com etapa de build.
+- **Decisão do Rafael:** B. O Streamlit sai.
+- **Motivo:** a B dá a experiência de app de chat (barra lateral com sessões, bolhas, compositor
+  fixo, estado vazio com sugestões, tema claro e escuro) sem etapa de build nem dependência de
+  front. A C traria build e um ecossistema novo para um entregável que não conta nota.
+- **Como ficou:**
+  - `app/main.py` expõe a API sobre o mesmo `AgenteIntegrado`: criar, listar e abrir sessão,
+    enviar mensagem (JSON ou SSE com os passos), post-mortem a pedido e análise do turno;
+  - os passos do turno ("mascarando", "moderação", "entendendo", "investigando", "consultando",
+    "auditando") vêm de um `BaseCallbackHandler` do LangChain, ligado a todas as execuções do
+    turno por `register_configure_hook`, sem mudar o agente;
+  - o front está em `app/static/` (HTML, CSS com tokens claro e escuro, JavaScript puro); a paleta,
+    a tipografia (Inter e JetBrains Mono) e as regras de acessibilidade vêm da skill
+    `ui-ux-pro-max:ui-ux-pro-max` com `ui-ux-pro-max:design-system`;
+  - testes da API com agente falso e sem chave em `tests/test_api.py`;
+  - a constitution passou a 2.1.0 (princípio X).
+
