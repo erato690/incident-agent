@@ -13,7 +13,9 @@ def selo_auditoria(resposta: RespostaTurno) -> str:
     auditoria = resposta.auditoria
     if auditoria is None:
         return "auditada: não auditada"
-    return "auditada: aprovada" if auditoria.aprovada else "auditada: reprovada"
+    selo = "auditada: aprovada" if auditoria.aprovada else "auditada: reprovada"
+    veredito = getattr(auditoria, "veredito", None)
+    return f"{selo} (veredito: {veredito})" if veredito else selo
 
 
 def _bloco_analise(resposta: RespostaTurno) -> list[str]:
@@ -59,6 +61,7 @@ def linhas_registro(registros: list[RegistroTurno]) -> list[dict]:
             "rota": r.rota,
             "ferramentas": ", ".join(r.ferramentas),
             "auditoria": _rotulo_auditoria(r.auditoria_aprovada),
+            "veredito": r.veredito or "-",
             "duração (ms)": r.duracao_ms,
         }
         for r in registros

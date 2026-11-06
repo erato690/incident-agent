@@ -5,7 +5,7 @@ from typing import Literal
 from uuid import uuid4
 
 from langchain_core.messages import BaseMessage
-from pydantic import BaseModel, Field, computed_field, model_validator
+from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 from pydantic.json_schema import SkipJsonSchema
 
 Intencao = Literal[
@@ -300,15 +300,32 @@ class ChecagemFato(BaseModel):
     fonte: str | None = Field(default=None, description="Por que o status foi atribuído")
 
 
+Veredito = Literal["apoia", "refuta", "neutra"]
+
+
 class VereditoCoerencia(BaseModel):
-    veredito: Literal["apoia", "refuta", "neutro"]
+    """Inferência lógica (NLI) das evidências sobre a hipótese principal: apoia (decorre delas),
+    refuta (as contradiz) ou neutra (não bastam)."""
+
+    veredito: Veredito
     e_coerente: bool
     falacias: list[Falacia] = Field(default_factory=lambda: ["nenhuma"])
     justificativa: str
 
+    @field_validator("veredito", mode="before")
+    @classmethod
+    def _neutro_antigo(cls, valor):
+        return "neutra" if valor == "neutro" else valor
+
 
 class Auditoria(BaseModel):
     aprovada: bool
+    veredito: Veredito | None = Field(
+        default=None, description="Veredito final, depois das travas sobre o fact-check"
+    )
+    veredito_rebaixado: bool = Field(
+        default=False, description="True quando o código rebaixou o veredito do juiz"
+    )
     checagens: list[ChecagemFato] = Field(default_factory=list)
     coerencia: VereditoCoerencia | None = None
     motivos: list[str] = Field(default_factory=list)

@@ -63,6 +63,9 @@ def test_saida_do_turno_serializavel():
         "confianca": 0.9,
         "ferramentas": ["a", "b"],
         "auditoria_aprovada": None,
+        "veredito": None,
+        "fatos_confirmados": 0,
+        "fatos_verificaveis": 0,
         "aviso": None,
     }
     vazia = saida_do_turno(RespostaTurno(rota="erro", moderacao=ResultadoModeracao(status="ok")))
@@ -161,4 +164,4 @@ def test_enviar_ao_langsmith_com_cliente_falso(monkeypatch):
     assert chamadas["dataset"] == "incident-agent-cenarios" and chamadas["exemplos"] == 8
     kw = chamadas["evaluate"]
     assert kw["experiment_prefix"] == "fase5" and kw["max_concurrency"] == 4
-    assert len(kw["evaluators"]) == 3
+    assert len(kw["evaluators"]) == 5  # causa, trajetória, fato, NLI e auditor

@@ -39,9 +39,12 @@ SISTEMA_COERENCIA = """Persona:
 You are a natural language inference (NLI) auditor for incident analyses.
 
 Task:
-Given the tool observations and the analysis, decide whether the observations support (apoia),
-refute (refuta) or are neutral about (neutro) the MAIN hypothesis only (the one given
-separately). Secondary hypotheses with low confidence that the analysis rules out are fine and
+Given the tool observations and the analysis, give a verdict on the MAIN hypothesis only (the
+one given separately):
+- apoia: the main hypothesis follows from the observations;
+- refuta: the observations contradict it;
+- neutra: the observations are not enough to support or refute it.
+Secondary hypotheses with low confidence that the analysis rules out are fine and
 never make the verdict refuta. Decide whether the analysis is coherent (e_coerente). List the
 domain fallacies you find:
 - deploy_posterior_ao_sintoma: the MAIN hypothesis blames a deploy whose time is LATER than the
@@ -184,9 +187,26 @@ def _descarta_falso_positivo(
     return veredito.model_copy(update={"falacias": restantes or ["nenhuma"]})
 
 
+def veredito_final(checagens: list[ChecagemFato], coerencia: VereditoCoerencia) -> str:
+    """Trava: o veredito do juiz não pode contradizer o fact-check determinístico. Afirmação
+    contraditória rebaixa para refuta; mais da metade sem prova rebaixa apoia para neutra."""
+    if any(c.status == "contraditoria" for c in checagens):
+        return "refuta"
+    verificaveis = [c for c in checagens if c.afirmacao.chave != "outro"]
+    sem_prova = [c for c in verificaveis if c.status == "nao_verificada"]
+    muitas_sem_prova = verificaveis and len(sem_prova) / len(verificaveis) > CORTE_NAO_VERIFICADAS
+    if coerencia.veredito == "apoia" and muitas_sem_prova:
+        return "neutra"
+    return coerencia.veredito
+
+
 def _motivos(
-    checagens: list[ChecagemFato], coerencia: VereditoCoerencia, com_falacias: bool
+    checagens: list[ChecagemFato],
+    coerencia: VereditoCoerencia,
+    com_falacias: bool,
+    veredito: str | None = None,
 ) -> list[str]:
+    veredito = veredito or coerencia.veredito
     motivos = [
         f"afirmação contraditória às observações: {c.afirmacao.texto} ({c.afirmacao.valor})"
         for c in checagens
@@ -199,8 +219,10 @@ def _motivos(
         motivos.append(f"mais da metade das afirmações não foi verificada: {valores}")
     if not coerencia.e_coerente:
         motivos.append(f"análise incoerente: {coerencia.justificativa}")
-    if coerencia.veredito == "refuta":
-        motivos.append("as observações refutam a hipótese principal")
+    if veredito == "refuta":
+        motivos.append("veredito refuta: as observações contradizem a hipótese principal")
+    if veredito == "neutra":
+        motivos.append("veredito neutra: as observações não bastam para a hipótese principal")
     falacias = [f for f in coerencia.falacias if f != "nenhuma"]
     if com_falacias and falacias:
         motivos.append(f"falácias encontradas: {', '.join(falacias)}")
@@ -254,9 +276,15 @@ def montar_auditor(llm, com_falacias: bool = True) -> Runnable:
         except Exception as erro:  # noqa: BLE001 - erro do modelo nunca derruba o turno
             return Auditoria(aprovada=False, erro=str(erro), motivos=[f"não auditada: {erro}"])
         veredito = _descarta_falso_positivo(veredito, analise, trajetoria)
-        motivos = _motivos(checagens, veredito, com_falacias)
+        final = veredito_final(checagens, veredito)
+        motivos = _motivos(checagens, veredito, com_falacias, final)
         return Auditoria(
-            aprovada=not motivos, checagens=checagens, coerencia=veredito, motivos=motivos
+            aprovada=final == "apoia" and not motivos,
+            veredito=final,
+            veredito_rebaixado=final != veredito.veredito,
+            checagens=checagens,
+            coerencia=veredito,
+            motivos=motivos,
         )
 
     return RunnableLambda(auditar, name="auditor")
