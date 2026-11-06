@@ -85,3 +85,108 @@ def cenarios_disponiveis(pasta: Path | str) -> list[dict]:
                 }
             )
     return sorted(itens, key=lambda c: c["titulo"])
+
+
+# --- Apoio à tela de chat (funções puras; o app só desenha) ---
+
+ROTULO_FERRAMENTA = {
+    "buscar_logs": "logs da loja",
+    "buscar_metricas": "métricas",
+    "listar_deploys": "deploys",
+    "comparar_versoes": "diff entre versões",
+    "consultar_estatisticas_banco": "estatísticas do banco",
+    "consultar_memoria": "incidentes anteriores",
+    "gravar_episodio": "registro da causa",
+    "buscar_documentacao": "documentação indexada",
+    "consultar_wiki": "wiki de fatos",
+    "gravar_fato": "registro de fato",
+    "sugerir_acao": "runbooks (ações sugeridas)",
+    "consultar_sql": "histórico de incidentes (SQL)",
+}
+
+# Cores dos selos de markdown do Streamlit (`:cor-badge[texto]`); o texto sempre diz o nível.
+COR_SEVERIDADE = {"baixa": "blue", "media": "orange", "alta": "red", "critica": "red"}
+TEXTO_SEVERIDADE = {"baixa": "baixa", "media": "média", "alta": "alta", "critica": "crítica"}
+COR_RISCO = {"baixo": "green", "medio": "orange", "alto": "red"}
+TEXTO_RISCO = {"baixo": "baixo", "medio": "médio", "alto": "alto"}
+
+
+def rotulo_ferramenta(nome: str) -> str:
+    return ROTULO_FERRAMENTA.get(nome, nome)
+
+
+def selo(texto: str, cor: str) -> str:
+    """Selo de markdown do Streamlit; colchetes no texto são escapados."""
+    limpo = texto.replace("[", "(").replace("]", ")")
+    return f":{cor}-badge[{limpo}]"
+
+
+def selo_severidade(severidade: str) -> str:
+    return selo(
+        f"Severidade {TEXTO_SEVERIDADE.get(severidade, severidade)}",
+        COR_SEVERIDADE.get(severidade, "gray"),
+    )
+
+
+def selo_risco(risco: str) -> str:
+    return selo(f"Risco {TEXTO_RISCO.get(risco, risco)}", COR_RISCO.get(risco, "gray"))
+
+
+def selo_auditor(resposta: RespostaTurno) -> str:
+    auditoria = resposta.auditoria
+    if auditoria is None:
+        return selo("Não auditada", "gray")
+    if auditoria.aprovada:
+        return selo("Auditor aprovou", "green")
+    return selo("Auditor reprovou", "red")
+
+
+def dados_faltantes(resposta: RespostaTurno) -> list[str]:
+    """Dados que o engenheiro precisa trazer: das hipóteses e do NLU, sem repetição."""
+    itens: list[str] = []
+    if resposta.analise is not None:
+        itens += [h.dado_que_falta for h in resposta.analise.hipoteses if h.dado_que_falta]
+    if resposta.nlu is not None and getattr(resposta.nlu, "dado_faltante", None):
+        itens.append(resposta.nlu.dado_faltante)
+    unicos: dict[str, str] = {}
+    for item in itens:
+        unicos.setdefault(item.casefold(), item)
+    return list(unicos.values())
+
+
+def fontes_consultadas(resposta: RespostaTurno) -> list[str]:
+    """Rótulos das ferramentas chamadas, na ordem da primeira chamada."""
+    nomes = dict.fromkeys(p.ferramenta for p in resposta.trajetoria)
+    return [rotulo_ferramenta(n) for n in nomes]
+
+
+def linhas_passos(trajetoria) -> list[str]:
+    """Uma linha legível por chamada de ferramenta (usada no estado 'investigando')."""
+    linhas = []
+    for i, p in enumerate(trajetoria, start=1):
+        rotulo = rotulo_ferramenta(p.ferramenta)
+        linha = f"{i}. Consultou {rotulo} (`{p.ferramenta}`, {p.duracao_ms} ms)"
+        if p.erro:
+            linha += " — falhou"
+        elif p.reserva:
+            linha += " — usou dados gravados"
+        linhas.append(linha)
+    return linhas
+
+
+def sugestoes_iniciais(servico: str | None) -> list[str]:
+    alvo = servico or "o serviço"
+    return [
+        f"O {alvo} está com erros desde as 14h. Qual a causa provável?",
+        f"Teve deploy do {alvo} antes do erro começar?",
+        "Isso já aconteceu antes? Qual foi a causa?",
+        f"O que eu confirmo antes de mexer no {alvo}?",
+    ]
+
+
+def mensagem_erro(excecao: BaseException) -> str:
+    """Texto legível para falha inesperada do turno (sem pilha de chamadas)."""
+    nome = type(excecao).__name__
+    detalhe = str(excecao).strip().splitlines()[0][:200] if str(excecao).strip() else ""
+    base = "Não consegui concluir a investigação deste turno"
+    return f"{base} ({nome}{': ' + detalhe if detalhe else ''}). Tente de novo ou reformule."
