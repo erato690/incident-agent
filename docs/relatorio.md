@@ -103,9 +103,11 @@ Cada turno da conversa atravessa as camadas abaixo, nesta ordem.
 6. **Post-mortem.** É o único atuador do agente: um arquivo `.md` gerado por template a partir de
    dados Pydantic, só quando o engenheiro pede. Sem causa confirmada, sai marcado como "causa não
    confirmada".
-7. **Interface.** Aplicação Streamlit com duas telas: *uso* (a conversa por incidente) e
-   *análise* (tabela dos turnos, com rota, tempo, ferramentas e veredito do auditor). Há
-   Dockerfile e `docker compose`.
+7. **Interface.** Interface web própria: uma API FastAPI sobre o mesmo agente integrado e um
+   front em HTML, CSS e JavaScript sem build. Na visão de *uso*, a conversa por incidente, com
+   barra lateral de sessões, resposta em cartão estruturado e os passos do turno ao vivo; na de
+   *análise*, a trajetória das ferramentas e o veredito do auditor. Há Dockerfile e
+   `docker compose`.
 
 Internamente os módulos trocam objetos Pydantic serializáveis em JSON (moderação, NLU, análise do
 incidente, veredito do auditor, registro do turno e dados do post-mortem). O código vive no pacote
@@ -266,7 +268,7 @@ e avaliação no LangSmith.
 **O que foi feito.** O agente integrado reúne todas as ferramentas, inclusive `consultar_sql`,
 atrás da barreira, numa sessão por `session_id`. A versão clássica `create_openai_tools_agent` mais
 `AgentExecutor` (pacote `langchain-classic`) aparece numa célula curta. O auditor, o post-mortem, o
-registro de turnos, o app Streamlit e a avaliação foram implementados (seção 5 do relatório e
+registro de turnos, a interface web e a avaliação foram implementados (seção 5 do relatório e
 seção 8).
 
 **Decisões e alternativas.**
@@ -282,6 +284,11 @@ seção 8).
 - *Organização da entrega:* seções do notebook renomeadas pela capacidade ("1 Chain, barreira e
   saída estruturada", "2 Agente com ferramentas", "3 Memória", "4 Consulta SQL e RAG", "5 Agente
   integrado") e uma seção 0 com visão geral, agente final e índice da rubrica.
+- *Interface:* o app Streamlit foi feito e depois trocado, por decisão do autor, por uma interface
+  web própria (FastAPI com front HTML, CSS e JavaScript sem build). O Streamlit não dava a
+  experiência de chat esperada: barra lateral de conversas, caixa de mensagem fixa e passos do
+  turno ao vivo. Os passos vêm de um `BaseCallbackHandler` do LangChain ligado ao turno, sem mudar
+  o agente.
 - *Ordem de corte se faltasse tempo:* Streamlit só com a tela de uso; verificador sem falácias;
   fato da documentação sem gravação. LangSmith, relatório e notebook não seriam cortados.
 
@@ -401,8 +408,8 @@ scripts/avaliar_langsmith.py --enviar`.
   calibração (8 cenários) é pequena. Melhoria: um modelo maior como juiz e mais cenários.
 - **Loja ao vivo não publicada.** A API do `incident-shop` não está no ar; o agente roda com os
   dados gravados. A rota `GET /estatisticas_banco` (contrato 1.1.0) foi usada com dados gravados.
-- **Streamlit sem autenticação.** Qualquer pessoa com acesso à porta usa o agente e gasta a chave
-  da OpenAI. Melhoria: autenticação e limite de uso antes de qualquer publicação.
+- **Interface sem autenticação.** Qualquer pessoa com acesso à porta usa o agente e gasta a chave
+  da OpenAI. As sessões ficam só na memória do servidor. Melhoria: autenticação e limite de uso antes de qualquer publicação.
 - **SQL com defesa mínima.** A lista negra e o início `SELECT` são a defesa escolhida; uma conexão
   somente leitura seria mais forte (alternativa rejeitada na D4).
 - **Wiki limitada.** A "pesquisa externa" é só a busca na documentação indexada (D6); não há busca
@@ -424,7 +431,7 @@ scripts/avaliar_langsmith.py --enviar`.
 | Auditor: resposta certa aprovada e errada reprovada | seção 5.1 do notebook |
 | Conversa integrada de 4 ou mais turnos (sintoma, SQL, confirmação, post-mortem) | seção 5.2 do notebook |
 | `create_openai_tools_agent` mais `AgentExecutor` e `RunnableWithMessageHistory` | seções 5.3 e 5.4 do notebook |
-| Interface Streamlit | seção 5.5 do notebook; `app/app.py`, `Dockerfile`, `docker-compose.yml` |
+| Interface web (FastAPI e front próprio) | `app/main.py`, `app/static/`, `Dockerfile`, `docker-compose.yml` |
 | Avaliação (avaliadores do LangSmith) | seção 5.6 do notebook; envio do experimento pendente (cota da conta) |
 | Decisões e calibrações | `specs/00N-*/research.md` |
 | Código e testes | `agente/`, `tests/`, `app/` |
@@ -520,5 +527,5 @@ decisões de nível 3, revisou os resultados e responde pelo conteúdo entregue.
   Agents* (CoALA). Transactions on Machine Learning Research, 2024. arXiv:2309.02427.
 - Yao, S. et al. *ReAct: Synergizing Reasoning and Acting in Language Models*. ICLR 2023.
   arXiv:2210.03629.
-- Streamlit. Documentação. https://docs.streamlit.io/
+- FastAPI. Documentação. https://fastapi.tiangolo.com/
 - OpenAI. Documentação de moderação e de embeddings. https://platform.openai.com/docs/
