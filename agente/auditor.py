@@ -128,7 +128,10 @@ def _status_numero(valor: str, fonte: str) -> str:
     afirmado = _como_numero(achado.group())
     if afirmado < 10:
         return "nao_verificada"
-    for numero in re.findall(r"(?<![\d.,])\d+(?:[.,]\d+)?(?![\d])", fonte):
+    percentual = "%" in valor
+    for numero, sinal in re.findall(r"(?<![\d.,])(\d+(?:[.,]\d+)?)(?![\d])\s*(%?)", fonte):
+        if percentual != bool(sinal):  # percentual só casa com percentual
+            continue
         observado = _como_numero(numero)
         if observado and abs(afirmado - observado) / observado <= TOLERANCIA_NUMERO:
             return "aproximada"

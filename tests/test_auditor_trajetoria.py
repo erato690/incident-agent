@@ -149,3 +149,14 @@ def test_resumo_das_quatro_tecnicas():
     ]
     assert all(t["status"] in {"ok", "falha", "nao_se_aplica"} for t in tecnicas)
     assert resumo_tecnicas(Auditoria(aprovada=False)) == []
+
+
+def test_tolerancia_respeita_a_unidade_percentual():
+    fonte = [_passo("buscar_metricas", observacao="req/min max 36.2; erros 12,0%")]
+
+    def status(valor):
+        return checar_fatos([Afirmacao(texto="t", chave="numero", valor=valor)], fonte)[0].status
+
+    assert status("37%") == "nao_verificada"  # 36.2 não é percentual
+    assert status("12,4%") == "confirmada"
+    assert status("37") == "confirmada"
