@@ -152,6 +152,7 @@ class Conversa:
         cadeia = {
             "mensagem": itemgetter("mensagem"),
             "session_id": itemgetter("session_id"),
+            "servico_sessao": lambda x: x.get("servico_sessao"),
             "historico": lambda x: limitador.invoke(list(filter(_relevante, x["historico"]))),
         } | RunnableLambda(self._turno)
         # O turno guarda o par (pergunta mascarada, resposta) em "novas". `guardar_entrada` é
@@ -183,6 +184,7 @@ class Conversa:
                 "historico": entrada["historico"],
                 "incidente_id": entrada["session_id"],
                 "session_id": entrada["session_id"],
+                "servico_sessao": entrada.get("servico_sessao"),
             }
         )
         novas: list[BaseMessage] = []
@@ -238,7 +240,12 @@ class Conversa:
         base = self.estado(sessao)["sessao"]
         config = {"configurable": {"session_id": sessao.session_id}}
         saida = self._com_historico.invoke(
-            {"mensagem": mensagem, "session_id": sessao.session_id, "guardar_entrada": []},
+            {
+                "mensagem": mensagem,
+                "session_id": sessao.session_id,
+                "servico_sessao": base.servico,
+                "guardar_entrada": [],
+            },
             config,
         )
         resposta = saida["resposta"]

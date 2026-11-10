@@ -89,14 +89,16 @@ def montar_ferramentas(
     wiki) e `llm_acao` (sugestão de ação, exige `indice`). Sem eles a lista é a de antes."""
 
     @tool
-    def buscar_logs(servico: str, nivel: str | None = None) -> str:
+    def buscar_logs(servico: str | None = None, nivel: str | None = None) -> str:
         """Fetches the logs of a service, grouped by message, with counts and times.
+        Without `servico`, returns all services (overview, ERROR and WARN first).
         Use `nivel` (ERROR, WARN, INFO) to filter."""
         return _observacao(lambda: resumir_logs(fonte.logs(servico, nivel)))
 
     @tool
-    def buscar_metricas(servico: str, metrica: str | None = None) -> str:
+    def buscar_metricas(servico: str | None = None, metrica: str | None = None) -> str:
         """Fetches the metrics of a service (minimum, maximum, average and last value of each).
+        Without `servico`, returns all services (overview).
         Use `metrica` for a single one: requisicoes, erros_5xx, latencia_p95, cpu, memoria,
         reinicios, conexoes_db or fila_mensagens."""
         return _observacao(lambda: resumir_metricas(fonte.metricas(servico, metrica)))

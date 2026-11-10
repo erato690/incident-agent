@@ -66,15 +66,16 @@ def test_analise_exige_proximos_passos():
         _analise(proximos_passos=[])
 
 
-@pytest.mark.parametrize("quantidade", [0, 1, 4])
-def test_analise_rejeita_menos_de_duas_ou_mais_de_tres_hipoteses(quantidade):
+@pytest.mark.parametrize("quantidade", [0, 4])
+def test_analise_rejeita_nenhuma_ou_mais_de_tres_hipoteses(quantidade):
     hipoteses = [_hip(str(indice), 0.1 * (indice + 1)) for indice in range(quantidade)]
     with pytest.raises(ValidationError):
         _analise(hipoteses=hipoteses)
 
 
-@pytest.mark.parametrize("quantidade", [2, 3])
-def test_analise_aceita_duas_ou_tres_hipoteses(quantidade):
+@pytest.mark.parametrize("quantidade", [1, 2, 3])
+def test_analise_aceita_de_uma_a_tres_hipoteses(quantidade):
+    # 1 é aceita na validação (pergunta aberta sem causa), mas o modelo é instruído a dar 2 ou 3
     hipoteses = [_hip(str(indice), 0.1 * (indice + 1)) for indice in range(quantidade)]
     assert len(_analise(hipoteses=hipoteses).hipoteses) == quantidade
 

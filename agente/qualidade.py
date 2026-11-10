@@ -77,8 +77,24 @@ def dado_faltante_valido(dado: str | None, mensagem: str) -> bool:
     return not (palavras and len(palavras & da_pergunta) / len(palavras) >= 0.6)
 
 
-def sanear_nlu(nlu: AnaliseNLU | None, mensagem: str) -> AnaliseNLU | None:
-    """Descarta o `dado_faltante` indevido do NLU; o resto da análise fica igual."""
+_PEDE_SERVICO = r"\bservicos?\b|\bqual (api|sistema|aplicac\w*|componente)\b"
+
+
+def sanear_nlu(
+    nlu: AnaliseNLU | None, mensagem: str, servico_sessao: str | None = None
+) -> AnaliseNLU | None:
+    """Descarta o `dado_faltante` indevido do NLU; o resto da análise fica igual.
+
+    Sem serviço na mensagem, herda o da sessão; com serviço conhecido, "qual serviço?" sai."""
+    if nlu is not None and not nlu.servico and servico_sessao:
+        nlu = nlu.model_copy(update={"servico": servico_sessao})
+    if (
+        nlu is not None
+        and nlu.servico
+        and nlu.dado_faltante
+        and re.search(_PEDE_SERVICO, _normalizar(nlu.dado_faltante))
+    ):
+        return nlu.model_copy(update={"dado_faltante": None})
     if (
         nlu is None
         or nlu.dado_faltante is None
@@ -101,6 +117,28 @@ def repete_consulta(texto: str, ferramentas_chamadas: set[str]) -> bool:
 
 
 PREFIXO_LACUNA = "Lacuna: "
+SEM_OBSERVACAO = (
+    f"{PREFIXO_LACUNA}nenhuma ferramenta foi consultada neste turno; sem observação, a hipótese "
+    "não se sustenta"
+)
+CONFIANCA_SEM_OBSERVACAO = 0.3
+
+
+def sem_observacao(analise: AnaliseIncidente) -> AnaliseIncidente:
+    """Análise sem nenhuma ferramenta chamada: nenhuma hipótese tem evidência (nem a de que "não
+    há erro"); a confiança fica no máximo em 0,3 e a evidência inventada sai."""
+    hipoteses = [
+        hipotese.model_copy(
+            update={
+                "evidencia_insuficiente": True,
+                "evidencia": None,
+                "confianca": min(hipotese.confianca, CONFIANCA_SEM_OBSERVACAO),
+                "dado_que_falta": SEM_OBSERVACAO,
+            }
+        )
+        for hipotese in analise.hipoteses
+    ]
+    return analise.model_copy(update={"hipoteses": hipoteses})
 
 
 def _como_lacuna(hipotese):

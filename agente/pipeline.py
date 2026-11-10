@@ -79,6 +79,8 @@ def _mascarar_entrada(entrada: dict) -> dict:
         "historico": historico,
         "incidente_id": _mascarar_opcional(entrada.get("incidente_id")),
         "session_id": _mascarar_opcional(entrada.get("session_id")),
+        # serviço que a sessão já conhece (cenário escolhido ou turno anterior); vem do sistema
+        "servico_sessao": entrada.get("servico_sessao"),
     }
 
 
@@ -336,8 +338,10 @@ def _sem_consulta_repetida(resultado: object) -> object:
 
 def _nlu_saneado(estado: dict) -> dict:
     """Trava de qualidade: dado faltante que é a causa, a própria pergunta ou algo que as
-    ferramentas alcançam não é pedido ao engenheiro."""
-    return {**estado, "nlu": sanear_nlu(estado.get("nlu"), estado.get("mensagem", ""))}
+    ferramentas alcançam não é pedido ao engenheiro; sem serviço na mensagem, vale o da sessão
+    (e o "qual serviço?" não é pedido)."""
+    nlu = sanear_nlu(estado.get("nlu"), estado.get("mensagem", ""), estado.get("servico_sessao"))
+    return {**estado, "nlu": nlu}
 
 
 def _resp_erro_registro(

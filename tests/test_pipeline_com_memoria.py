@@ -280,8 +280,10 @@ def _memoria_com_episodio_de_pool():
 
 def _investigador_que_consulta(memoria, consultar=True):
     ferramentas = montar_ferramentas(FonteLoja.gravada("cenario_teste", raiz=RAIZ), memoria=memoria)
-    passos = [chamada("consultar_memoria", {"servico": "pedidos-api", "descricao": "HikariPool"})]
-    modelo = roteiro(*(passos if consultar else []), json.dumps(ANALISE_POOL))
+    memoria_ = chamada("consultar_memoria", {"servico": "pedidos-api", "descricao": "HikariPool"})
+    # sem consultar a memória, o agente ainda observa (os logs): concluir sem ferramenta não vale
+    logs = chamada("buscar_logs", {"servico": "pedidos-api"})
+    modelo = roteiro(memoria_ if consultar else logs, json.dumps(ANALISE_POOL))
     return montar_investigador(modelo, ferramentas)
 
 

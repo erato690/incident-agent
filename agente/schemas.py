@@ -116,8 +116,13 @@ class AnaliseIncidente(BaseModel):
     categoria: str
     servico: str | None = None
     resumo: str
+    # O modelo vê "2 ou 3" (minItems 2 no schema das format_instructions), mas a validação
+    # aceita 1: uma única hipótese ("sintoma desconhecido") não pode derrubar o turno em erro.
     hipoteses: list[Hipotese] = Field(
-        min_length=2, max_length=3, description="2 ou 3 hipóteses, da mais para a menos provável"
+        min_length=1,
+        max_length=3,
+        description="2 ou 3 hipóteses, da mais para a menos provável",
+        json_schema_extra={"minItems": 2},
     )
     proximos_passos: list[str] = Field(min_length=1)
     # Preenchido pelo pipeline, não pelo modelo: fora do schema mostrado ao modelo.

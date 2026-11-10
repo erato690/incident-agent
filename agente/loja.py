@@ -102,8 +102,8 @@ class FonteLoja:
         resposta.raise_for_status()
         return resposta.json()
 
-    def logs(self, servico: str, nivel: str | None = None) -> dict:
-        """Corpo de `/logs`: `{"total", "truncado", "logs": [...]}`."""
+    def logs(self, servico: str | None, nivel: str | None = None) -> dict:
+        """Corpo de `/logs`: `{"total", "truncado", "logs": [...]}`; sem serviço, todos."""
         nivel = nivel.upper() if nivel else None
         if self._url:
             corpo = self._get("/logs", servico=servico, nivel=nivel, limite=LIMITE_LOGS)
@@ -111,12 +111,12 @@ class FonteLoja:
         itens = [
             registro
             for registro in self._dados["logs"]["logs"]
-            if registro["servico"] == servico and (nivel is None or registro["nivel"] == nivel)
+            if servico in (None, registro["servico"]) and nivel in (None, registro["nivel"])
         ]
         return {"total": len(itens), "truncado": False, "logs": itens}
 
-    def metricas(self, servico: str, metrica: str | None = None) -> list[dict]:
-        """Séries de `/metricas` (com `unidade` e `resumo`)."""
+    def metricas(self, servico: str | None, metrica: str | None = None) -> list[dict]:
+        """Séries de `/metricas` (com `unidade` e `resumo`); sem serviço, todos."""
         if self._url:
             return self._get("/metricas", servico=servico, metrica=metrica)["series"]
         if metrica is not None and metrica not in METRICAS:
@@ -124,7 +124,7 @@ class FonteLoja:
         return [
             serie
             for serie in self._dados["metricas"]["series"]
-            if serie["servico"] == servico and (metrica is None or serie["metrica"] == metrica)
+            if servico in (None, serie["servico"]) and metrica in (None, serie["metrica"])
         ]
 
     def deploys(self, servico: str | None = None) -> list[dict]:
@@ -166,6 +166,17 @@ class FonteLoja:
         except (ErroLoja, httpx.HTTPError):
             return []
         return [deploy["tag"] for deploy in sorted(corpo, key=lambda item: item["horario"])]
+
+
+def servico_do_cenario(cenario: str | None, raiz: Path | str = RAIZ_PADRAO) -> str | None:
+    """Serviço afetado do cenário (bloco `cenario` do JSON gravado); None se não houver.
+
+    É o serviço que o engenheiro escolheu ao abrir a sessão (a tela mostra o serviço no cartão do
+    cenário); o id do cenário continua fora do alcance do modelo."""
+    caminho = Path(raiz) / f"{cenario}.json"
+    if not cenario or not caminho.exists():
+        return None
+    return json.loads(caminho.read_text(encoding="utf-8")).get("cenario", {}).get("servico")
 
 
 def fonte_padrao(cenario: str, raiz: Path | str = RAIZ_PADRAO) -> FonteLoja:

@@ -14,7 +14,7 @@ from agente.agente_react import montar_investigador
 from agente.auditor import montar_auditor
 from agente.conversa import Conversa, abrir_sessao, montar_avaliacao_relevancia, montar_conversa
 from agente.ferramentas import montar_ferramentas
-from agente.loja import fonte_padrao
+from agente.loja import fonte_padrao, servico_do_cenario
 from agente.memoria import MemoriaLongoPrazo, embeddings_padrao
 from agente.moderacao import moderar as moderar_padrao
 from agente.pipeline import montar_pipeline
@@ -145,8 +145,10 @@ class AgenteIntegrado:
         return self._conversas[cenario]
 
     def abrir_sessao(self, cenario: str, incidente_id: str | None = None) -> Sessao:
-        """Sessão nova no cenário. O pipeline usa o `session_id` como id do incidente."""
-        sessao = abrir_sessao(cenario or self.cenario_padrao)
+        """Sessão nova no cenário, já com o serviço afetado do cenário (o engenheiro abriu a
+        sessão sobre ele). O pipeline usa o `session_id` como id do incidente."""
+        cenario = cenario or self.cenario_padrao
+        sessao = abrir_sessao(cenario, servico=servico_do_cenario(cenario))
         self._incidentes[sessao.session_id] = incidente_id or sessao.session_id
         return sessao
 
