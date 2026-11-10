@@ -297,3 +297,56 @@
   `rate_limit` no chat com as requisições `GET /logs`, `/metricas` e `/deploys` nos logs da loja,
   e `docker compose down`. Fora do compose, o padrão continua gravado (`dados_dummy/`).
 
+
+## LangSmith só na seção 5 e pergunta aberta sem serviço (2026-11-10)
+
+**A. Rastreamento do LangSmith.**
+
+- **Pedido do Rafael:** rastreamento desligado em todo o projeto (app, baterias, conversa longa,
+  avaliação local); a seção 5 liga só no envio do `scripts/avaliar_langsmith.py` (dataset +
+  experimento) e numa execução do agente integrado por cenário. Falha do LangSmith (429, cota)
+  vira aviso, nunca erro. O envio fica pronto e testado com mock; não rodou agora, para não gastar
+  a cota.
+- **Como ficou:** `agente/rastreamento.py`.
+  - `desligar_rastreamento_por_padrao()` põe `LANGSMITH_TRACING=false` quando a variável não
+    existe. É chamada por `escolher_llm`, pelo app e pelo script; `.env.example` e `Dockerfile`
+    também trazem o valor.
+  - `com_rastreamento(funcao)` liga o rastreamento com `langsmith.tracing_context(enabled=True)`
+    só no bloco e devolve `(resultado, aviso)`. Exceções viram aviso. Os avisos que o envio em
+    segundo plano grava no log (por exemplo, 429 no ingest dos traces) também viram aviso.
+  - `apresentar_cenarios` faz uma execução por cenário; a falha de um cenário não interrompe os
+    outros.
+  - O script passou a avaliar o agente integrado (antes, o da Fase 4).
+  - Avaliadores do envio: os mesmos 5 da avaliação local, isto é, as quatro técnicas mais o
+    agregado `auditor_aprovou`.
+
+**B. Pergunta aberta sem serviço** ("tem alguma coisa com problema?", "o que está errado no
+sistema?").
+
+- **Bug reproduzido** (gpt-4o-mini com NLU gpt-4.1, modo gravado):
+  - O NLU deixava o serviço vazio e pedia "qual serviço".
+  - O Investigador não chamava ferramenta e concluía "sistema funcionando normalmente", com
+    evidência inventada.
+  - Com 1 hipótese só, o turno caía em `rota="erro"` (o schema exigia 2).
+- **Correções:**
+  1. Sessão com o serviço do cenário: `servico_do_cenario` lê o JSON gravado, e a tela já mostra
+     o serviço no cartão. A conversa repassa `servico_sessao` ao pipeline.
+  2. O NLU herda o serviço da sessão, e o pedido "qual serviço" sai quando o serviço é conhecido.
+  3. Visão geral: `buscar_logs` e `buscar_metricas` aceitam rodar sem serviço (todos os
+     serviços, como o contrato 1.1.0 da loja), e a regra 9 do prompt manda começar por elas
+     quando a mensagem não cita serviço.
+  4. Investigador:
+     - a mensagem recebe o serviço da sessão como contexto;
+     - resposta sem nenhuma ferramenta recebe um pedido para investigar;
+     - se ainda assim não houver observação, `sem_observacao` marca todas as hipóteses com
+       `evidencia_insuficiente`, limita a confiança a 0,3 e tira a evidência.
+  5. Schema: a validação aceita 1 hipótese, e o modelo continua vendo `minItems: 2`. Das opções do
+     pedido, foi a que impede o erro mesmo depois da nova tentativa. O pedido de correção do JSON
+     agora traz o motivo da recusa.
+- **Conferência com o modelo real** (as 2 perguntas × 8 cenários, um agente novo por execução):
+  - `causa_certa` 16/16, nenhuma `rota="erro"`, auditor aprovou as 16;
+  - nenhum pedido de "qual serviço";
+  - toda trajetória começou por `buscar_logs` e `listar_deploys`.
+  - **Ressalva:** no `gateway_fora`, as duas respostas citam o 503, mas explicam a causa como
+    limite de requisições excedido. A causa certa é a indisponibilidade do provedor, e o gabarito
+    por palavra ("503") aceita a resposta. Pela leitura, a causa está certa em 14 de 16.

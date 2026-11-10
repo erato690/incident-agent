@@ -76,3 +76,21 @@ Textos para o leitor em português, sem citar "aula N".
 - [ ] T111 Diagramas (`scripts/gerar_diagramas.py`): componentes da Fase 4 e arquitetura final.
 - [ ] T112 Execução completa com a chave; mesclar as saídas; `docs/projeto.html`; README; varredura de segredos; commit local.
 - [ ] T113 `relatório técnico (fora do repositório)` e o PDF `PDF do relatório (fora do repositório)` (problema, arquitetura, decisões por fase, avaliação, limitações, evidências, processo com o spec-kit, IAs usadas).
+
+## Phase 8: Ajustes pós-entrega (2026-11-10)
+
+Pedido do Rafael, TDD (teste que falha antes do código), sem push.
+
+**A. LangSmith só na seção 5**
+
+- [x] T120 `agente/rastreamento.py`: rastreamento desligado por padrão (`LANGSMITH_TRACING=false` quando a variável não existe), chamado por `escolher_llm`, pelo app e pelo notebook; `com_rastreamento(funcao)` liga com `langsmith.tracing_context(enabled=True)` só no bloco e devolve `(resultado, aviso)`; falha do LangSmith (429, cota, autenticação, rede, aviso do envio em segundo plano) vira aviso, nunca exceção. Testes com mock em `tests/test_rastreamento.py`.
+- [x] T121 `apresentar_cenarios(rodar, cenarios)`: uma execução do agente integrado por cenário, rastreada, numa única apresentação; um cenário com falha não derruba os outros.
+- [x] T122 Seção 5.6 do notebook: envio (`enviar_ao_langsmith`) e apresentação rastreados só com `ENVIAR_LANGSMITH=1`; baterias, conversa longa e avaliação local continuam sem rastreamento.
+
+**B. Pergunta aberta sem serviço**
+
+- [x] T123 `FonteLoja.logs` e `.metricas` sem serviço devolvem todos os serviços (contrato 1.1.0: sem `servico`, todos); `buscar_logs` e `buscar_metricas` com `servico` opcional (visão geral).
+- [x] T124 Sessão do agente integrado nasce com o serviço do cenário; a conversa repassa `servico_sessao` ao pipeline; o NLU sem serviço herda o da sessão e não pede "qual serviço".
+- [x] T125 Investigador: mensagem sem o serviço recebe o contexto da sessão; prompt com a regra da visão geral; resposta sem nenhuma ferramenta recebe um pedido de correção; se ainda não chamar ferramenta, todas as hipóteses viram `evidencia_insuficiente` (nunca afirma ausência de erro sem observação).
+- [x] T126 `AnaliseIncidente` aceita 1 hipótese na validação (o schema mostrado ao modelo continua pedindo 2 ou 3); o pedido de correção do JSON traz o erro de validação.
+- [x] T127 Conferência com o modelo real: as duas perguntas abertas nos 8 cenários; taxa de causa certa no relatório.
