@@ -1,6 +1,10 @@
-"""Avalia o agente nos cenários: local por padrão; `--enviar` publica no LangSmith.
+"""Avalia o agente integrado nos cenários: local por padrão; `--enviar` publica no LangSmith.
 
 Uso: .venv/bin/python scripts/avaliar_langsmith.py [--enviar] [--prefixo fase5]
+
+O rastreamento fica desligado (LANGSMITH_TRACING=false) na avaliação local. Com `--enviar`, só o
+envio (dataset + experimento) roda com o rastreamento ligado; falha do LangSmith (429, cota,
+rede) vira aviso e o script termina sem erro.
 """
 
 import argparse
@@ -18,47 +22,45 @@ from agente.avaliacao import (  # noqa: E402
     enviar_ao_langsmith,
     exemplos_dataset,
     resumo_metricas,
+    saida_do_turno,
 )
+from agente.rastreamento import com_rastreamento, desligar_rastreamento_por_padrao  # noqa: E402
 
 
-def montar_alvo() -> Callable[[dict], object]:
-    """Agente da Fase 4; trocar por `agente.integrado` quando existir."""
-    from agente.agente_react import montar_investigador
+def montar_alvo() -> Callable[[dict], dict]:
+    """Um agente integrado novo por exemplo (memória própria), uma sessão no cenário."""
     from agente.config import escolher_llm
-    from agente.ferramentas import montar_ferramentas
-    from agente.loja import FonteLoja
-    from agente.memoria import MemoriaLongoPrazo, embeddings_padrao
-    from agente.moderacao import moderar
-    from agente.pipeline import montar_pipeline
-    from agente.recuperacao import carregar_indice
+    from agente.integrado import montar_agente_integrado
 
-    llm, emb = escolher_llm("openai"), embeddings_padrao()
-    indice = carregar_indice(Path("dados/indice_faiss"), emb)
+    llm = escolher_llm("openai")
+    base = montar_agente_integrado(llm)
+    pasta = Path(tempfile.mkdtemp(prefix="postmortem_"))
 
-    def alvo(inputs: dict):
-        memoria = MemoriaLongoPrazo(emb, Path(tempfile.mkdtemp()) / "m.json")
-        fonte = FonteLoja.gravada(inputs["cenario"])
-        ferramentas = montar_ferramentas(
-            fonte, memoria=memoria, indice=indice, llm_acao=llm, estatisticas=True
+    def alvo(inputs: dict) -> dict:
+        agente = montar_agente_integrado(
+            llm, embeddings=base.embeddings, indice=base.indice, pasta_postmortem=pasta
         )
-        investigador = montar_investigador(llm, ferramentas, max_passos=12)
-        pipe = montar_pipeline(llm, moderar, investigacao=investigador, memoria=memoria)
-        return pipe.invoke(
-            {"mensagem": inputs["mensagem"], "historico": [], "session_id": "avaliacao"}
-        )
+        sessao = agente.abrir_sessao(inputs["cenario"])
+        return saida_do_turno(agente.turno(sessao, inputs["mensagem"]))
 
     return alvo
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--enviar", action="store_true", help="envia ao LangSmith (ação externa)")
     parser.add_argument("--prefixo", default="fase5")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     load_dotenv()
+    desligar_rastreamento_por_padrao()
     alvo = montar_alvo()
     if args.enviar:
-        print(enviar_ao_langsmith(alvo, prefixo=args.prefixo))
+        experimento, aviso = com_rastreamento(
+            lambda: enviar_ao_langsmith(alvo, prefixo=args.prefixo)
+        )
+        print(
+            aviso or f"Experimento enviado: {getattr(experimento, 'experiment_name', experimento)}"
+        )
         return
     linhas = avaliar_localmente(alvo, exemplos_dataset())
     for linha in linhas:

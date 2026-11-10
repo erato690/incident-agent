@@ -1,7 +1,8 @@
 FROM python:3.12-slim
 
 WORKDIR /srv
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=1 \
+    LANGSMITH_TRACING=false
 
 COPY requirements.txt requirements-app.txt ./
 RUN pip install --no-cache-dir -r requirements-app.txt

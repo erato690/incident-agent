@@ -26,6 +26,7 @@ from langchain_core.tracers.context import register_configure_hook
 from pydantic import BaseModel, Field, field_validator
 
 from agente.conversa import abrir_sessao as abrir_sessao_local
+from agente.rastreamento import desligar_rastreamento_por_padrao
 from agente.schemas import RespostaTurno, Sessao
 from app.formatacao import (
     causa_a_confirmar,
@@ -40,6 +41,7 @@ from app.formatacao import (
     tecnicas,
 )
 
+desligar_rastreamento_por_padrao()  # o app nunca rastreia no LangSmith
 RAIZ = Path(__file__).resolve().parent.parent
 PASTA_ESTATICA = Path(__file__).resolve().parent / "static"
 PASTA_CENARIOS = RAIZ / "dados_dummy" / "cenarios"

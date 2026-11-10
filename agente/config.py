@@ -6,6 +6,8 @@ import os
 from dotenv import load_dotenv
 from langchain_core.language_models import BaseChatModel
 
+from agente.rastreamento import desligar_rastreamento_por_padrao
+
 # provedor: (módulo, classe, modelo, variável da chave)
 PROVEDORES = {
     "deepseek": ("langchain_deepseek", "ChatDeepSeek", "deepseek-v4-flash", "DEEPSEEK_API_KEY"),
@@ -17,6 +19,7 @@ PADRAO = "openai"
 def escolher_llm(provedor: str | None = None) -> BaseChatModel:
     """Provedor = argumento, senão LLM_PROVEDOR, senão openai."""
     load_dotenv()
+    desligar_rastreamento_por_padrao()  # LangSmith só onde a seção 5 liga
     nome = (provedor or os.getenv("LLM_PROVEDOR") or PADRAO).strip().lower()
     if nome not in PROVEDORES:
         raise ValueError(f"Provedor inválido: {nome!r}. Opções: {', '.join(PROVEDORES)}.")
