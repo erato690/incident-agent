@@ -246,9 +246,9 @@ def _citacao(achado: EpisodioEncontrado) -> str:
 def citar_episodios(
     analise: AnaliseIncidente, achados: list[EpisodioEncontrado]
 ) -> AnaliseIncidente:
-    """SC-002: cada episódio que `consultar_memoria` devolveu acima do limiar entra na evidência
-    da hipótese com mais palavras em comum com a causa do episódio (nenhuma em comum: não entra).
-    Determinístico; não depende de o modelo citar o id e a data."""
+    """Cita o incidente parecido: cada episódio que `consultar_memoria` devolveu acima do
+    limiar entra na evidência da hipótese com mais palavras em comum com a causa do episódio
+    (nenhuma em comum: não entra). Determinístico; não depende de o modelo citar o id e a data."""
     hipoteses = [hipotese.model_copy() for hipotese in analise.hipoteses]
     for achado in achados:
         causa = _palavras(achado.episodio.causa)

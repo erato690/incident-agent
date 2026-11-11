@@ -237,7 +237,7 @@ def test_gravacao_recusada_pela_trava_nao_vira_rota_memoria():
     assert modelo.chamadas == []
 
 
-# --- SC-002: id e data do episódio na evidência, sem depender do modelo ---------------------
+# --- Citação do incidente parecido: id e data na evidência, sem depender do modelo ------
 
 ANALISE_POOL = {
     "severidade": "alta",

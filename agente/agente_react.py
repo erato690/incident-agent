@@ -434,7 +434,8 @@ def _garantir_acao(
     acao: Any, resultado: ResultadoInvestigacao, chamador: dict | None
 ) -> ResultadoInvestigacao:
     """Toda análise sai com ação sugerida: se o modelo esqueceu `sugerir_acao`, o código chama
-    a ferramenta com a hipótese principal (mesmo contexto do turno), como na citação do SC-002."""
+    a ferramenta com a hipótese principal (mesmo contexto do turno), como faz com o incidente
+    parecido."""
     if acao is None or resultado.analise is None:
         return resultado
     if any(passo.ferramenta == acao.name for passo in resultado.trajetoria):
