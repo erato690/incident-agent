@@ -75,7 +75,7 @@ Textos para o leitor em português, sem citar "aula N".
 - [ ] T110 Renomear as seções pela capacidade, ajustar as referências e criar a seção 0 (diagrama de contexto, agente final num cenário, índice geral da rubrica).
 - [ ] T111 Diagramas (`scripts/gerar_diagramas.py`): componentes da Fase 4 e arquitetura final.
 - [ ] T112 Execução completa com a chave; mesclar as saídas; `docs/projeto.html`; README; varredura de segredos; commit local.
-- [ ] T113 `relatório técnico (fora do repositório)` e o PDF `PDF do relatório (fora do repositório)` (problema, arquitetura, decisões por fase, avaliação, limitações, evidências, processo com o spec-kit, IAs usadas).
+- [ ] T113 `relatório técnico (fora do repositório)` e o PDF `PDF do relatório (fora do repositório)`, gerado por `gerador do PDF (fora do repositório)` e fora do git (problema, arquitetura, decisões por fase, avaliação, limitações, evidências, processo com o spec-kit, IAs usadas).
 
 ## Phase 8: Ajustes pós-entrega (2026-11-10)
 
@@ -94,3 +94,7 @@ Pedido do Rafael, TDD (teste que falha antes do código), sem push.
 - [x] T125 Investigador: mensagem sem o serviço recebe o contexto da sessão; prompt com a regra da visão geral; resposta sem nenhuma ferramenta recebe um pedido de correção; se ainda não chamar ferramenta, todas as hipóteses viram `evidencia_insuficiente` (nunca afirma ausência de erro sem observação).
 - [x] T126 `AnaliseIncidente` aceita 1 hipótese na validação (o schema mostrado ao modelo continua pedindo 2 ou 3); o pedido de correção do JSON traz o erro de validação.
 - [x] T127 Conferência com o modelo real: as duas perguntas abertas nos 8 cenários; taxa de causa certa no relatório.
+
+**C. PDF do relatório fora do git**
+
+- [x] T128 `git rm --cached` do PDF e `docs/*.pdf` no `.gitignore`; `gerador do PDF (fora do repositório)` continua gerando em `docs/` e copia para `~/Downloads/` quando a pasta existe; README, spec e plano dizem que o PDF sai do gerador e vai pelo Moodle. O histórico publicado (desde ca43bf3) fica como está.

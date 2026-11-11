@@ -350,3 +350,13 @@ sistema?").
   - **Ressalva:** no `gateway_fora`, as duas respostas citam o 503, mas explicam a causa como
     limite de requisições excedido. A causa certa é a indisponibilidade do provedor, e o gabarito
     por palavra ("503") aceita a resposta. Pela leitura, a causa está certa em 14 de 16.
+
+## PDF do relatório fora do git (2026-11-10)
+
+- **Decisão do Rafael:** o PDF `PDF do relatório (fora do repositório)` não entra mais no
+  git. O nome segue o padrão da faculdade e o arquivo é entregue pelo Moodle.
+- **Como ficou:** `git rm --cached` do PDF e `docs/*.pdf` no `.gitignore`. O gerador
+  (`gerador do PDF (fora do repositório)`) continua escrevendo em `docs/` e copia o PDF para
+  `~/Downloads/` quando a pasta existe.
+- **Histórico:** o PDF continua nos commits já publicados (de ca43bf3 em diante). Não houve
+  reescrita de histórico nem force push; limpar o histórico fica para o Rafael decidir.

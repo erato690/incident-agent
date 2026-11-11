@@ -133,7 +133,8 @@ e a análise.
 As seções passam a se chamar "1 Chain, barreira e saída estruturada", "2 Agente com
 ferramentas", "3 Memória", "4 Consulta SQL e RAG" e "5 Agente integrado". A seção 0 traz o
 diagrama de contexto, 2 ou 3 células com o agente final e o índice da rubrica. O relatório PDF é
-`PDF do relatório (fora do repositório)`.
+`PDF do relatório (fora do repositório)`, gerado por `gerador do PDF (fora do repositório)`, fora do
+git e entregue pelo Moodle.
 
 ### Edge Cases
 
@@ -194,7 +195,8 @@ diagrama de contexto, 2 ou 3 células com o agente final e o índice da rubrica.
   de 8.
 - **SC-004**: Streamlit roda local e em `docker compose`; prints das duas telas.
 - **SC-005**: Seção 5 com a chave em até 300 s; testes sem chave passando; ruff limpo.
-- **SC-006**: O PDF é gerado a partir do repositório, com o nome do padrão.
+- **SC-006**: O PDF é gerado a partir do repositório, com o nome do padrão; não é versionado
+  (`docs/*.pdf` no `.gitignore`) e vai pelo Moodle.
 
 ## Assumptions
 

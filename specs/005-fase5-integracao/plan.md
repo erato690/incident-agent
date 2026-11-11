@@ -9,7 +9,8 @@ passo do auditor depois da investigação (`agente/auditor.py`). A intenção `g
 passa a gerar o post-mortem (`agente/postmortem.py`). O registro de turnos (`RegistroTurno`)
 alimenta o Streamlit (`app/app.py`). A avaliação sai de `agente/avaliacao.py`
 (avaliadores + dataset) e de `scripts/avaliar_langsmith.py`. O notebook ganha a seção 5, as
-seções renomeadas e a seção 0. O relatório sai de `relatório técnico (fora do repositório)`, gerado em PDF.
+seções renomeadas e a seção 0. O relatório sai de `relatório técnico (fora do repositório)`, gerado em PDF por
+`gerador do PDF (fora do repositório)` (em `docs/`, ignorado pelo git, e numa cópia em `~/Downloads/`).
 
 ## Technical Context
 
