@@ -360,3 +360,27 @@ sistema?").
   `~/Downloads/` quando a pasta existe.
 - **Histórico:** o PDF continua nos commits já publicados (de ca43bf3 em diante). Não houve
   reescrita de histórico nem force push; limpar o histórico fica para o Rafael decidir.
+
+## Pergunta aberta sem herança do serviço do cenário (2026-11-11)
+
+- **Correção de rumo do Rafael:** dar ao agente o serviço do cenário é atalho do mock. Em incidente
+  real ninguém entrega o serviço; achar qual serviço falha é trabalho do agente. A medição
+  anterior (16/16) foi feita com o serviço já entregue e não vale.
+- **Como ficou:**
+  - `AgenteIntegrado.abrir_sessao` não passa mais `servico_do_cenario`; a sessão nasce sem
+    serviço. O cenário só escolhe a fonte (`?cenario=`). `servico_do_cenario` ficou só para a
+    medição (gabarito).
+  - `sanear_nlu` tira sempre o pedido "qual serviço" do NLU: o Investigador começa pela visão
+    geral. O serviço citado na conversa continua sendo herdado (`servico_sessao`).
+  - Regra 9 do prompt: identificar o serviço afetado pelas saídas das ferramentas, preencher
+    `servico`, citá-lo no `resumo`; perguntar serviço e horário só se a visão geral não mostrar
+    erro em nenhum serviço.
+  - O serviço descoberto pela investigação (`analise.servico`) entra na sessão, depois do da
+    mensagem e do que a sessão já tinha. A tela mostra o serviço da sessão, não o do cenário.
+- **Medição** (gpt-4o-mini, NLU gpt-4.1, modo gravado, 2 rodadas × 2 perguntas × 8 cenários):
+  causa certa 32/32 pelo gabarito e 28/32 pela leitura (`gateway_fora` 0/4: 503 explicado como
+  limite de requisições); serviço certo 30/32 (`banco_lento_com_deploy` 2/4: `estoque-worker` no
+  lugar de `pedidos-api`, mesmo banco); 0 erros; 0 pedidos de "qual serviço"; auditor 31/32.
+- **Ajustes propostos, não aplicados** (só prompt): separar 503 (indisponível) de 429 (limite) e
+  não usar fato da wiki que os logs não mostram; com causa em banco compartilhado, citar todos os
+  serviços afetados.

@@ -85,12 +85,12 @@ def sanear_nlu(
 ) -> AnaliseNLU | None:
     """Descarta o `dado_faltante` indevido do NLU; o resto da análise fica igual.
 
-    Sem serviço na mensagem, herda o da sessão; com serviço conhecido, "qual serviço?" sai."""
+    Sem serviço na mensagem, herda o que a conversa já nomeou. "Qual serviço?" sai sempre: o
+    Investigador começa pela visão geral e só pergunta se as ferramentas não acharem nada."""
     if nlu is not None and not nlu.servico and servico_sessao:
         nlu = nlu.model_copy(update={"servico": servico_sessao})
     if (
         nlu is not None
-        and nlu.servico
         and nlu.dado_faltante
         and re.search(_PEDE_SERVICO, _normalizar(nlu.dado_faltante))
     ):

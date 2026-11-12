@@ -47,8 +47,11 @@ def test_sanear_nlu_remove_so_o_dado_indevido():
     )
     limpo = sanear_nlu(nlu, PERGUNTA)
     assert limpo.dado_faltante is None and limpo.servico == "pagamentos-api"
-    bom = AnaliseNLU(intencao="investigar_erro", dado_faltante="nome do serviço afetado")
-    assert sanear_nlu(bom, "deu erro").dado_faltante == "nome do serviço afetado"
+    # "qual serviço" sai: o Investigador descobre o serviço pela visão geral
+    sem_servico = AnaliseNLU(intencao="investigar_erro", dado_faltante="nome do serviço afetado")
+    assert sanear_nlu(sem_servico, "deu erro").dado_faltante is None
+    bom = AnaliseNLU(intencao="investigar_erro", dado_faltante="horário em que o erro começou")
+    assert sanear_nlu(bom, "deu erro").dado_faltante == "horário em que o erro começou"
     assert sanear_nlu(None, PERGUNTA) is None
 
 

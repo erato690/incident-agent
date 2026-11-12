@@ -98,3 +98,4 @@ Pedido do Rafael, TDD (teste que falha antes do código), sem push.
 **C. PDF do relatório fora do git**
 
 - [x] T128 `git rm --cached` do PDF e `docs/*.pdf` no `.gitignore`; `gerador do PDF (fora do repositório)` continua gerando em `docs/` e copia para `~/Downloads/` quando a pasta existe; README, spec e plano dizem que o PDF sai do gerador e vai pelo Moodle. O histórico publicado (desde ca43bf3) fica como está.
+- [x] T129 Pergunta aberta sem herança do serviço do cenário: sessão nasce sem serviço, o NLU não pede "qual serviço", o Investigador descobre o serviço pela visão geral e ele fica na sessão; nova medição com o modelo real (2 rodadas) no relatório.

@@ -189,19 +189,25 @@ def test_pipeline_herda_o_servico_da_sessao_e_nao_pede_servico():
     assert vistos[0].servico == "x-api" and vistos[0].dado_faltante is None
 
 
-def test_sem_servico_na_sessao_o_pedido_legitimo_fica():
+def test_sem_servico_conhecido_vai_investigar_em_vez_de_pedir_servico():
+    """Achar o serviço com problema é trabalho do agente: a visão geral vem antes da pergunta."""
+    vistos = []
+
+    def investigar(estado):
+        vistos.append(estado["nlu"])
+        return ResultadoInvestigacao(
+            analise=AnaliseIncidente.model_validate(UMA_HIPOTESE), trajetoria=[]
+        )
+
     pipe = montar_pipeline(
         None,
         _moderar,
         nlu=RunnableLambda(lambda e: _nlu(None, "qual serviço está com erro")),
-        investigacao=RunnableLambda(
-            lambda e: ResultadoInvestigacao(
-                analise=AnaliseIncidente.model_validate(UMA_HIPOTESE), trajetoria=[]
-            )
-        ),
+        investigacao=RunnableLambda(investigar),
     )
     resposta = pipe.invoke({"mensagem": "tem alguma coisa com problema?", "historico": []})
-    assert resposta.nlu.servico is None and resposta.nlu.dado_faltante
+    assert resposta.rota == "investigacao"
+    assert vistos[0].servico is None and vistos[0].dado_faltante is None
 
 
 def test_conversa_repassa_o_servico_da_sessao():
@@ -223,20 +229,47 @@ def test_conversa_repassa_o_servico_da_sessao():
     assert entradas[0]["servico_sessao"] == "pedidos-api"
 
 
-def test_sessao_do_agente_integrado_nasce_com_o_servico_do_cenario(tmp_path):
+def _agente_integrado(tmp_path, modelo):
     from langchain_core.embeddings import DeterministicFakeEmbedding
 
     from agente.integrado import AgenteIntegrado
     from agente.memoria import MemoriaLongoPrazo
 
     embeddings = DeterministicFakeEmbedding(size=8)
-    agente = AgenteIntegrado(
-        roteiro("ok"),
+    return AgenteIntegrado(
+        modelo,
         embeddings=embeddings,
         indice=object(),
         memoria=MemoriaLongoPrazo(embeddings, tmp_path / "m.json"),
         auditor=False,
         avaliar_relevancia=False,
     )
-    assert agente.abrir_sessao("rate_limit").servico == "pagamentos-api"
-    assert agente.abrir_sessao("pool_esgotado").servico == "pedidos-api"
+
+
+def test_sessao_do_agente_integrado_nao_recebe_o_servico_do_cenario(tmp_path):
+    """Em incidente real ninguém entrega o serviço ao agente: a sessão nasce sem ele."""
+    agente = _agente_integrado(tmp_path, roteiro("ok"))
+    assert agente.abrir_sessao("rate_limit").servico is None
+    assert agente.abrir_sessao("pool_esgotado").servico is None
+
+
+def test_servico_descoberto_pela_investigacao_fica_na_sessao():
+    from agente.conversa import _sessao_atualizada
+    from agente.schemas import RespostaTurno
+
+    analise = AnaliseIncidente.model_validate({**UMA_HIPOTESE, "servico": "pedidos-api"})
+    resposta = RespostaTurno(
+        rota="investigacao",
+        moderacao=ResultadoModeracao(status="ok"),
+        nlu=_nlu(None),
+        analise=analise,
+    )
+    sessao = _sessao_atualizada(abrir_sessao("pool_esgotado"), resposta)
+    assert sessao.servico == "pedidos-api"
+
+
+def test_prompt_manda_descobrir_o_servico_e_so_perguntar_sem_achados():
+    texto = " ".join(SISTEMA_AGENTE.split())
+    assert "session service" not in texto
+    assert "identify the affected service" in texto
+    assert "only when the overview shows no errors" in texto.lower()

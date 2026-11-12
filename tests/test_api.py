@@ -126,7 +126,7 @@ def test_estado_e_cenarios(cliente):
 def test_criar_listar_e_abrir_sessao(cliente):
     criada = _nova(cliente)
     assert criada["cenario"] == "pool_esgotado" and criada["mensagens"] == []
-    assert criada["servico"]
+    assert criada["servico"] is None  # a sessão nasce sem serviço; o agente o descobre
     lista = cliente.get("/api/sessoes").json()
     assert [s["id"] for s in lista] == [criada["id"]]
     aberta = cliente.get(f"/api/sessoes/{criada['id']}").json()

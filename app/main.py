@@ -120,7 +120,8 @@ class Conversa:
             "id": self.sessao.session_id,
             "cenario": self.cenario["id"],
             "titulo_cenario": self.cenario["titulo"],
-            "servico": self.cenario.get("servico"),
+            # serviço citado ou descoberto na conversa; o do cenário fica fora (é o gabarito)
+            "servico": self.sessao.servico,
             "titulo": self.titulo or self.cenario["titulo"],
             "criada_em": self.sessao.criada_em.isoformat(),
             "turnos": sum(1 for m in self.mensagens if m["papel"] == "agente"),

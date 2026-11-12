@@ -100,8 +100,10 @@ def _e_resumo(mensagem: BaseMessage) -> bool:
 
 def _sessao_atualizada(sessao: Sessao, resposta: RespostaTurno) -> Sessao:
     servico = None if _bloqueada(resposta) or not resposta.nlu else resposta.nlu.servico
+    descoberto = resposta.analise.servico if resposta.analise and not _bloqueada(resposta) else None
     return sessao.model_copy(
-        update={"turnos": sessao.turnos + 1, "servico": servico or sessao.servico}
+        # ordem: serviço da mensagem, o que a conversa já tinha, o que a investigação descobriu
+        update={"turnos": sessao.turnos + 1, "servico": servico or sessao.servico or descoberto}
     )
 
 
