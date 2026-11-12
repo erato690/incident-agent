@@ -1,4 +1,4 @@
-"""Formatação pura das respostas e do registro (sem Streamlit, testável sem chave)."""
+"""Formatação pura das respostas e do registro: não depende da interface e roda sem chave."""
 
 import json
 import re

@@ -596,7 +596,7 @@ Exemplos:
       <pre class="code" style="margin-top:12px">Tela de uso ──▶ agente responde ──▶ grava o turno em JSON (pergunta, resposta, trajetória, auditoria)
                                                   │
 Tela de análise ◀── lê os turnos gravados ◀───────┘</pre>
-      <p class="sec-sub" style="margin-top:10px">Na versão Streamlit (padrão da aula 8), é um app com duas páginas. A tela de análise pode depois ganhar o LangSmith.</p>
+      <p class="sec-sub" style="margin-top:10px">O plano inicial era um app Streamlit (padrão da aula 8) com duas páginas. Em 05/11 ele foi trocado por uma interface web própria (FastAPI com front HTML, CSS e JavaScript), porque o Streamlit não dava a experiência de chat esperada (barra lateral de conversas, caixa de mensagem fixa, passos do turno ao vivo). A interface tem o chat de uso e o painel de análise.</p>
       <h3 style="font-family:var(--font-display);font-size:16px;margin:18px 0 8px">Tela de uso: investigação que começa pelo sintoma</h3>
 <pre class="code">┌ Incidentes ──────────────┐┌─────────────────────────────────────────────────────────┐
 │ [ + Novo chat ]          ││ pagamentos-api · produção · desde 13:55        [editar] │
@@ -647,7 +647,7 @@ Tela de análise ◀── lê os turnos gravados ◀───────┘</p
 
     <section>
       <h2 class="sec">Entrega: notebook que roda sozinho</h2>
-      <p class="sec-sub">O professor executa de cima para baixo com dados dummy criados no próprio notebook. O Streamlit não roda dentro de uma célula, então o notebook reproduz as duas telas em texto e tabelas. O <code>app.py</code> reaproveita as mesmas funções e é um extra para o vídeo.</p>
+      <p class="sec-sub">O professor executa de cima para baixo com dados dummy criados no próprio notebook. A interface web não roda dentro de uma célula, então o notebook reproduz as duas telas em texto e tabelas. A interface (<code>app/</code>, FastAPI com front próprio, que substituiu o Streamlit em 05/11) reaproveita as mesmas funções e é um extra para o vídeo.</p>
       <ol class="ladder" style="margin-top:12px">
         <li><b>1 · Setup</b><span>Chaves, escolha do LLM (openai ou deepseek), embeddings.</span></li>
         <li><b>2 · Dados dummy</b><span>SQLite em memória, FAISS de runbooks, API simulada em thread.</span></li>
@@ -703,7 +703,7 @@ Tela de análise ◀── lê os turnos gravados ◀───────┘</p
           <li>Logs, métricas e deploys vêm da API FastAPI do repositório <code>incident-shop</code> (8 cenários com gabarito); substitui o laboratório com moto</li>
           <li>API externa real: repositório próprio e público <code>incident-shop</code> no GitHub, separado do projeto e documentado no README dele</li>
           <li>Duas telas: uso (engenheiro) e análise (nós)</li>
-          <li>Notebook roda sozinho com dados dummy; Streamlit é extra</li>
+          <li>Notebook roda sozinho com dados dummy; a interface web é extra (substituiu o Streamlit em 05/11)</li>
           <li>Alvo de entrega 09/11 (Moodle); 13/11 se o professor confirmar</li>
           <li>Chat por incidente; investigação pode começar pelo sintoma</li>
           <li>Guardrails em seis camadas (moderação OpenAI incluída em 01/11)</li>

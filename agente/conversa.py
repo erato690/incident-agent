@@ -133,7 +133,7 @@ class Conversa:
         avaliar_relevancia: Runnable | None = None,
         limite: int = 8,
         manter: int = 4,
-        max_tokens_janela: int = 2000,
+        max_tokens_janela: int = 16000,
     ):
         self._avaliar_relevancia = avaliar_relevancia
         self._limite, self._manter = limite, manter
@@ -265,7 +265,7 @@ def montar_conversa(
     avaliar_relevancia: Runnable | None = None,
     limite: int = 8,
     manter: int = 4,
-    max_tokens_janela: int = 2000,
+    max_tokens_janela: int = 16000,
 ) -> Conversa:
     """Conversa com `RunnableWithMessageHistory`; resume acima de `limite` mensagens.
 

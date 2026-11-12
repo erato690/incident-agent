@@ -1315,8 +1315,8 @@ def arquitetura_final():
         60,
         10,
         COR_SISTEMA,
-        "Streamlit",
-        "telas Uso (conversa) e Análise (registro dos turnos)",
+        "Interface web (FastAPI + HTML/CSS/JS)",
+        "chat de uso (conversa) e painel de análise (registro dos turnos)",
     )
     caixa(
         ax,
@@ -1354,7 +1354,7 @@ def arquitetura_final():
         COR_SISTEMA,
         "Registro de turnos",
         "guarda cada turno (pergunta, ferramentas, veredito);\n"
-        "alimenta a tela de Análise do Streamlit",
+        "alimenta o painel de análise da interface web",
     )
     caixa(
         ax,
