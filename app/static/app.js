@@ -287,6 +287,7 @@ function blocoPerguntas(mensagem) {
         erro.textContent = `Não consegui enviar: ${falha}`; erro.hidden = false;
       }
     };
+    campo.addEventListener("input", () => autoajustar(campo));
     campo.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); formulario.requestSubmit(); }
     });
@@ -681,11 +682,15 @@ function atualizarBotaoEnviar() {
   $("enviar").disabled = estado.enviando || !$("entrada").value.trim();
 }
 
-function ajustarAltura() {
-  const t = $("entrada");
+function autoajustar(t, max = 200) {
+  const borda = t.offsetHeight - t.clientHeight;
   t.style.height = "auto";
-  t.style.height = `${Math.min(t.scrollHeight, 200)}px`;
+  const total = t.scrollHeight + borda;
+  t.style.height = `${Math.min(total, max)}px`;
+  t.style.overflowY = total > max ? "auto" : "hidden";
 }
+
+function ajustarAltura() { autoajustar($("entrada")); }
 
 function ligarEventos() {
   const entrada = $("entrada");
