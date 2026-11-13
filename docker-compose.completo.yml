@@ -1,0 +1,42 @@
+# Sobe a loja (incident-shop) e o agente já conectados; o chat abre em http://127.0.0.1:8501.
+#   docker compose -f docker-compose.completo.yml up --build
+#   docker compose -f docker-compose.completo.yml down
+# A loja é construída direto do GitHub, então não precisa clonar o incident-shop. Se já tiver o
+# clone ao lado, use SHOP_CONTEXTO=../incident-shop.
+# A chave da OpenAI vem do .env (ou da variável OPENAI_API_KEY do shell); nunca fica na imagem.
+# Escolha o incidente com CENARIO (padrão pool_esgotado): rate_limit, gateway_fora,
+# banco_lento_com_deploy, e os demais cenários da loja.
+
+services:
+  shop:
+    build:
+      context: ${SHOP_CONTEXTO:-https://github.com/erato690/incident-shop.git#main}
+    ports:
+      - "127.0.0.1:${SHOP_PORTA:-8000}:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/saude', timeout=3)"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  agente:
+    build: .
+    depends_on:
+      shop:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${AGENTE_PORTA:-8501}:8501"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: "8501"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      LOJA_URL: http://shop:8000
+      CENARIO: ${CENARIO:-pool_esgotado}
+      # Sem chave do LangSmith, o envio de traces fica desligado.
+      LANGSMITH_TRACING: ${LANGSMITH_TRACING:-false}
