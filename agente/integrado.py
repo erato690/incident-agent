@@ -187,7 +187,9 @@ class AgenteIntegrado:
 
     def _episodio_confirmado(self, servico: str, session_id: str) -> Episodio | None:
         ativos = self.memoria.listar_episodios(servico, incluir_arquivados=False)
-        dela = [e for e in ativos if e.incidente_id == session_id]
+        dela = [e for e in ativos if e.session_id == session_id]
+        if not dela:  # a confirmação pode ter caído em outro serviço (ex.: o do fornecedor citado)
+            dela = self.memoria.episodios_da_sessao(session_id)
         return dela[-1] if dela else None
 
     def _postmortem(self, estado: dict) -> RespostaTurno:

@@ -187,3 +187,57 @@ class RespostaTurnoFalsa:
             analise=resultado.analise,
             trajetoria=resultado.trajetoria,
         )
+
+
+def test_postmortem_acha_causa_confirmada_em_outro_servico(agente):
+    """Confirmação que o NLU atribuiu a outro serviço (ex.: o fornecedor) vale para a sessão."""
+    sessao = agente.abrir_sessao("pool_esgotado")
+    agente.turno(sessao, "pagamentos-api com NullPointerException")
+    agente.memoria.registrar_episodio(
+        Episodio(
+            incidente_id=sessao.session_id,
+            session_id=sessao.session_id,
+            servico="PagaFácil",
+            resumo="Limite excedido",
+            causa="limite de requisições excedido",
+            origem="engenheiro",
+            criado_em=datetime.now(),
+        ),
+        RunnableLambda(lambda _: ResolucaoMemoria(acao="inserir_novo", motivo="novo")),
+    )
+    resposta = agente.turno(sessao, "gere o post-mortem")
+    assert resposta.fixa.categoria == "gerar_relatorio"
+    assert "limite de requisições excedido" in resposta.fixa.texto
+
+
+def _gravar_em(agente, sessao_id, servico, arquivar=False):
+    resultado = agente.memoria.registrar_episodio(
+        Episodio(
+            incidente_id=sessao_id,
+            session_id=sessao_id,
+            servico=servico,
+            resumo="r",
+            causa="causa x",
+            origem="engenheiro",
+            criado_em=datetime.now(),
+        ),
+        RunnableLambda(lambda _: ResolucaoMemoria(acao="inserir_novo", motivo="novo")),
+    )
+    if arquivar:
+        agente.memoria._atualizar_metadados(resultado.episodio.id_memoria, status="arquivado")
+
+
+def test_fallback_ignora_episodio_de_outra_sessao(agente):
+    sessao = agente.abrir_sessao("pool_esgotado")
+    agente.turno(sessao, "pagamentos-api com NullPointerException")
+    _gravar_em(agente, "outra-sessao", "PagaFácil")
+    resposta = agente.turno(sessao, "gere o post-mortem")
+    assert resposta.fixa.categoria == CATEGORIA_SEM_CONFIRMACAO
+
+
+def test_fallback_ignora_episodio_arquivado(agente):
+    sessao = agente.abrir_sessao("pool_esgotado")
+    agente.turno(sessao, "pagamentos-api com NullPointerException")
+    _gravar_em(agente, sessao.session_id, "PagaFácil", arquivar=True)
+    resposta = agente.turno(sessao, "gere o post-mortem")
+    assert resposta.fixa.categoria == CATEGORIA_SEM_CONFIRMACAO

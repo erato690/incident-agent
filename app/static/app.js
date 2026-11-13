@@ -407,9 +407,25 @@ function cartaoAgente(mensagem) {
       const erro = el("p", { classe: "fonte erro-envio", role: "alert", hidden: true });
       botao.addEventListener("click", async () => {
         botao.disabled = true;
-        const falha = await enviarMensagem(`Confirmado: ${mensagem.causa_a_confirmar}`);
-        if (falha === null) botao.replaceWith(el("p", { classe: "fonte" }, "Causa confirmada. Peça o post-mortem de novo para gerá-lo."));
-        else { botao.disabled = false; erro.textContent = `Não consegui enviar: ${falha}`; erro.hidden = false; }
+        erro.hidden = true;
+        // O aviso entra no lugar do botão antes da espera, para o engenheiro ver o andamento.
+        const aviso = el("p", { classe: "fonte", role: "status" }, "Enviando a confirmação…");
+        botao.replaceWith(aviso);
+        let terminou = false;
+        const falha = await enviarMensagem(`Confirmado: ${mensagem.causa_a_confirmar}`, {
+          gerando: () => { aviso.textContent = "Causa confirmada. Gerando o post-mortem…"; },
+          fim: (categoria) => {
+            terminou = true;
+            if (categoria === "gerar_relatorio") aviso.textContent = "Causa confirmada. Post-mortem gerado.";
+            else if (categoria === "postmortem_sem_confirmacao") {
+              aviso.textContent = "Causa confirmada, mas o post-mortem não saiu: faltou confirmação.";
+            } else aviso.textContent = "Causa confirmada, mas o post-mortem não saiu. Peça de novo.";
+          },
+        });
+        if (falha !== null) {
+          aviso.replaceWith(botao);
+          botao.disabled = false; erro.textContent = `Não consegui enviar: ${falha}`; erro.hidden = false;
+        } else if (!terminou) aviso.textContent = "Causa confirmada.";
       });
       cartao.append(el("div", { classe: "chips" }, botao), erro);
     }
@@ -522,7 +538,34 @@ function mostrarAvisoChave(texto) {
   aviso.hidden = false;
 }
 
-async function enviarMensagem(texto) {
+// O texto confirma exatamente a causa pendente da última mensagem do agente (nunca um fato).
+function confirmaCausaPendente(texto) {
+  const mensagens = estado.atual ? estado.atual.mensagens : [];
+  const ultima = mensagens[mensagens.length - 1];
+  if (!ultima || ultima.papel === "engenheiro" || !ultima.causa_a_confirmar) return false;
+  // Ignora caixa, espaços e pontuação final: "Confirmado: O limite ... timeouts." também vale.
+  const normaliza = (t) => t.trim().replace(/[\s.;!]+$/u, "").replace(/\s+/g, " ").toLocaleLowerCase("pt-BR");
+  return normaliza(texto) === normaliza(`Confirmado: ${ultima.causa_a_confirmar}`);
+}
+
+// Confirmar a causa pendente (botão ou "Confirmado:" digitado) gera o post-mortem em seguida.
+// `pedirPostmortem` usa `enviarTurno`, então não há recursão. `avisos.gerando()` avisa o início
+// e `avisos.fim(categoria)` entrega a categoria da resposta do post-mortem.
+async function enviarMensagem(texto, avisos = null) {
+  const confirmaCausa = confirmaCausaPendente(texto);
+  const id = estado.atual && estado.atual.id;
+  const resultado = await enviarTurno(texto);
+  if (resultado !== null || !confirmaCausa || !id || !estado.atual || estado.atual.id !== id) return resultado;
+  if (avisos) avisos.gerando();
+  await pedirPostmortem();
+  if (!estado.atual || estado.atual.id !== id) return resultado;
+  const ultima = estado.atual.mensagens[estado.atual.mensagens.length - 1];
+  const fixa = ultima && ultima.resposta && ultima.resposta.fixa;
+  if (avisos) avisos.fim(fixa ? fixa.categoria : null);
+  return resultado;
+}
+
+async function enviarTurno(texto) {
   texto = texto.trim();
   if (!texto) return "mensagem vazia";
   if (estado.enviando) return "aguarde a resposta anterior terminar";
@@ -568,7 +611,7 @@ async function enviarMensagem(texto) {
 
 async function pedirPostmortem() {
   if (!estado.atual || estado.enviando) return;
-  await enviarMensagem("Gera o post-mortem deste incidente.");
+  await enviarTurno("Gera o post-mortem deste incidente.");
 }
 
 // ---------- painel de análise ----------

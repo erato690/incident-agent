@@ -126,12 +126,14 @@ class MemoriaLongoPrazo:
         if registro is not None:
             registro["metadata"].update(campos)
 
-    def _documentos_episodicos(self, servico: str) -> list[Document]:
-        """Todos os documentos episódicos do serviço, sem busca (não reembeda, não conta acesso)."""
+    def _documentos_episodicos(self, servico: str | None = None) -> list[Document]:
+        """Documentos episódicos do serviço (de todos, sem `servico`), sem busca (não reembeda,
+        não conta acesso)."""
         return [
             Document(id=d["id"], page_content=d["text"], metadata=d["metadata"])
             for d in self._store.store.values()
-            if d["metadata"]["tipo"] == "episodica" and d["metadata"]["servico"] == servico
+            if d["metadata"]["tipo"] == "episodica"
+            and (servico is None or d["metadata"]["servico"] == servico)
         ]
 
     # --- episódica -------------------------------------------------------------------------
@@ -244,6 +246,13 @@ class MemoriaLongoPrazo:
         if not incluir_arquivados:
             episodios = [e for e in episodios if e.status == "ativo"]
         return sorted(episodios, key=lambda episodio: episodio.criado_em)
+
+    def episodios_da_sessao(self, session_id: str) -> list[Episodio]:
+        """Episódios ativos gravados nesta sessão, de qualquer serviço (o serviço do turno de
+        confirmação pode diferir do da investigação), do mais antigo ao mais novo."""
+        achados = [self._episodio_do_documento(d) for d in self._documentos_episodicos()]
+        dela = [e for e in achados if e.session_id == session_id and e.status == "ativo"]
+        return sorted(dela, key=lambda episodio: episodio.criado_em)
 
     # --- semântica (só interface) ----------------------------------------------------------
 
