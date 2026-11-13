@@ -17,3 +17,10 @@ saida/
 # relatório técnico (texto e PDF): fica fora do repositório e é entregue pelo Moodle
 docs/relatorio.*
 docs/*.pdf
+
+# arquivos locais de ferramentas (spec-kit assess, extensões do specify, índice do agentdb)
+.claude/skills/speckit-assess-*/
+.specify/extensions.yml
+.specify/extensions/
+agentdb.rvf
+agentdb.rvf.idmap.json
