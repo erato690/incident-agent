@@ -14,5 +14,6 @@ ruvector.db
 # saídas geradas (post-mortems)
 saida/
 
-# relatório em PDF: gerado por gerador do PDF (fora do repositório) e entregue pelo Moodle
+# relatório técnico (texto e PDF): fica fora do repositório e é entregue pelo Moodle
+docs/relatorio.*
 docs/*.pdf

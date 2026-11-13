@@ -9,8 +9,8 @@ passo do auditor depois da investigação (`agente/auditor.py`). A intenção `g
 passa a gerar o post-mortem (`agente/postmortem.py`). O registro de turnos (`RegistroTurno`)
 alimenta o Streamlit (`app/app.py`). A avaliação sai de `agente/avaliacao.py`
 (avaliadores + dataset) e de `scripts/avaliar_langsmith.py`. O notebook ganha a seção 5, as
-seções renomeadas e a seção 0. O relatório sai de `relatório técnico (fora do repositório)`, gerado em PDF por
-`gerador do PDF (fora do repositório)` (em `docs/`, ignorado pelo git, e numa cópia em `~/Downloads/`).
+seções renomeadas e a seção 0. O relatório técnico (PDF) fica fora do
+repositório e é entregue pelo Moodle.
 
 ## Technical Context
 
@@ -44,6 +44,5 @@ agente/avaliacao.py    # exemplos do dataset, avaliadores (causa, trajetória, a
 agente/integrado.py    # montar_agente_integrado (pipeline + todas as ferramentas + auditor + sessão)
 app/app.py             # Streamlit: abas Uso e Análise
 Dockerfile, docker-compose.yml
-scripts/avaliar_langsmith.py, gerador do PDF (fora do repositório)
-relatório técnico (fora do repositório)
+scripts/avaliar_langsmith.py
 ```

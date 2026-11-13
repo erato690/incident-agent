@@ -353,13 +353,13 @@ sistema?").
 
 ## PDF do relatório fora do git (2026-11-10)
 
-- **Decisão do Rafael:** o PDF `PDF do relatório (fora do repositório)` não entra mais no
+- **Decisão do Rafael:** o PDF do relatório não entra mais no
   git. O nome segue o padrão da faculdade e o arquivo é entregue pelo Moodle.
 - **Como ficou:** `git rm --cached` do PDF e `docs/*.pdf` no `.gitignore`. O gerador
-  (`gerador do PDF (fora do repositório)`) continua escrevendo em `docs/` e copia o PDF para
-  `~/Downloads/` quando a pasta existe.
-- **Histórico:** o PDF continua nos commits já publicados (de ca43bf3 em diante). Não houve
-  reescrita de histórico nem force push; limpar o histórico fica para o Rafael decidir.
+  continuava escrevendo em `docs/` e copiava o PDF para `~/Downloads/`.
+- **Histórico (2026-11-13):** o Rafael decidiu tirar o relatório inteiro do repositório, inclusive
+  do histórico publicado: o texto, o PDF, o gerador e o teste do gerador saíram de todos os
+  commits (reescrita com git filter-repo e force push). O texto fica só no disco, ignorado pelo git.
 
 ## Pergunta aberta sem herança do serviço do cenário (2026-11-11)
 

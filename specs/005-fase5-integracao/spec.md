@@ -132,9 +132,8 @@ e a análise.
 
 As seções passam a se chamar "1 Chain, barreira e saída estruturada", "2 Agente com
 ferramentas", "3 Memória", "4 Consulta SQL e RAG" e "5 Agente integrado". A seção 0 traz o
-diagrama de contexto, 2 ou 3 células com o agente final e o índice da rubrica. O relatório PDF é
-`PDF do relatório (fora do repositório)`, gerado por `gerador do PDF (fora do repositório)`, fora do
-git e entregue pelo Moodle.
+diagrama de contexto, 2 ou 3 células com o agente final e o índice da rubrica. O relatório PDF fica
+fora do repositório e é entregue pelo Moodle.
 
 ### Edge Cases
 

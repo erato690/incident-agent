@@ -75,7 +75,7 @@ Textos para o leitor em português, sem citar "aula N".
 - [ ] T110 Renomear as seções pela capacidade, ajustar as referências e criar a seção 0 (diagrama de contexto, agente final num cenário, índice geral da rubrica).
 - [ ] T111 Diagramas (`scripts/gerar_diagramas.py`): componentes da Fase 4 e arquitetura final.
 - [ ] T112 Execução completa com a chave; mesclar as saídas; `docs/projeto.html`; README; varredura de segredos; commit local.
-- [ ] T113 `relatório técnico (fora do repositório)` e o PDF `PDF do relatório (fora do repositório)`, gerado por `gerador do PDF (fora do repositório)` e fora do git (problema, arquitetura, decisões por fase, avaliação, limitações, evidências, processo com o spec-kit, IAs usadas).
+- [ ] T113 Relatório técnico e PDF, fora do repositório (problema, arquitetura, decisões por fase, avaliação, limitações, evidências, processo com o spec-kit, IAs usadas).
 
 ## Phase 8: Ajustes pós-entrega (2026-11-10)
 
@@ -97,5 +97,6 @@ Pedido do Rafael, TDD (teste que falha antes do código), sem push.
 
 **C. PDF do relatório fora do git**
 
-- [x] T128 `git rm --cached` do PDF e `docs/*.pdf` no `.gitignore`; `gerador do PDF (fora do repositório)` continua gerando em `docs/` e copia para `~/Downloads/` quando a pasta existe; README, spec e plano dizem que o PDF sai do gerador e vai pelo Moodle. O histórico publicado (desde ca43bf3) fica como está.
+- [x] T128 `git rm --cached` do PDF e `docs/*.pdf` no `.gitignore`; README, spec e plano dizem que o PDF vai pelo Moodle.
+- [x] T130 Relatório fora do repositório, inclusive do histórico: texto, PDF, gerador e teste do gerador removidos de todos os commits (git filter-repo, force push autorizado pelo Rafael); o texto fica no disco, ignorado pelo git.
 - [x] T129 Pergunta aberta sem herança do serviço do cenário: sessão nasce sem serviço, o NLU não pede "qual serviço", o Investigador descobre o serviço pela visão geral e ele fica na sessão; nova medição com o modelo real (2 rodadas) no relatório.
